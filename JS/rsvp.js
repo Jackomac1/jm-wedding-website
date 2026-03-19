@@ -67,15 +67,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // ----------------------------------------------------------
-  // 3. Attending radio: show/hide guest count & dietary
+  // 3. Attending radio: show/hide guest count, dietary & song
   // ----------------------------------------------------------
+  const songRequestWrap = document.getElementById('songRequestWrap');
+
   function updateAttendingFields() {
     const attendingYes = document.getElementById('attendingYes');
-    const attendingNo  = document.getElementById('attendingNo');
     const isYes = attendingYes && attendingYes.checked;
 
-    if (guestCountWrap) guestCountWrap.style.display = isYes ? 'block' : 'none';
-    if (dietaryWrap)    dietaryWrap.style.display    = isYes ? 'block' : 'none';
+    if (guestCountWrap)  guestCountWrap.style.display  = isYes ? 'block' : 'none';
+    if (dietaryWrap)     dietaryWrap.style.display     = isYes ? 'block' : 'none';
+    if (songRequestWrap) songRequestWrap.style.display = isYes ? 'block' : 'none';
 
     if (!isYes && guestCountInput) {
       guestCountInput.value = 1;
@@ -85,6 +87,92 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('input[name="attending"]').forEach(radio => {
     radio.addEventListener('change', updateAttendingFields);
   });
+
+  // ----------------------------------------------------------
+  // 3b. Song search
+  // ----------------------------------------------------------
+  const songSearch       = document.getElementById('songSearch');
+  const songResults      = document.getElementById('songResults');
+  const songSelected     = document.getElementById('songSelected');
+  const songSelectedImg  = document.getElementById('songSelectedImg');
+  const songSelectedName = document.getElementById('songSelectedName');
+  const songSelectedArtist = document.getElementById('songSelectedArtist');
+  const songClearBtn     = document.getElementById('songClearBtn');
+  const songUriInput     = document.getElementById('songUri');
+  const songNameInput    = document.getElementById('songName');
+
+  let searchTimeout = null;
+
+  function selectSong(track) {
+    songUriInput.value  = track.uri;
+    songNameInput.value = track.name + ' — ' + track.artist;
+    songSelectedName.textContent   = track.name;
+    songSelectedArtist.textContent = track.artist;
+    songSelectedImg.src = track.image || '';
+    songSelectedImg.style.display = track.image ? 'block' : 'none';
+    songSelected.style.display = 'flex';
+    songSearch.style.display   = 'none';
+    songResults.innerHTML      = '';
+    songResults.classList.remove('visible');
+  }
+
+  function clearSong() {
+    songUriInput.value  = '';
+    songNameInput.value = '';
+    songSearch.value    = '';
+    songSelected.style.display = 'none';
+    songSearch.style.display   = 'block';
+    songSearch.focus();
+  }
+
+  if (songClearBtn) songClearBtn.addEventListener('click', clearSong);
+
+  if (songSearch) {
+    songSearch.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      const q = songSearch.value.trim();
+      if (q.length < 2) {
+        songResults.innerHTML = '';
+        songResults.classList.remove('visible');
+        return;
+      }
+      searchTimeout = setTimeout(async () => {
+        try {
+          const res  = await fetch(`/api/spotify/search?q=${encodeURIComponent(q)}`);
+          const data = await res.json();
+          songResults.innerHTML = '';
+          if (!data.tracks || !data.tracks.length) {
+            songResults.classList.remove('visible');
+            return;
+          }
+          data.tracks.forEach(track => {
+            const li = document.createElement('li');
+            li.setAttribute('role', 'option');
+            li.className = 'song-result-item';
+            li.innerHTML = `
+              ${track.image ? `<img src="${track.image}" alt="" width="36" height="36">` : ''}
+              <div class="song-result-info">
+                <span class="song-result-name">${track.name}</span>
+                <span class="song-result-artist">${track.artist}</span>
+              </div>
+            `;
+            li.addEventListener('click', () => selectSong(track));
+            songResults.appendChild(li);
+          });
+          songResults.classList.add('visible');
+        } catch (err) {
+          console.warn('Song search failed:', err);
+        }
+      }, 350);
+    });
+
+    // Close results when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!songSearch.contains(e.target) && !songResults.contains(e.target)) {
+        songResults.classList.remove('visible');
+      }
+    });
+  }
 
   // ----------------------------------------------------------
   // 4. Form submission
@@ -123,7 +211,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       guest_count:          attending === 'yes' ? (parseInt(guestCountInput?.value, 10) || 1) : 1,
       dietary_restrictions: attending === 'yes' ? (document.getElementById('dietary')?.value.trim() || '') : '',
       message:              document.getElementById('message')?.value.trim() || '',
-      token:                token || ''
+      token:                token || '',
+      song_uri:             attending === 'yes' ? (document.getElementById('songUri')?.value || '') : '',
+      song_name:            attending === 'yes' ? (document.getElementById('songName')?.value || '') : ''
     };
 
     // Validate guest count against token limit

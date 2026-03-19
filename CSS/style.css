@@ -1243,6 +1243,130 @@ h1, h2, h3, h4 {
 }
 
 /* ============================================================
+   Song Search (RSVP)
+   ============================================================ */
+
+.song-search-wrap {
+  position: relative;
+}
+
+.song-results {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  z-index: 100;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.song-results.visible {
+  display: block;
+}
+
+.song-result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.song-result-item:hover {
+  background: var(--cream);
+}
+
+.song-result-item img {
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.song-result-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.song-result-name {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--brown);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-result-artist {
+  font-size: 0.78rem;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-selected {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  background: var(--cream);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.song-selected img {
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.song-selected-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.song-selected-name {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--brown);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-selected-artist {
+  font-size: 0.78rem;
+  color: #888;
+}
+
+.song-clear-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 1rem;
+  padding: 0.25rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.song-clear-btn:hover {
+  color: var(--berry);
+}
+
+/* ============================================================
    Footer
    ============================================================ */
 .footer {

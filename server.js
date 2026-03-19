@@ -9,6 +9,7 @@ const { v4: uuidv4 } = require('uuid');
 const QRCode      = require('qrcode');
 const multer      = require('multer');
 const { Resend }  = require('resend');
+const axios       = require('axios');
 const path    = require('path');
 const fs      = require('fs');
 
@@ -247,6 +248,111 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Spotify
+// ---------------------------------------------------------------------------
+const SPOTIFY_SCOPES = 'playlist-modify-public playlist-modify-private';
+
+async function getSpotifyAccessToken() {
+  const db = getDb();
+  const refreshToken = db.settings.spotifyRefreshToken;
+  if (!refreshToken) throw new Error('Spotify not authorized');
+
+  const response = await axios.post('https://accounts.spotify.com/api/token',
+    new URLSearchParams({
+      grant_type:    'refresh_token',
+      refresh_token: refreshToken
+    }),
+    {
+      headers: {
+        'Content-Type':  'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + Buffer.from(
+          process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET
+        ).toString('base64')
+      }
+    }
+  );
+  return response.data.access_token;
+}
+
+async function addTrackToPlaylist(trackUri) {
+  const token = await getSpotifyAccessToken();
+  await axios.post(
+    `https://api.spotify.com/v1/playlists/${process.env.SPOTIFY_PLAYLIST_ID}/tracks`,
+    { uris: [trackUri] },
+    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+  );
+}
+
+// One-time admin auth to authorize Spotify
+app.get('/api/spotify/auth', requireAdminAuth, (req, res) => {
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id:     process.env.SPOTIFY_CLIENT_ID,
+    scope:         SPOTIFY_SCOPES,
+    redirect_uri:  `${process.env.SITE_URL}/api/spotify/callback`
+  });
+  res.redirect(`https://accounts.spotify.com/authorize?${params}`);
+});
+
+app.get('/api/spotify/callback', requireAdminAuth, async (req, res) => {
+  const { code, error } = req.query;
+  if (error) return res.send(`Spotify auth error: ${error}`);
+
+  try {
+    const response = await axios.post('https://accounts.spotify.com/api/token',
+      new URLSearchParams({
+        grant_type:   'authorization_code',
+        code,
+        redirect_uri: `${process.env.SITE_URL}/api/spotify/callback`
+      }),
+      {
+        headers: {
+          'Content-Type':  'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' + Buffer.from(
+            process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET
+          ).toString('base64')
+        }
+      }
+    );
+
+    const db = getDb();
+    db.settings.spotifyRefreshToken = response.data.refresh_token;
+    writeDb(db);
+
+    res.send('<h2>Spotify authorized successfully!</h2><p>You can close this tab.</p>');
+  } catch (err) {
+    console.error('Spotify callback error:', err.response?.data || err.message);
+    res.status(500).send('Failed to authorize Spotify. Check server logs.');
+  }
+});
+
+// Song search — used by RSVP form
+app.get('/api/spotify/search', async (req, res) => {
+  const { q } = req.query;
+  if (!q || q.trim().length < 2) return res.json({ tracks: [] });
+
+  try {
+    const token = await getSpotifyAccessToken();
+    const response = await axios.get('https://api.spotify.com/v1/search', {
+      params:  { q, type: 'track', limit: 5 },
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const tracks = response.data.tracks.items.map(t => ({
+      uri:    t.uri,
+      name:   t.name,
+      artist: t.artists.map(a => a.name).join(', '),
+      image:  t.album.images[2]?.url || t.album.images[0]?.url || null
+    }));
+
+    res.json({ tracks });
+  } catch (err) {
+    console.error('Spotify search error:', err.response?.data || err.message);
+    res.status(500).json({ error: 'Search failed' });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // API — RSVP (public)
 // ---------------------------------------------------------------------------
 app.get('/api/rsvp/status', (req, res) => {
@@ -261,13 +367,13 @@ app.get('/api/rsvp/token/:token', (req, res) => {
   res.json({ guestName: tok.guestName, groupName: tok.groupName, maxGuests: tok.maxGuests });
 });
 
-app.post('/api/rsvp', (req, res) => {
+app.post('/api/rsvp', async (req, res) => {
   const db = getDb();
   if (!db.settings.rsvp_open) {
     return res.status(403).json({ error: 'RSVP is currently closed' });
   }
 
-  const { guest_name, email, phone, attending, guest_count, dietary_restrictions, message, token } = req.body;
+  const { guest_name, email, phone, attending, guest_count, dietary_restrictions, message, token, song_uri, song_name } = req.body;
 
   if (!guest_name || !attending) {
     return res.status(400).json({ error: 'Name and attendance are required' });
@@ -299,9 +405,21 @@ app.post('/api/rsvp', (req, res) => {
     dietary_restrictions: dietary_restrictions || null,
     message:              message || null,
     token:                token || null,
+    song_uri:             song_uri || null,
+    song_name:            song_name || null,
     submitted_at:         new Date().toISOString()
   });
   writeDb(db);
+
+  // Add song to Spotify playlist if provided and guest is attending
+  if (att === 'yes' && song_uri && db.settings.spotifyRefreshToken) {
+    try {
+      await addTrackToPlaylist(song_uri);
+    } catch (err) {
+      console.error('Spotify add track failed:', err.message);
+      // Don't fail the RSVP if Spotify fails
+    }
+  }
 
   res.json({ success: true, message: 'RSVP submitted successfully' });
 });

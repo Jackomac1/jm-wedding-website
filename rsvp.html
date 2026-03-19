@@ -160,15 +160,39 @@
             ></textarea>
           </div>
 
+          <!-- Song Request (shown when attending yes) -->
+          <div class="form-group" id="songRequestWrap" style="display:none;">
+            <label class="form-label" for="songSearch">Song Request for the Dancefloor</label>
+            <div class="song-search-wrap">
+              <input
+                type="text"
+                id="songSearch"
+                class="form-input"
+                placeholder="Search for a song…"
+                autocomplete="off"
+              >
+              <ul class="song-results" id="songResults" role="listbox" aria-label="Song results"></ul>
+              <div class="song-selected" id="songSelected" style="display:none;">
+                <img id="songSelectedImg" src="" alt="" width="40" height="40">
+                <div class="song-selected-info">
+                  <span class="song-selected-name" id="songSelectedName"></span>
+                  <span class="song-selected-artist" id="songSelectedArtist"></span>
+                </div>
+                <button type="button" class="song-clear-btn" id="songClearBtn" aria-label="Clear song selection">&#x2715;</button>
+              </div>
+              <input type="hidden" id="songUri"  name="song_uri">
+              <input type="hidden" id="songName" name="song_name">
+            </div>
+          </div>
+
           <!-- Message -->
           <div class="form-group">
             <label class="form-label" for="message">Message to Jack &amp; Maja</label>
-            <!-- TODO: Replace placeholder couple names in label -->
             <textarea
               id="message"
               name="message"
               class="form-textarea"
-              placeholder="Share a message, song request, or well-wishes…"
+              placeholder="Share a message or well-wishes…"
               rows="4"
             ></textarea>
           </div>
