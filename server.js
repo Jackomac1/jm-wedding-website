@@ -338,23 +338,34 @@ app.get('/api/spotify/callback', requireAdminAuth, async (req, res) => {
 
 // Diagnostic test endpoint
 app.get('/api/spotify/test', requireAdminAuth, async (req, res) => {
+  const result = { playlistId: process.env.SPOTIFY_PLAYLIST_ID };
   try {
     const token = await getSpotifyAccessToken();
-    // Fetch playlist info
+    result.tokenOk = true;
+
+    // Step 1: get current user
+    const meRes = await axios.get('https://api.spotify.com/v1/me',
+      { headers: { Authorization: `Bearer ${token}` } });
+    result.userId = meRes.data.id;
+
+    // Step 2: get playlist info
     const playlistRes = await axios.get(
       `https://api.spotify.com/v1/playlists/${process.env.SPOTIFY_PLAYLIST_ID}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
-    const { name, owner, public: isPublic } = playlistRes.data;
-    // Try adding a known track (Bohemian Rhapsody)
+    result.playlist = { name: playlistRes.data.name, owner: playlistRes.data.owner.id, public: playlistRes.data.public };
+
+    // Step 3: add a track
     const addRes = await axios.post(
       `https://api.spotify.com/v1/playlists/${process.env.SPOTIFY_PLAYLIST_ID}/tracks`,
       { uris: ['spotify:track:7tFiyTwD0nx5a1eklYtX2J'] },
       { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
     );
-    res.json({ playlist: { name, owner: owner.id, isPublic }, addResult: addRes.data });
+    result.addResult = addRes.data;
+
+    res.json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message, details: err.response?.data });
+    res.status(500).json({ ...result, error: err.message, details: err.response?.data });
   }
 });
 
