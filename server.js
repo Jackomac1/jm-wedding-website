@@ -355,7 +355,20 @@ app.get('/api/spotify/test', requireAdminAuth, async (req, res) => {
     );
     result.playlist = { name: playlistRes.data.name, owner: playlistRes.data.owner.id, public: playlistRes.data.public };
 
-    // Step 3: add a track (using fetch to rule out axios issues)
+    // Step 3: try creating a brand new playlist
+    const createRes = await fetch(
+      `https://api.spotify.com/v1/users/${meRes.data.id}/playlists`,
+      {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'API Write Test', public: false })
+      }
+    );
+    const createData = await createRes.json();
+    result.createStatus = createRes.status;
+    result.createResult = createData.id || createData.error;
+
+    // Step 4: add a track to existing playlist
     const addRes = await fetch(
       `https://api.spotify.com/v1/playlists/${process.env.SPOTIFY_PLAYLIST_ID}/tracks`,
       {
