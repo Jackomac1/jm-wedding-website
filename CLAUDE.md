@@ -23,11 +23,13 @@
 - **Node.js path:** `/usr/local/bin/node` and `/usr/local/bin/npm` (not in shell PATH by default)
 - **Database:** JSON flat file (`data/db.json`) — no SQLite, no compilation required
 - **Auth:** bcryptjs + express-session. Two passwords: site (guests) and admin
-- **Config:** `.env` file — `SITE_PASSWORD`, `ADMIN_PASSWORD`, `SESSION_SECRET`, `PORT`, `SITE_URL`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`
-- **Email:** nodemailer + Gmail App Password — contact form POSTs to `/api/contact` → email forwarded to `GMAIL_USER`. Requires a Gmail App Password (not the regular Gmail password) set in `.env`.
+- **Config:** `.env` file — `SITE_PASSWORD`, `ADMIN_PASSWORD`, `SESSION_SECRET`, `PORT`, `SITE_URL`, `RESEND_API_KEY`, `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_PLAYLIST_ID`, `SPOTIFY_REFRESH_TOKEN`
+- **Email:** Resend — contact form POSTs to `/api/contact` → email sent via Resend API to `majaandjack@gmail.com`. From address: `noreply@majaandjack.ca`. Domain verified in Resend.
+- **Spotify:** Song request on RSVP form — guests search Spotify and pick a song. Song name + URI stored with RSVP. Server attempts to add to playlist `2yGEUvxvBzCpGob3JwgLQB` ("Maja and Jacks Guest Requests") via Spotify Web API. **Note:** Spotify write API returning 403 — suspected new app restriction. Retry after recreating the Spotify Developer app (rate limited — try again after 2026-03-20). Spotify auth done via `/api/spotify/auth` (admin only) → refresh token stored as `SPOTIFY_REFRESH_TOKEN` env var.
 - **Fonts:** Playfair Display (headings/section titles), Cormorant Garamond italic (hero script + footer + nav brand + enter monogram — `--font-script`), Lato (body) — Google Fonts
 - **No build tools** — plain HTML/CSS/JS served as static files from Express
 - **File uploads:** `multer` handles multipart uploads — saved to `/Images/` with auto-generated filenames. Site photos overwrite fixed filenames. Party photos: `party-{slot}.jpg`. Gallery photos: `gallery-{id}.jpg`.
+- **Deployment:** Railway — connected to GitHub repo `Jackomac1/jm-wedding-website`, auto-deploys on push to `main`. Live at `https://jm-wedding.up.railway.app`. Custom domain `majaandjack.ca` purchased on Namecheap, CNAME pointing to Railway — DNS propagating.
 
 ## File Structure
 
@@ -90,7 +92,11 @@ JM_Wedding_Website/
 | DELETE | `/api/admin/gallery/:id` | admin | Remove gallery photo |
 | GET | `/api/admin/party` | admin | Wedding party data |
 | POST | `/api/admin/party/:slot` | admin | Update party member name/description/photo |
-| POST | `/api/contact` | — | Contact form → email to GMAIL_USER via nodemailer |
+| POST | `/api/contact` | — | Contact form → email via Resend to majaandjack@gmail.com |
+| GET | `/api/spotify/auth` | admin | One-time Spotify OAuth — redirects to Spotify consent screen |
+| GET | `/api/spotify/callback` | admin | OAuth callback — saves refresh token, displays it for copying to env |
+| GET | `/api/spotify/search` | — | Search Spotify tracks (used by RSVP form) |
+| GET | `/api/spotify/test` | admin | Diagnostic: tests token, playlist read, and write access |
 
 ## Colour Palette
 
@@ -159,7 +165,7 @@ Photos are referenced in two places per page: the `.site-bg-fixed` div (inline s
 - **Contact phone**: `+1 (555) 000-0000` — replace when known
 - **Wedding planner**: "Jane Planner" / `planner@example.com` — replace or remove if not applicable
 - **Malcolm Hotel booking link**: `href="#"` on the Book Now button in `details.html`
-- **Song requests field**: RSVP form uses a general message field — a dedicated song request field can be added if desired
+- **Spotify write fix**: Delete and recreate the Spotify Developer app (currently rate-limited, try after 2026-03-20) — new app may bypass the 403 write restriction on the current app
 - **Wedding party names + photos**: Managed via admin → Photos → Wedding Party tab. Names, descriptions, and photos are stored in `db.json` and rendered dynamically. Party photos saved as `party-{slot}.jpg` in `/Images/`.
 - **Gallery photos**: Managed via admin → Photos → Gallery tab. Photos stored in `db.json`, filenames saved as `gallery-{id}.jpg`. Gallery page renders dynamically from `/api/gallery`.
 - **Schedule placeholder events**: Friday Aug 27 (welcome reception + rehearsal dinner), Saturday Aug 28 (activities TBD), and Monday Aug 30 (farewell brunch) items in `schedule.html` are placeholder — fill in times, venues, details. Sunday Aug 29 is fully populated (ceremony + reception).
@@ -170,7 +176,7 @@ Photos are referenced in two places per page: the `.site-bg-fixed` div (inline s
 
 ## RSVP Form Fields (current)
 
-Name, email, phone, attending yes/no, guest count (shown when attending), dietary restrictions (shown when attending), message to Jack & Maja (includes song request prompt in placeholder text)
+Name, email, phone, attending yes/no, guest count (shown when attending), dietary restrictions (shown when attending), song request — Spotify search + pick (shown when attending), message to Jack & Maja
 
 ## Claude Instructions
 
