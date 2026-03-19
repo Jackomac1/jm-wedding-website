@@ -336,6 +336,28 @@ app.get('/api/spotify/callback', requireAdminAuth, async (req, res) => {
   }
 });
 
+// Diagnostic test endpoint
+app.get('/api/spotify/test', requireAdminAuth, async (req, res) => {
+  try {
+    const token = await getSpotifyAccessToken();
+    // Fetch playlist info
+    const playlistRes = await axios.get(
+      `https://api.spotify.com/v1/playlists/${process.env.SPOTIFY_PLAYLIST_ID}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const { name, owner, public: isPublic } = playlistRes.data;
+    // Try adding a known track (Bohemian Rhapsody)
+    const addRes = await axios.post(
+      `https://api.spotify.com/v1/playlists/${process.env.SPOTIFY_PLAYLIST_ID}/tracks`,
+      { uris: ['spotify:track:7tFiyTwD0nx5a1eklYtX2J'] },
+      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+    );
+    res.json({ playlist: { name, owner: owner.id, isPublic }, addResult: addRes.data });
+  } catch (err) {
+    res.status(500).json({ error: err.message, details: err.response?.data });
+  }
+});
+
 // Song search — used by RSVP form
 app.get('/api/spotify/search', async (req, res) => {
   const { q } = req.query;
