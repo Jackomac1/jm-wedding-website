@@ -426,7 +426,7 @@ app.post('/api/rsvp', async (req, res) => {
     try {
       await addTrackToPlaylist(song_uri);
     } catch (err) {
-      console.error('Spotify add track failed:', err.message);
+      console.error('Spotify add track failed:', err.message, err.response?.data);
       // Don't fail the RSVP if Spotify fails
     }
   }
