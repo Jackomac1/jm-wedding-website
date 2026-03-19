@@ -254,7 +254,7 @@ const SPOTIFY_SCOPES = 'playlist-modify-public playlist-modify-private';
 
 async function getSpotifyAccessToken() {
   const db = getDb();
-  const refreshToken = db.settings.spotifyRefreshToken;
+  const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN || db.settings.spotifyRefreshToken;
   if (!refreshToken) throw new Error('Spotify not authorized');
 
   const response = await axios.post('https://accounts.spotify.com/api/token',
@@ -315,11 +315,20 @@ app.get('/api/spotify/callback', requireAdminAuth, async (req, res) => {
       }
     );
 
+    const refreshToken = response.data.refresh_token;
+
+    // Save to db for local use
     const db = getDb();
-    db.settings.spotifyRefreshToken = response.data.refresh_token;
+    db.settings.spotifyRefreshToken = refreshToken;
     writeDb(db);
 
-    res.send('<h2>Spotify authorized successfully!</h2><p>You can close this tab.</p>');
+    res.send(`
+      <h2>Spotify authorized!</h2>
+      <p>Add this as a Railway environment variable:</p>
+      <p><strong>SPOTIFY_REFRESH_TOKEN</strong></p>
+      <code style="display:block;padding:1rem;background:#f4f4f4;word-break:break-all;">${refreshToken}</code>
+      <p>After adding it in Railway, redeploy and song requests will work.</p>
+    `);
   } catch (err) {
     console.error('Spotify callback error:', err.response?.data || err.message);
     res.status(500).send('Failed to authorize Spotify. Check server logs.');
