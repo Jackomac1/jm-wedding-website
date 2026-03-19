@@ -271,6 +271,7 @@ async function getSpotifyAccessToken() {
       }
     }
   );
+  console.log('Spotify token scopes:', response.data.scope);
   return response.data.access_token;
 }
 
