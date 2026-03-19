@@ -355,13 +355,18 @@ app.get('/api/spotify/test', requireAdminAuth, async (req, res) => {
     );
     result.playlist = { name: playlistRes.data.name, owner: playlistRes.data.owner.id, public: playlistRes.data.public };
 
-    // Step 3: add a track
-    const addRes = await axios.post(
+    // Step 3: add a track (using fetch to rule out axios issues)
+    const addRes = await fetch(
       `https://api.spotify.com/v1/playlists/${process.env.SPOTIFY_PLAYLIST_ID}/tracks`,
-      { uris: ['spotify:track:7tFiyTwD0nx5a1eklYtX2J'] },
-      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uris: ['spotify:track:7tFiyTwD0nx5a1eklYtX2J'] })
+      }
     );
-    result.addResult = addRes.data;
+    const addData = await addRes.json();
+    result.addStatus = addRes.status;
+    result.addResult = addData;
 
     res.json(result);
   } catch (err) {
