@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="QR code generator for the wedding website admin panel.">
+  <meta name="robots" content="noindex, nofollow">
+  <title>QR Generator — Admin</title>
+  <link rel="stylesheet" href="/CSS/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar" role="navigation" aria-label="Admin navigation">
+      <div class="sidebar-brand">
+        <!-- TODO: Replace placeholder couple names -->
+        <span class="sidebar-brand-script">J &amp; M</span>
+        <span class="sidebar-brand-label">Admin Panel</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-section">Main</div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/dashboard" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📊</span> Dashboard
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/qr-generator" class="sidebar-nav-link active" aria-current="page">
+            <span class="sidebar-nav-icon" aria-hidden="true">📷</span> QR Generator
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/photos" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">🖼</span> Photos
+          </a>
+        </div>
+        <div class="sidebar-nav-section">Actions</div>
+        <div class="sidebar-nav-item">
+          <a href="#" class="sidebar-nav-link" id="adminLogoutBtn">
+            <span class="sidebar-nav-icon" aria-hidden="true">🚪</span> Logout
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/home" class="sidebar-back-link">← View Wedding Site</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+
+      <!-- Top Bar -->
+      <header class="admin-topbar">
+        <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+        <h1 class="admin-topbar-title">QR Code Generator</h1>
+      </header>
+
+      <main class="admin-content">
+
+        <!-- Generate Form -->
+        <section class="admin-form-card" aria-labelledby="qrFormTitle">
+          <h3 id="qrFormTitle">Generate Guest QR Code</h3>
+
+          <form id="qrForm" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="qrGuestName">
+                  Guest Name <span class="required" aria-label="required">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="qrGuestName"
+                  name="guestName"
+                  class="form-input"
+                  placeholder="e.g. The Smith Family"
+                  required
+                >
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="qrGroupName">Group Name <span class="form-hint" style="font-size:0.7rem;">(optional)</span></label>
+                <input
+                  type="text"
+                  id="qrGroupName"
+                  name="groupName"
+                  class="form-input"
+                  placeholder="e.g. Bride's Side"
+                >
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="qrEmail">Email <span class="form-hint" style="font-size:0.7rem;">(optional)</span></label>
+                <input
+                  type="email"
+                  id="qrEmail"
+                  name="email"
+                  class="form-input"
+                  placeholder="guest@example.com"
+                >
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="qrMaxGuests">Max Guests</label>
+                <input
+                  type="number"
+                  id="qrMaxGuests"
+                  name="maxGuests"
+                  class="form-input"
+                  value="1"
+                  min="1"
+                  max="20"
+                >
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="qrCustomUrl">
+                Custom URL <span class="form-hint" style="font-size:0.7rem;">(optional — defaults to RSVP page with token)</span>
+              </label>
+              <input
+                type="url"
+                id="qrCustomUrl"
+                name="customUrl"
+                class="form-input"
+                placeholder="https://… (leave blank for default RSVP link)"
+              >
+              <p class="form-hint">Leave blank to generate a personalised RSVP link with the guest's token.</p>
+            </div>
+
+            <div class="admin-alert admin-alert-error" id="qrError" role="alert" aria-live="polite"></div>
+
+            <button type="submit" class="btn btn-primary" id="qrGenerateBtn">
+              Generate QR Code
+            </button>
+          </form>
+        </section>
+
+        <!-- QR Result -->
+        <section class="qr-result" id="qrResult" aria-labelledby="qrResultTitle" aria-live="polite">
+          <h3 style="font-family: var(--font-heading); margin-bottom:1.5rem; padding-bottom:0.75rem; border-bottom:1px solid var(--admin-border);" id="qrResultTitle">
+            Generated QR Code
+          </h3>
+          <div class="qr-result-inner">
+            <div class="qr-image-wrap">
+              <img id="qrImage" src="" alt="Generated QR code" class="qr-image" width="220" height="220">
+              <button class="btn btn-secondary btn-sm" style="margin-top:0.75rem; width:100%;" onclick="downloadQr()">
+                ↓ Download
+              </button>
+            </div>
+            <div class="qr-info">
+              <h3 id="qrResultGuestName"></h3>
+              <p class="qr-token">Token: <strong id="qrResultToken"></strong></p>
+              <p class="qr-url" id="qrResultUrl" aria-label="RSVP URL"></p>
+              <button class="btn btn-primary btn-sm" onclick="copyUrl()">📋 Copy URL</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Import Guest List -->
+        <section class="admin-form-card" aria-labelledby="importTitle">
+          <h3 id="importTitle">Import Guest List from CSV</h3>
+          <p style="color:var(--admin-muted);margin-bottom:1.25rem;font-size:0.875rem;">
+            Upload a CSV file to bulk-create guest tokens. Each row becomes one invitation link / QR code.
+          </p>
+
+          <div style="margin-bottom:1rem;">
+            <button class="btn btn-secondary btn-sm" onclick="downloadTemplate()">↓ Download CSV Template</button>
+          </div>
+
+          <label class="csv-dropzone" for="csvFileInput" id="csvDropzone">
+            <div class="csv-dropzone-icon" aria-hidden="true">📂</div>
+            <p class="csv-dropzone-text">Drop your CSV here or <span class="csv-browse-link">browse</span></p>
+            <p class="csv-dropzone-hint">Columns: Name, Group, Email, MaxGuests</p>
+            <input type="file" id="csvFileInput" accept=".csv,text/csv" class="visually-hidden">
+          </label>
+
+          <!-- Preview table (hidden until file loaded) -->
+          <div id="csvPreviewWrap" style="display:none;margin-top:1.5rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+              <p id="csvPreviewCount" style="font-weight:600;color:var(--admin-text);"></p>
+              <button class="btn btn-secondary btn-sm" onclick="clearCsv()">✕ Clear</button>
+            </div>
+            <div class="admin-table-wrap" style="max-height:300px;overflow-y:auto;" role="region" aria-label="CSV preview">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Group</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Max Guests</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="csvPreviewBody"></tbody>
+              </table>
+            </div>
+
+            <div class="admin-alert admin-alert-error" id="importError" role="alert" aria-live="polite" style="margin-top:1rem;"></div>
+            <div class="admin-alert admin-alert-success" id="importSuccess" role="status" aria-live="polite" style="margin-top:1rem;"></div>
+
+            <button class="btn btn-primary" id="importBtn" style="margin-top:1rem;" onclick="importGuests()">
+              Import Guests
+            </button>
+          </div>
+        </section>
+
+        <!-- Tokens Table -->
+        <section class="admin-table-card" aria-labelledby="tokensTableTitle">
+          <div class="admin-table-header">
+            <h3 id="tokensTableTitle">Existing Tokens</h3>
+            <button class="btn btn-secondary btn-sm" onclick="loadTokens()">↻ Refresh</button>
+          </div>
+
+          <div class="admin-table-wrap" role="region" aria-label="Tokens table" tabindex="0">
+            <table class="admin-table" aria-label="Guest tokens">
+              <thead>
+                <tr>
+                  <th scope="col">Guest Name</th>
+                  <th scope="col">Group</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Max Guests</th>
+                  <th scope="col">Created</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tokensTableBody">
+                <tr>
+                  <td colspan="6">
+                    <div class="empty-state">
+                      <div class="empty-state-icon" aria-hidden="true">📷</div>
+                      <p>No tokens generated yet.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // -----------------------------------------------------------------------
+    // Sidebar mobile toggle
+    // -----------------------------------------------------------------------
+    const sidebarToggle  = document.getElementById('sidebarToggle');
+    const adminSidebar   = document.getElementById('adminSidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    sidebarToggle.addEventListener('click', () => {
+      adminSidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('visible');
+    });
+    sidebarOverlay.addEventListener('click', () => {
+      adminSidebar.classList.remove('open');
+      sidebarOverlay.classList.remove('visible');
+    });
+
+    document.getElementById('adminLogoutBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await fetch('/api/admin/logout', { method: 'POST' });
+      window.location.href = '/admin/login';
+    });
+
+    // -----------------------------------------------------------------------
+    // Current QR data (for download)
+    // -----------------------------------------------------------------------
+    let currentQrDataUrl = null;
+    let currentQrGuestName = '';
+
+    // -----------------------------------------------------------------------
+    // Generate QR Code
+    // -----------------------------------------------------------------------
+    document.getElementById('qrForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const errorEl = document.getElementById('qrError');
+      errorEl.classList.remove('visible');
+
+      const guestName = document.getElementById('qrGuestName').value.trim();
+      const groupName = document.getElementById('qrGroupName').value.trim();
+      const email     = document.getElementById('qrEmail').value.trim();
+      const maxGuests = document.getElementById('qrMaxGuests').value;
+      const customUrl = document.getElementById('qrCustomUrl').value.trim();
+
+      if (!guestName) {
+        errorEl.textContent = 'Guest name is required.';
+        errorEl.classList.add('visible');
+        return;
+      }
+
+      const btn = document.getElementById('qrGenerateBtn');
+      btn.disabled = true;
+      btn.textContent = 'Generating…';
+
+      try {
+        const res = await fetch('/api/admin/qr/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ guestName, groupName, email, maxGuests, customUrl: customUrl || undefined })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          errorEl.textContent = data.error || 'Failed to generate QR code.';
+          errorEl.classList.add('visible');
+          return;
+        }
+
+        // Display result
+        currentQrDataUrl   = data.qrCode;
+        currentQrGuestName = data.guestName;
+
+        document.getElementById('qrImage').src           = data.qrCode;
+        document.getElementById('qrResultGuestName').textContent = data.guestName;
+        document.getElementById('qrResultToken').textContent = data.token;
+        document.getElementById('qrResultUrl').textContent   = data.url;
+        document.getElementById('qrResult').classList.add('visible');
+        document.getElementById('qrResult').scrollIntoView({ behavior: 'smooth' });
+
+        // Reload tokens table
+        loadTokens();
+
+        // Reset form
+        document.getElementById('qrForm').reset();
+
+      } catch (err) {
+        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.classList.add('visible');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate QR Code';
+      }
+    });
+
+    // -----------------------------------------------------------------------
+    // Download QR Code
+    // -----------------------------------------------------------------------
+    function downloadQr() {
+      if (!currentQrDataUrl) return;
+      const a = document.createElement('a');
+      a.href     = currentQrDataUrl;
+      a.download = `qr-${currentQrGuestName.replace(/\s+/g, '-').toLowerCase()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // -----------------------------------------------------------------------
+    // Copy URL
+    // -----------------------------------------------------------------------
+    function copyUrl() {
+      const url = document.getElementById('qrResultUrl').textContent;
+      if (!url) return;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = event.target;
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => { btn.textContent = '📋 Copy URL'; }, 2000);
+      }).catch(() => {
+        prompt('Copy this URL:', url);
+      });
+    }
+
+    // -----------------------------------------------------------------------
+    // Load Tokens Table
+    // -----------------------------------------------------------------------
+    async function loadTokens() {
+      const tbody = document.getElementById('tokensTableBody');
+
+      try {
+        const res  = await fetch('/api/admin/tokens');
+        const rows = await res.json();
+
+        if (!rows.length) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <div class="empty-state-icon">📷</div>
+                  <p>No tokens generated yet.</p>
+                </div>
+              </td>
+            </tr>`;
+          return;
+        }
+
+        tbody.innerHTML = rows.map(row => {
+          const date = new Date(row.createdAt).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric'
+          });
+          return `
+            <tr>
+              <td class="cell-name">${escHtml(row.guestName)}</td>
+              <td class="cell-muted">${escHtml(row.groupName || '—')}</td>
+              <td class="cell-muted cell-wrap">${escHtml(row.email || '—')}</td>
+              <td>${row.maxGuests}</td>
+              <td class="cell-muted">${date}</td>
+              <td>
+                <button class="btn btn-danger" onclick="deleteToken(${row.id}, '${escHtml(row.guestName)}')">
+                  Delete
+                </button>
+              </td>
+            </tr>`;
+        }).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#999;">Failed to load tokens.</td></tr>`;
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // Delete Token
+    // -----------------------------------------------------------------------
+    async function deleteToken(id, name) {
+      if (!confirm(`Delete token for "${name}"? This action cannot be undone.`)) return;
+
+      try {
+        const res = await fetch(`/api/admin/tokens/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          loadTokens();
+        } else {
+          alert('Failed to delete token.');
+        }
+      } catch {
+        alert('Network error. Please try again.');
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // Utility
+    // -----------------------------------------------------------------------
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // -----------------------------------------------------------------------
+    // CSV Import
+    // -----------------------------------------------------------------------
+    let parsedGuests = [];
+
+    // Drag-and-drop
+    const dropzone = document.getElementById('csvDropzone');
+    const fileInput = document.getElementById('csvFileInput');
+
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) handleCsvFile(file);
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files[0]) handleCsvFile(fileInput.files[0]);
+    });
+
+    function handleCsvFile(file) {
+      const reader = new FileReader();
+      reader.onload = e => parseCsv(e.target.result);
+      reader.readAsText(file);
+    }
+
+    function parseCsv(text) {
+      // Normalise line endings, split rows, skip blank lines
+      const rows = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+        .split('\n').map(r => r.trim()).filter(r => r.length);
+
+      if (!rows.length) { alert('The CSV file appears to be empty.'); return; }
+
+      // Detect header row (first cell looks like "name" or "guest")
+      let dataRows = rows;
+      const firstCell = rows[0].split(',')[0].toLowerCase().replace(/"/g, '');
+      if (['name', 'guest', 'guest name', 'guestname'].includes(firstCell)) {
+        dataRows = rows.slice(1); // skip header
+      }
+
+      parsedGuests = dataRows.map((row, i) => {
+        const cols = parseCsvRow(row);
+        return {
+          guestName:  (cols[0] || '').trim(),
+          groupName:  (cols[1] || '').trim(),
+          email:      (cols[2] || '').trim(),
+          maxGuests:  parseInt(cols[3], 10) || 1,
+          rowNum:     i + 1,
+          valid:      !!(cols[0] || '').trim()
+        };
+      });
+
+      renderPreview();
+    }
+
+    // Handles quoted fields with commas inside
+    function parseCsvRow(row) {
+      const result = [];
+      let cur = '', inQuote = false;
+      for (let i = 0; i < row.length; i++) {
+        const ch = row[i];
+        if (ch === '"') { inQuote = !inQuote; }
+        else if (ch === ',' && !inQuote) { result.push(cur); cur = ''; }
+        else { cur += ch; }
+      }
+      result.push(cur);
+      return result;
+    }
+
+    function renderPreview() {
+      const valid   = parsedGuests.filter(g => g.valid).length;
+      const invalid = parsedGuests.length - valid;
+
+      document.getElementById('csvPreviewCount').textContent =
+        `${parsedGuests.length} row${parsedGuests.length !== 1 ? 's' : ''} found — ${valid} valid${invalid ? ', ' + invalid + ' will be skipped (no name)' : ''}`;
+
+      document.getElementById('csvPreviewBody').innerHTML = parsedGuests.map(g => `
+        <tr class="${g.valid ? '' : 'row-invalid'}">
+          <td class="cell-muted">${g.rowNum}</td>
+          <td class="cell-name">${escHtml(g.guestName) || '<em style="color:#999">—</em>'}</td>
+          <td class="cell-muted">${escHtml(g.groupName || '—')}</td>
+          <td class="cell-muted">${escHtml(g.email || '—')}</td>
+          <td>${g.maxGuests}</td>
+          <td>${g.valid
+            ? '<span class="status-badge status-attending">✓ OK</span>'
+            : '<span class="status-badge status-not-attending">✗ Skip</span>'}</td>
+        </tr>`).join('');
+
+      document.getElementById('importError').classList.remove('visible');
+      document.getElementById('importSuccess').classList.remove('visible');
+      document.getElementById('csvPreviewWrap').style.display = 'block';
+      // Reset file input so same file can be re-selected
+      fileInput.value = '';
+    }
+
+    function clearCsv() {
+      parsedGuests = [];
+      document.getElementById('csvPreviewWrap').style.display = 'none';
+      document.getElementById('importError').classList.remove('visible');
+      document.getElementById('importSuccess').classList.remove('visible');
+    }
+
+    async function importGuests() {
+      const valid = parsedGuests.filter(g => g.valid);
+      if (!valid.length) {
+        document.getElementById('importError').textContent = 'No valid rows to import.';
+        document.getElementById('importError').classList.add('visible');
+        return;
+      }
+
+      const btn = document.getElementById('importBtn');
+      btn.disabled = true;
+      btn.textContent = 'Importing…';
+
+      const errorEl   = document.getElementById('importError');
+      const successEl = document.getElementById('importSuccess');
+      errorEl.classList.remove('visible');
+      successEl.classList.remove('visible');
+
+      try {
+        const res  = await fetch('/api/admin/guests/import', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ guests: valid })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          errorEl.textContent = data.error || 'Import failed.';
+          errorEl.classList.add('visible');
+          return;
+        }
+
+        successEl.textContent =
+          `✓ Successfully imported ${data.imported} guest${data.imported !== 1 ? 's' : ''}.` +
+          (data.skipped ? ` ${data.skipped} row(s) skipped.` : '');
+        successEl.classList.add('visible');
+
+        clearCsv();
+        loadTokens();
+
+      } catch {
+        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.classList.add('visible');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Import Guests';
+      }
+    }
+
+    function downloadTemplate() {
+      const csv = 'Name,Group,Email,MaxGuests\nThe Smith Family,Bride\'s Side,smith@example.com,2\nJane Doe,Groom\'s Side,jane@example.com,1\n';
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href     = URL.createObjectURL(blob);
+      a.download = 'guest-list-template.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // Initial load
+    loadTokens();
+  </script>
+
+  <style>
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap;
+    }
+    .csv-dropzone {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border: 2px dashed var(--admin-border); border-radius: 10px;
+      padding: 2.5rem 1.5rem; cursor: pointer; text-align: center;
+      background: var(--admin-bg); transition: border-color 0.2s, background 0.2s;
+    }
+    .csv-dropzone:hover, .csv-dropzone.drag-over {
+      border-color: var(--admin-accent); background: #fdf8f3;
+    }
+    .csv-dropzone-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .csv-dropzone-text { font-size: 0.95rem; color: var(--admin-text); margin: 0 0 0.25rem; }
+    .csv-browse-link   { color: var(--admin-accent); text-decoration: underline; }
+    .csv-dropzone-hint { font-size: 0.78rem; color: var(--admin-muted); margin: 0; }
+    .row-invalid td    { opacity: 0.5; }
+    .admin-alert-success {
+      background: #f0faf2; border: 1px solid #6dbf82; color: #2d6a3f;
+      padding: 0.75rem 1rem; border-radius: 6px; display: none;
+    }
+    .admin-alert-success.visible { display: block; }
+  </style>
+
+</body>
+</html>

@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Photo management — Admin">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Photos — Admin</title>
+  <link rel="stylesheet" href="/CSS/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    /* ── Section tabs ─────────────────────────────────── */
+    .photo-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid var(--admin-border);
+      padding-bottom: 0;
+    }
+    .photo-tab {
+      padding: 0.6rem 1.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      color: var(--admin-muted);
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .photo-tab.active {
+      color: var(--admin-accent);
+      border-bottom-color: var(--admin-accent);
+    }
+    .photo-panel { display: none; }
+    .photo-panel.active { display: block; }
+
+    /* ── Site photos grid ─────────────────────────────── */
+    .site-photos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+    .site-photo-card {
+      background: #fff;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .site-photo-thumb {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+      background: var(--admin-border);
+    }
+    .site-photo-info {
+      padding: 1rem;
+    }
+    .site-photo-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--admin-text);
+      margin-bottom: 0.2rem;
+    }
+    .site-photo-used {
+      font-size: 0.75rem;
+      color: var(--admin-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    /* ── Gallery grid ─────────────────────────────────── */
+    .gallery-admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .gallery-admin-item {
+      position: relative;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      background: var(--admin-border);
+      aspect-ratio: 1;
+    }
+    .gallery-admin-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .gallery-admin-remove {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 1rem;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .gallery-admin-remove:hover { background: var(--berry); }
+    .gallery-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--admin-muted);
+      font-size: 0.9rem;
+    }
+
+    /* ── Drop zone ────────────────────────────────────── */
+    .drop-zone {
+      border: 2px dashed var(--admin-border);
+      border-radius: var(--radius-md);
+      padding: 2.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--admin-accent);
+      background: rgba(108, 20, 32, 0.03);
+    }
+    .drop-zone-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .drop-zone p { font-size: 0.875rem; color: var(--admin-muted); margin: 0; }
+    .drop-zone input[type="file"] { display: none; }
+
+    /* ── Party grid ───────────────────────────────────── */
+    .party-section-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--admin-muted);
+      font-weight: 700;
+      margin: 0 0 1rem;
+    }
+    .party-admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+    .party-admin-card {
+      background: #fff;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .party-admin-photo-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: var(--admin-border);
+      cursor: pointer;
+      overflow: hidden;
+    }
+    .party-admin-photo-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .party-admin-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--bluebell);
+    }
+    .party-admin-photo-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .party-admin-photo-wrap:hover .party-admin-photo-overlay { opacity: 1; }
+    .party-admin-photo-wrap input[type="file"] { display: none; }
+    .party-admin-fields {
+      padding: 0.875rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .party-admin-role {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--admin-muted);
+      margin-bottom: 0.1rem;
+    }
+    .party-admin-fields input,
+    .party-admin-fields textarea {
+      width: 100%;
+      padding: 0.45rem 0.6rem;
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      color: var(--admin-text);
+      background: var(--admin-bg);
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+    .party-admin-fields input:focus,
+    .party-admin-fields textarea:focus {
+      outline: none;
+      border-color: var(--admin-accent);
+    }
+    .party-admin-fields textarea { min-height: 70px; }
+    .party-save-btn {
+      width: 100%;
+      padding: 0.5rem;
+      background: var(--admin-accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .party-save-btn:hover { opacity: 0.85; }
+    .party-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Feedback toast ───────────────────────────────── */
+    .photo-toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #fff;
+      box-shadow: var(--shadow-md);
+      z-index: 200;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+    }
+    .photo-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .photo-toast.success { background: #2d6a4f; }
+    .photo-toast.error   { background: var(--berry); }
+  </style>
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar" role="navigation" aria-label="Admin navigation">
+      <div class="sidebar-brand">
+        <span class="sidebar-brand-script">J &amp; M</span>
+        <span class="sidebar-brand-label">Admin Panel</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-section">Main</div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/dashboard" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📊</span> Dashboard
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/qr-generator" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📷</span> QR Generator
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/photos" class="sidebar-nav-link active" aria-current="page">
+            <span class="sidebar-nav-icon" aria-hidden="true">🖼</span> Photos
+          </a>
+        </div>
+        <div class="sidebar-nav-section">Actions</div>
+        <div class="sidebar-nav-item">
+          <a href="#" class="sidebar-nav-link" id="adminLogoutBtn">
+            <span class="sidebar-nav-icon" aria-hidden="true">🚪</span> Logout
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/home" class="sidebar-back-link">← View Wedding Site</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+
+      <!-- Top Bar -->
+      <header class="admin-topbar">
+        <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+        <h1 class="admin-topbar-title">Photos</h1>
+      </header>
+
+      <!-- Content -->
+      <main class="admin-content">
+
+        <!-- Tabs -->
+        <div class="photo-tabs" role="tablist">
+          <button class="photo-tab active" role="tab" data-panel="site"  aria-selected="true">Site Photos</button>
+          <button class="photo-tab"        role="tab" data-panel="gallery" aria-selected="false">Gallery</button>
+          <button class="photo-tab"        role="tab" data-panel="party"   aria-selected="false">Wedding Party</button>
+        </div>
+
+        <!-- ── Panel: Site Photos ─────────────────────── -->
+        <div class="photo-panel active" id="panel-site" role="tabpanel">
+          <p style="color:var(--admin-muted);font-size:0.875rem;margin-bottom:1.5rem;">
+            Click a card to replace the background photo used on that page. Max file size: 15 MB.
+          </p>
+          <div class="site-photos-grid" id="sitePhotosGrid">
+            <!-- rendered by JS -->
+          </div>
+        </div>
+
+        <!-- ── Panel: Gallery ─────────────────────────── -->
+        <div class="photo-panel" id="panel-gallery" role="tabpanel">
+          <p style="color:var(--admin-muted);font-size:0.875rem;margin-bottom:1.5rem;">
+            These photos appear in the gallery page for guests. Click the &times; to remove a photo.
+          </p>
+
+          <div class="gallery-admin-grid" id="galleryAdminGrid">
+            <div class="gallery-empty">Loading photos&hellip;</div>
+          </div>
+
+          <!-- Add photos drop zone -->
+          <div class="drop-zone" id="galleryDropZone" role="button" tabindex="0" aria-label="Upload gallery photos">
+            <div class="drop-zone-icon" aria-hidden="true">+</div>
+            <p><strong>Click to add photos</strong> or drag and drop here</p>
+            <p>JPG, PNG, WEBP &mdash; up to 15 MB each</p>
+            <input type="file" id="galleryFileInput" accept="image/*" multiple>
+          </div>
+        </div>
+
+        <!-- ── Panel: Wedding Party ───────────────────── -->
+        <div class="photo-panel" id="panel-party" role="tabpanel">
+          <p style="color:var(--admin-muted);font-size:0.875rem;margin-bottom:1.5rem;">
+            Click a photo to replace it. Fill in the name and description then hit Save.
+          </p>
+
+          <p class="party-section-label">Maja's Side — Bridal Party</p>
+          <div class="party-admin-grid" id="bridalGrid">
+            <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--admin-muted);">Loading&hellip;</div>
+          </div>
+
+          <p class="party-section-label">Jack's Side — Groomsmen</p>
+          <div class="party-admin-grid" id="groomsmenGrid">
+            <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--admin-muted);">Loading&hellip;</div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="photo-toast" id="photoToast" role="status" aria-live="polite"></div>
+
+  <script>
+    // ── Sidebar toggle ──────────────────────────────────────────────
+    const sidebarToggle  = document.getElementById('sidebarToggle');
+    const adminSidebar   = document.getElementById('adminSidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    sidebarToggle.addEventListener('click', () => {
+      adminSidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('visible');
+    });
+    sidebarOverlay.addEventListener('click', () => {
+      adminSidebar.classList.remove('open');
+      sidebarOverlay.classList.remove('visible');
+    });
+
+    document.getElementById('adminLogoutBtn').addEventListener('click', async e => {
+      e.preventDefault();
+      await fetch('/api/admin/logout', { method: 'POST' });
+      window.location.href = '/admin/login';
+    });
+
+    // ── Tabs ────────────────────────────────────────────────────────
+    document.querySelectorAll('.photo-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.photo-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
+        document.querySelectorAll('.photo-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected','true');
+        document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+      });
+    });
+
+    // ── Toast ───────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('photoToast');
+      t.textContent = msg;
+      t.className = 'photo-toast ' + type + ' show';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ── Site Photos ─────────────────────────────────────────────────
+    const SITE_SLOTS = [
+      { slot: 'home',      label: 'Homepage Hero',     usedOn: 'Homepage full-height hero' },
+      { slot: 'details',   label: 'Details Page',      usedOn: 'Details hero & photo strip' },
+      { slot: 'rsvp',      label: 'RSVP / Schedule',   usedOn: 'RSVP & Schedule hero and strips' },
+      { slot: 'registry',  label: 'Registry Page',     usedOn: 'Registry hero & photo strip' },
+      { slot: 'contact',   label: 'Contact Page',      usedOn: 'Contact hero & photo strip' },
+      { slot: 'dresscode', label: 'Dress Code Photo',  usedOn: 'Dress code card on Details page' }
+    ];
+
+    const SLOT_FILE = {
+      home: 'photo-home.jpg', details: 'photo-details.jpg', rsvp: 'photo-rsvp.jpg',
+      registry: 'photo-registry.jpg', contact: 'photo-contact.jpg', dresscode: 'photo-dresscode.jpg'
+    };
+
+    function renderSitePhotos() {
+      const grid = document.getElementById('sitePhotosGrid');
+      grid.innerHTML = SITE_SLOTS.map(s => `
+        <div class="site-photo-card">
+          <img class="site-photo-thumb" src="/Images/${SLOT_FILE[s.slot]}?t=${Date.now()}" alt="${s.label}" id="thumb-${s.slot}">
+          <div class="site-photo-info">
+            <div class="site-photo-label">${s.label}</div>
+            <div class="site-photo-used">${s.usedOn}</div>
+            <label style="display:block;width:100%;">
+              <input type="file" accept="image/*" style="display:none;" onchange="uploadSitePhoto('${s.slot}', this)">
+              <span class="btn btn-secondary btn-sm" style="display:block;text-align:center;cursor:pointer;">Replace Photo</span>
+            </label>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function uploadSitePhoto(slot, input) {
+      if (!input.files[0]) return;
+      const fd = new FormData();
+      fd.append('photo', input.files[0]);
+
+      try {
+        const r = await fetch(`/api/admin/photos/site/${slot}`, { method: 'POST', body: fd });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Upload failed');
+
+        // Refresh thumbnail with cache-bust
+        const thumb = document.getElementById(`thumb-${slot}`);
+        if (thumb) thumb.src = `/Images/${SLOT_FILE[slot]}?t=${Date.now()}`;
+        showToast('Photo updated successfully');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+      input.value = '';
+    }
+
+    // ── Gallery ─────────────────────────────────────────────────────
+    async function loadGallery() {
+      const grid = document.getElementById('galleryAdminGrid');
+      try {
+        const r    = await fetch('/api/admin/gallery');
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Failed to load');
+        renderGallery(data);
+      } catch (err) {
+        grid.innerHTML = `<div class="gallery-empty">Error loading gallery: ${err.message}</div>`;
+      }
+    }
+
+    function renderGallery(photos) {
+      const grid = document.getElementById('galleryAdminGrid');
+      if (!photos.length) {
+        grid.innerHTML = '<div class="gallery-empty">No photos yet. Add some below.</div>';
+        return;
+      }
+      grid.innerHTML = photos.map(p => `
+        <div class="gallery-admin-item" id="gallery-item-${p.id}">
+          <img src="/Images/${p.filename}?t=${Date.now()}" alt="${p.alt}">
+          <button class="gallery-admin-remove" onclick="removeGalleryPhoto(${p.id})" aria-label="Remove photo">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    async function removeGalleryPhoto(id) {
+      if (!confirm('Remove this photo from the gallery?')) return;
+      try {
+        const r = await fetch(`/api/admin/gallery/${id}`, { method: 'DELETE' });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Delete failed');
+        document.getElementById(`gallery-item-${id}`)?.remove();
+        if (!document.querySelector('.gallery-admin-item')) {
+          document.getElementById('galleryAdminGrid').innerHTML = '<div class="gallery-empty">No photos yet. Add some below.</div>';
+        }
+        showToast('Photo removed');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function uploadGalleryPhoto(file) {
+      const fd = new FormData();
+      fd.append('photo', file);
+      fd.append('alt', 'Jack and Maja');
+      try {
+        const r    = await fetch('/api/admin/gallery', { method: 'POST', body: fd });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Upload failed');
+        await loadGallery();
+        showToast('Photo added to gallery');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // Drop zone
+    const galleryDrop  = document.getElementById('galleryDropZone');
+    const galleryInput = document.getElementById('galleryFileInput');
+
+    galleryDrop.addEventListener('click', () => galleryInput.click());
+    galleryDrop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') galleryInput.click(); });
+    galleryDrop.addEventListener('dragover', e => { e.preventDefault(); galleryDrop.classList.add('dragover'); });
+    galleryDrop.addEventListener('dragleave', () => galleryDrop.classList.remove('dragover'));
+    galleryDrop.addEventListener('drop', e => {
+      e.preventDefault();
+      galleryDrop.classList.remove('dragover');
+      [...e.dataTransfer.files].forEach(f => { if (f.type.startsWith('image/')) uploadGalleryPhoto(f); });
+    });
+    galleryInput.addEventListener('change', () => {
+      [...galleryInput.files].forEach(f => uploadGalleryPhoto(f));
+      galleryInput.value = '';
+    });
+
+    // ── Wedding Party ───────────────────────────────────────────────
+    async function loadParty() {
+      try {
+        const r    = await fetch('/api/admin/party');
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Failed to load');
+        renderPartyGrid('bridalGrid',    data.bridal);
+        renderPartyGrid('groomsmenGrid', data.groomsmen);
+      } catch (err) {
+        document.getElementById('bridalGrid').innerHTML =
+          `<div style="grid-column:1/-1;color:var(--admin-muted);">Error: ${err.message}</div>`;
+      }
+    }
+
+    function renderPartyGrid(gridId, members) {
+      const grid = document.getElementById(gridId);
+      grid.innerHTML = members.map(m => {
+        const initial = m.name ? m.name.charAt(0).toUpperCase() : (m.role.charAt(0));
+        const photoHtml = m.photo
+          ? `<img src="/Images/${m.photo}?t=${Date.now()}" alt="${m.name || m.role}">`
+          : `<div class="party-admin-placeholder">${initial}</div>`;
+
+        return `
+          <div class="party-admin-card" id="party-card-${m.slot}">
+            <div class="party-admin-photo-wrap" onclick="document.getElementById('party-file-${m.slot}').click()" role="button" tabindex="0" aria-label="Replace photo for ${m.role}">
+              ${photoHtml}
+              <div class="party-admin-photo-overlay">Click to replace</div>
+              <input type="file" accept="image/*" id="party-file-${m.slot}" onchange="uploadPartyPhoto('${m.slot}', this)">
+            </div>
+            <div class="party-admin-fields">
+              <div class="party-admin-role">${m.role}</div>
+              <input type="text" id="party-name-${m.slot}" value="${m.name || ''}" placeholder="Name" aria-label="Name">
+              <textarea id="party-desc-${m.slot}" placeholder="Short description for flip card">${m.description || ''}</textarea>
+              <button class="party-save-btn" onclick="savePartyMember('${m.slot}')">Save</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function uploadPartyPhoto(slot, input) {
+      if (!input.files[0]) return;
+      const name = document.getElementById(`party-name-${slot}`)?.value || '';
+      const desc = document.getElementById(`party-desc-${slot}`)?.value || '';
+      const fd   = new FormData();
+      fd.append('photo', input.files[0]);
+      fd.append('name',  name);
+      fd.append('description', desc);
+
+      try {
+        const r    = await fetch(`/api/admin/party/${slot}`, { method: 'POST', body: fd });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Upload failed');
+        await loadParty();
+        showToast('Photo updated');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+      input.value = '';
+    }
+
+    async function savePartyMember(slot) {
+      const name = document.getElementById(`party-name-${slot}`)?.value || '';
+      const desc = document.getElementById(`party-desc-${slot}`)?.value || '';
+      const btn  = document.querySelector(`#party-card-${slot} .party-save-btn`);
+      if (btn) btn.disabled = true;
+
+      const fd = new FormData();
+      fd.append('name',        name);
+      fd.append('description', desc);
+
+      try {
+        const r    = await fetch(`/api/admin/party/${slot}`, { method: 'POST', body: fd });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Save failed');
+        showToast('Saved');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+      if (btn) btn.disabled = false;
+    }
+
+    // ── Init ────────────────────────────────────────────────────────
+    renderSitePhotos();
+    loadGallery();
+    loadParty();
+  </script>
+
+</body>
+</html>

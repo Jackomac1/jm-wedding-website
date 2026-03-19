@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- TODO: Replace placeholder couple names, date, and venue -->
+  <meta name="description" content="Wedding details for Jack & Maja — ceremony at Stewart Creek Golf & Country Club, reception at Bridgette Bar Canmore, August 28, 2027.">
+  <title>The Details — Jack &amp; Maja</title>
+  <link rel="stylesheet" href="/CSS/style.css">
+</head>
+<body class="theme-chartreuse">
+
+  <!-- Fixed background layer for iOS (parallax fallback) -->
+  <div class="site-bg-fixed" style="background-image: url('/Images/photo-details.jpg');" aria-hidden="true"></div>
+
+  <!-- Navigation -->
+  <nav class="nav nav-solid" id="mainNav" aria-label="Main navigation">
+    <!-- TODO: Replace placeholder couple names -->
+    <a href="/home" class="nav-brand" aria-label="Home">J &amp; M</a>
+
+    <button class="nav-hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav-menu" id="navMenu" role="list">
+      <li><a href="/home"          class="nav-link" data-page="home">Home</a></li>
+      <li><a href="/details"       class="nav-link" data-page="details">Details</a></li>
+      <li><a href="/schedule"      class="nav-link" data-page="schedule">Schedule</a></li>
+      <li><a href="/wedding-party" class="nav-link" data-page="wedding-party">Wedding Party</a></li>
+      <li><a href="/gallery"       class="nav-link" data-page="gallery">Gallery</a></li>
+      <li><a href="/registry"      class="nav-link" data-page="registry">Gifts</a></li>
+      <li><a href="/rsvp"          class="nav-link" data-page="rsvp">RSVP</a></li>
+      <li><a href="/contact"       class="nav-link" data-page="contact">Contact</a></li>
+      <li><a href="#" class="nav-link nav-logout" id="logoutBtn">Logout</a></li>
+      <li><a href="/admin"         class="nav-link nav-admin">Admin</a></li>
+    </ul>
+  </nav>
+
+  <!-- Page Hero -->
+  <section class="hero-page" aria-label="Page header">
+    <div class="hero-content">
+      <p class="hero-date">Everything You Need to Know</p>
+      <h1 class="hero-script">The Details</h1>
+    </div>
+  </section>
+
+  <!-- Ceremony & Reception -->
+  <section class="section" aria-labelledby="eventDetailsTitle">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Mark Your Calendar</span>
+        <h2 class="section-title" id="eventDetailsTitle">The Celebration</h2>
+      </div>
+
+      <div class="detail-grid">
+
+        <!-- Ceremony -->
+        <article class="detail-card fade-in delay-1" aria-labelledby="ceremonyTitle">
+
+          <div class="detail-card-meta">Ceremony</div>
+          <h3 class="detail-card-title" id="ceremonyTitle">The Wedding Ceremony</h3>
+          <p><strong>Date:</strong> Sunday, August 29, 2027</p>
+          <p><strong>Time:</strong> 4:00 PM</p>
+          <p><strong>Venue:</strong> Stewart Creek Golf &amp; Country Club</p>
+          <p><strong>Address:</strong> 4100 Stewart Creek Dr, Canmore, AB T1W 2V3</p>
+          <p style="margin-top:0.75rem; color:#888;">
+            Please arrive 15–20 minutes before the ceremony begins to be seated
+            comfortably.
+          </p>
+        </article>
+
+        <!-- Reception -->
+        <article class="detail-card fade-in delay-2" aria-labelledby="receptionTitle">
+
+          <div class="detail-card-meta">Reception</div>
+          <h3 class="detail-card-title" id="receptionTitle">The Reception</h3>
+          <p><strong>Date:</strong> Sunday, August 29, 2027</p>
+          <p><strong>Cocktail Hour:</strong> 5:30 PM</p>
+          <p><strong>Dinner &amp; Dancing:</strong> 6:30 PM</p>
+          <p><strong>End Time:</strong> 1:00 AM</p>
+          <p><strong>Venue:</strong> Bridgette Bar Canmore</p>
+          <p><strong>Address:</strong> 1030 Spring Creek Dr, Canmore, AB T1W 0C8</p>
+          <p style="margin-top:0.75rem; color:#888;">
+            Join us after the ceremony for cocktails, dinner, toasts,
+            dancing, and celebrating — we plan to have the best night of our lives!
+          </p>
+        </article>
+
+        <!-- Dress Code -->
+        <article class="detail-card fade-in delay-3" aria-labelledby="dressCodeTitle">
+
+          <div class="detail-card-meta">Attire</div>
+          <h3 class="detail-card-title" id="dressCodeTitle">Dress Code</h3>
+          <p><strong>Colourful Garden Soirée</strong></p>
+          <p style="margin-top:0.75rem; color:#888;">
+            Bright colours, joyful florals, and elevated garden-party looks; 
+            garden-inspired outfits with a dressy feel are encouraged.
+          </p>
+          <img
+            src="/Images/photo-dresscode.jpg"
+            alt="Garden Party Chic dress code example"
+            class="dresscode-photo"
+          >
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Photo Strip -->
+  <div class="photo-strip" style="background-image: url('/Images/photo-details.jpg');" aria-hidden="true"></div>
+
+  <!-- Additional Details -->
+  <section class="section" aria-labelledby="additionalDetailsTitle">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Good to Know</span>
+        <h2 class="section-title" id="additionalDetailsTitle">Additional Details</h2>
+      </div>
+
+      <div class="detail-grid">
+
+        <!-- Drinks -->
+        <article class="detail-card fade-in delay-1" aria-labelledby="drinksTitle">
+          <div class="detail-card-meta">Drinks</div>
+          <p>
+            We're delighted to host you for welcome drinks at the ceremony, followed by wine service
+            with dinner and three additional drinks to enjoy as the celebration continues. A cash bar
+            will be available throughout the evening for any further refreshments.
+          </p>
+          <p style="margin-top:0.75rem; color:#888;">
+            We can't wait to raise a glass with you.
+          </p>
+        </article>
+
+        <!-- Placeholder 2 -->
+        <article class="detail-card fade-in delay-2" aria-labelledby="details2Title">
+          <div class="detail-card-meta">Coming Soon</div>
+          <h3 class="detail-card-title" id="details2Title">More Details</h3>
+          <p style="color:#888;">Information coming soon.</p>
+        </article>
+
+        <!-- Placeholder 3 -->
+        <article class="detail-card fade-in delay-3" aria-labelledby="details3Title">
+          <div class="detail-card-meta">Coming Soon</div>
+          <h3 class="detail-card-title" id="details3Title">More Details</h3>
+          <p style="color:#888;">Information coming soon.</p>
+        </article>
+
+        <!-- Important Notes -->
+        <article class="detail-card fade-in delay-4" aria-labelledby="notesTitle">
+          <div class="detail-card-meta">Important Notes</div>
+          <h3 class="detail-card-title" id="notesTitle">Guests &amp; Children</h3>
+          <p>
+            Children are very welcome to join us for Friday night drinks, Saturday brunch, and daytime
+            activities (including golf and the spa, noting that some activities may have age restrictions).
+            Due to venue age restrictions, guests under the age of 16 are unable to attend the Sunday
+            wedding celebrations.
+          </p>
+          <p style="margin-top:0.75rem; color:#888;">
+            We kindly ask that attendance be limited to those named on the invitation, as we are
+            unfortunately unable to accommodate additional guests or plus ones. Thank you so much
+            for your understanding, and we can’t wait to celebrate with you.
+          </p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Getting There -->
+  <section class="section section-alt" aria-labelledby="gettingThereTitle">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Logistics</span>
+        <h2 class="section-title" id="gettingThereTitle">Getting There</h2>
+      </div>
+
+      <div class="detail-grid">
+
+        <!-- Parking -->
+        <article class="detail-card fade-in delay-1" aria-labelledby="parkingTitle">
+
+          <div class="detail-card-meta">By Car</div>
+          <h3 class="detail-card-title" id="parkingTitle">Parking</h3>
+          <p>
+            Parking is available at Stewart Creek Golf &amp; Country Club.
+            Please park on the far end of the lot to avoid overcrowding near the ceremony tent.
+          </p>
+        </article>
+
+        <!-- Transit -->
+        <article class="detail-card fade-in delay-2" aria-labelledby="transitTitle">
+
+          <div class="detail-card-meta">Getting Around</div>
+          <h3 class="detail-card-title" id="transitTitle">Rideshare &amp; Taxis</h3>
+          <p>
+            Rideshares and taxis are available in Canmore. We encourage guests staying
+            at nearby hotels to rideshare to the ceremony so everyone can enjoy the evening
+            without worrying about driving.
+          </p>
+        </article>
+
+        <!-- Canmore Info -->
+        <article class="detail-card fade-in delay-3" aria-labelledby="canmoreTitle">
+
+          <div class="detail-card-meta">The Town</div>
+          <h3 class="detail-card-title" id="canmoreTitle">Canmore, Alberta</h3>
+          <p>
+            Nestled in the Rocky Mountains, Canmore is a stunning mountain town just
+            20 minutes from Banff. Come early and explore — there's no shortage of
+            hiking, scenery, and great restaurants to enjoy before the big day.
+          </p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Accommodations -->
+  <section class="section" aria-labelledby="accommodationsTitle">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Stay the Night</span>
+        <h2 class="section-title" id="accommodationsTitle">Accommodations</h2>
+        <p class="section-subtitle">
+          We recommend staying in Canmore — plenty of great options close to the venue.
+        </p>
+      </div>
+
+      <div class="detail-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+
+        <!-- Hotel 1 -->
+        <article class="detail-card fade-in delay-1" aria-labelledby="hotel1Title">
+
+          <div class="detail-card-meta">Recommended · ~500m from ceremony</div>
+          <h3 class="detail-card-title" id="hotel1Title">The Malcolm Hotel</h3>
+          <p style="color:#888; margin-bottom:0.75rem;">
+            Our top recommendation for guests. Located just a short walk from
+            Stewart Creek Golf &amp; Country Club, right in the heart of Canmore.
+          </p>
+          <a href="#" class="btn btn-secondary btn-sm" style="font-size:0.75rem; padding:0.4rem 1rem;">
+            Book Now
+          </a>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer-script">Jack &amp; Maja</div>
+    <div class="footer-date">August 28, 2027</div>
+    <p class="footer-tagline">With love, laughter, and happily ever after</p>
+    <nav class="footer-links" aria-label="Footer navigation">
+      <a href="/details">Details</a>
+      <a href="/schedule">Schedule</a>
+      <a href="/gallery">Gallery</a>
+      <a href="/rsvp">RSVP</a>
+      <a href="/contact">Contact</a>
+    </nav>
+    <p class="footer-copy">&copy; 2027 Jack &amp; Maja</p>
+  </footer>
+
+  <script src="/JS/main.js"></script>
+
+</body>
+</html>

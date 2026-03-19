@@ -1,0 +1,571 @@
+'use strict';
+
+require('dotenv').config();
+
+const express = require('express');
+const session = require('express-session');
+const bcrypt  = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
+const QRCode      = require('qrcode');
+const multer      = require('multer');
+const { Resend }  = require('resend');
+const path    = require('path');
+const fs      = require('fs');
+
+const app  = express();
+const PORT = process.env.PORT || 3000;
+
+// ---------------------------------------------------------------------------
+// JSON "database" — stored in data/db.json
+// ---------------------------------------------------------------------------
+const dataDir  = path.join(__dirname, 'data');
+const dbFile   = path.join(dataDir, 'db.json');
+const imagesDir = path.join(__dirname, 'Images');
+
+if (!fs.existsSync(dataDir))   fs.mkdirSync(dataDir,   { recursive: true });
+if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+
+function readDb() {
+  if (!fs.existsSync(dbFile)) return null;
+  return JSON.parse(fs.readFileSync(dbFile, 'utf8'));
+}
+
+function writeDb(data) {
+  fs.writeFileSync(dbFile, JSON.stringify(data, null, 2), 'utf8');
+}
+
+function getDb() {
+  let db = readDb();
+  let changed = false;
+
+  if (!db) {
+    const sitePassword  = process.env.SITE_PASSWORD  || 'wedding2025';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    db = {
+      settings: {
+        rsvp_open:      false,
+        site_password:  bcrypt.hashSync(sitePassword,  12),
+        admin_password: bcrypt.hashSync(adminPassword, 12)
+      },
+      rsvps:       [],
+      guestTokens: []
+    };
+    changed = true;
+    console.log('Created fresh database at', dbFile);
+  }
+
+  // Migrate: add gallery if missing
+  if (!db.gallery) {
+    db.gallery = [];
+    changed = true;
+  }
+
+  // Migrate: add weddingParty if missing
+  if (!db.weddingParty) {
+    db.weddingParty = {
+      bridal: [
+        { slot: 'moh-1',        role: 'Maid of Honour', name: '', description: '', photo: null },
+        { slot: 'moh-2',        role: 'Maid of Honour', name: '', description: '', photo: null },
+        { slot: 'bridesmaid-1', role: 'Bridesmaid',     name: '', description: '', photo: null },
+        { slot: 'bridesmaid-2', role: 'Bridesmaid',     name: '', description: '', photo: null },
+        { slot: 'bridesmaid-3', role: 'Bridesmaid',     name: '', description: '', photo: null },
+        { slot: 'bridesmaid-4', role: 'Bridesmaid',     name: '', description: '', photo: null },
+        { slot: 'bridesmaid-5', role: 'Bridesmaid',     name: '', description: '', photo: null }
+      ],
+      groomsmen: [
+        { slot: 'bestman-1',   role: 'Best Man',  name: '', description: '', photo: null },
+        { slot: 'bestman-2',   role: 'Best Man',  name: '', description: '', photo: null },
+        { slot: 'groomsman-1', role: 'Groomsman', name: '', description: '', photo: null },
+        { slot: 'groomsman-2', role: 'Groomsman', name: '', description: '', photo: null },
+        { slot: 'groomsman-3', role: 'Groomsman', name: '', description: '', photo: null },
+        { slot: 'groomsman-4', role: 'Groomsman', name: '', description: '', photo: null },
+        { slot: 'groomsman-5', role: 'Groomsman', name: '', description: '', photo: null }
+      ]
+    };
+    changed = true;
+  }
+
+  if (changed) writeDb(db);
+  return db;
+}
+
+// Initialise on startup
+getDb();
+
+// ---------------------------------------------------------------------------
+// File upload (multer)
+// ---------------------------------------------------------------------------
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: imagesDir,
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+      cb(null, `_tmp-${Date.now()}${ext}`);
+    }
+  }),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) return cb(null, true);
+    cb(new Error('Only image files are allowed'));
+  },
+  limits: { fileSize: 15 * 1024 * 1024 } // 15 MB
+});
+
+// Site photo slot → filename map
+const SITE_PHOTO_SLOTS = {
+  home:      'photo-home.jpg',
+  details:   'photo-details.jpg',
+  rsvp:      'photo-rsvp.jpg',
+  registry:  'photo-registry.jpg',
+  contact:   'photo-contact.jpg',
+  dresscode: 'photo-dresscode.jpg'
+};
+
+// ---------------------------------------------------------------------------
+// Middleware
+// ---------------------------------------------------------------------------
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret:            process.env.SESSION_SECRET || 'fallback-dev-secret-change-me',
+  resave:            false,
+  saveUninitialized: false,
+  cookie: { secure: false, maxAge: 1000 * 60 * 60 * 24 }
+}));
+
+app.use('/CSS',    express.static(path.join(__dirname, 'CSS')));
+app.use('/JS',     express.static(path.join(__dirname, 'JS')));
+app.use('/Images', express.static(path.join(__dirname, 'Images')));
+
+// ---------------------------------------------------------------------------
+// Auth middleware
+// ---------------------------------------------------------------------------
+function requireSiteAuth(req, res, next) {
+  if (req.session && req.session.siteAuthenticated) return next();
+  res.redirect('/enter');
+}
+
+function requireAdminAuth(req, res, next) {
+  if (req.session && req.session.adminAuthenticated) return next();
+  res.redirect('/admin/login');
+}
+
+// ---------------------------------------------------------------------------
+// Page routes
+// ---------------------------------------------------------------------------
+app.get('/', (req, res) => res.redirect('/enter'));
+
+app.get('/enter', (req, res) => {
+  if (req.session && req.session.siteAuthenticated) return res.redirect('/home');
+  res.sendFile(path.join(__dirname, 'enter.html'));
+});
+
+app.get('/home',         requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/details',      requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'details.html')));
+app.get('/registry',     requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'registry.html')));
+app.get('/rsvp',         requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'rsvp.html')));
+app.get('/contact',      requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'contact.html')));
+app.get('/gallery',      requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'gallery.html')));
+app.get('/wedding-party',requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'wedding-party.html')));
+app.get('/schedule',     requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'schedule.html')));
+
+app.get('/admin/login', (req, res) => {
+  if (req.session && req.session.adminAuthenticated) return res.redirect('/admin/dashboard');
+  res.sendFile(path.join(__dirname, 'admin', 'login.html'));
+});
+
+app.get('/admin',              requireAdminAuth, (req, res) => res.redirect('/admin/dashboard'));
+app.get('/admin/dashboard',    requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'dashboard.html')));
+app.get('/admin/qr-generator', requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'qr-generator.html')));
+app.get('/admin/photos',       requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'photos.html')));
+
+// ---------------------------------------------------------------------------
+// API — authentication
+// ---------------------------------------------------------------------------
+app.post('/api/auth/site', (req, res) => {
+  const { password } = req.body;
+  if (!password) return res.status(400).json({ error: 'Password required' });
+
+  const db = getDb();
+  if (!bcrypt.compareSync(password, db.settings.site_password)) {
+    return res.status(401).json({ error: 'Incorrect password' });
+  }
+
+  req.session.siteAuthenticated = true;
+  res.json({ success: true });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  req.session.siteAuthenticated = false;
+  res.json({ success: true });
+});
+
+app.post('/api/admin/auth', (req, res) => {
+  const { password } = req.body;
+  if (!password) return res.status(400).json({ error: 'Password required' });
+
+  const db = getDb();
+  if (!bcrypt.compareSync(password, db.settings.admin_password)) {
+    return res.status(401).json({ error: 'Incorrect password' });
+  }
+
+  req.session.adminAuthenticated = true;
+  res.json({ success: true });
+});
+
+app.post('/api/admin/logout', (req, res) => {
+  req.session.adminAuthenticated = false;
+  res.json({ success: true });
+});
+
+// ---------------------------------------------------------------------------
+// Mailer (Resend)
+// ---------------------------------------------------------------------------
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// ---------------------------------------------------------------------------
+// API — Contact form
+// ---------------------------------------------------------------------------
+app.post('/api/contact', async (req, res) => {
+  const { name, email, message } = req.body;
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'Name, email, and message are required.' });
+  }
+
+  try {
+    await resend.emails.send({
+      from:     'Wedding Website <noreply@majaandjack.ca>',
+      to:       'majaandjack@gmail.com',
+      reply_to: email,
+      subject:  `Wedding website message from ${name}`,
+      text:     `Name: ${name}\nEmail: ${email}\n\n${message}`
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Contact email failed:', err.message);
+    res.status(500).json({ error: 'Failed to send message. Please try emailing us directly.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// API — RSVP (public)
+// ---------------------------------------------------------------------------
+app.get('/api/rsvp/status', (req, res) => {
+  const db = getDb();
+  res.json({ isOpen: db.settings.rsvp_open === true });
+});
+
+app.get('/api/rsvp/token/:token', (req, res) => {
+  const db  = getDb();
+  const tok = db.guestTokens.find(t => t.token === req.params.token);
+  if (!tok) return res.status(404).json({ error: 'Token not found' });
+  res.json({ guestName: tok.guestName, groupName: tok.groupName, maxGuests: tok.maxGuests });
+});
+
+app.post('/api/rsvp', (req, res) => {
+  const db = getDb();
+  if (!db.settings.rsvp_open) {
+    return res.status(403).json({ error: 'RSVP is currently closed' });
+  }
+
+  const { guest_name, email, phone, attending, guest_count, dietary_restrictions, message, token } = req.body;
+
+  if (!guest_name || !attending) {
+    return res.status(400).json({ error: 'Name and attendance are required' });
+  }
+
+  const att = attending.toLowerCase();
+  if (!['yes', 'no'].includes(att)) {
+    return res.status(400).json({ error: 'Invalid attendance value' });
+  }
+
+  if (token) {
+    const tok = db.guestTokens.find(t => t.token === token);
+    if (tok) {
+      const count = parseInt(guest_count, 10) || 1;
+      if (count > tok.maxGuests) {
+        return res.status(400).json({ error: `Maximum ${tok.maxGuests} guest(s) allowed for this invitation` });
+      }
+    }
+  }
+
+  const id = db.rsvps.length ? Math.max(...db.rsvps.map(r => r.id)) + 1 : 1;
+  db.rsvps.push({
+    id,
+    guest_name,
+    email:                email || null,
+    phone:                phone || null,
+    attending:            att,
+    guest_count:          parseInt(guest_count, 10) || 1,
+    dietary_restrictions: dietary_restrictions || null,
+    message:              message || null,
+    token:                token || null,
+    submitted_at:         new Date().toISOString()
+  });
+  writeDb(db);
+
+  res.json({ success: true, message: 'RSVP submitted successfully' });
+});
+
+// ---------------------------------------------------------------------------
+// API — Gallery & Party (site-auth — for guest-facing pages)
+// ---------------------------------------------------------------------------
+app.get('/api/gallery', requireSiteAuth, (req, res) => {
+  const db = getDb();
+  res.json(db.gallery);
+});
+
+app.get('/api/party', requireSiteAuth, (req, res) => {
+  const db = getDb();
+  res.json(db.weddingParty);
+});
+
+// ---------------------------------------------------------------------------
+// API — Admin: RSVPs
+// ---------------------------------------------------------------------------
+app.get('/api/admin/rsvps', requireAdminAuth, (req, res) => {
+  const db = getDb();
+  res.json([...db.rsvps].reverse());
+});
+
+app.get('/api/admin/rsvp-status', requireAdminAuth, (req, res) => {
+  const db = getDb();
+  res.json({ isOpen: db.settings.rsvp_open === true });
+});
+
+app.post('/api/admin/rsvp/toggle', requireAdminAuth, (req, res) => {
+  const db = getDb();
+  db.settings.rsvp_open = !db.settings.rsvp_open;
+  writeDb(db);
+  res.json({ isOpen: db.settings.rsvp_open });
+});
+
+app.delete('/api/admin/rsvps/:id', requireAdminAuth, (req, res) => {
+  const db  = getDb();
+  const idx = db.rsvps.findIndex(r => r.id === parseInt(req.params.id, 10));
+  if (idx === -1) return res.status(404).json({ error: 'RSVP not found' });
+  db.rsvps.splice(idx, 1);
+  writeDb(db);
+  res.json({ success: true });
+});
+
+app.get('/api/admin/rsvps/export', requireAdminAuth, (req, res) => {
+  const db   = getDb();
+  const esc  = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const header = 'ID,Name,Email,Phone,Attending,Guests,Dietary,Message,Token,Submitted\n';
+  const rows   = db.rsvps.map(r =>
+    [r.id, r.guest_name, r.email, r.phone, r.attending, r.guest_count,
+     r.dietary_restrictions, r.message, r.token, r.submitted_at].map(esc).join(',')
+  );
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="rsvps.csv"');
+  res.send(header + rows.join('\n'));
+});
+
+app.get('/api/admin/stats', requireAdminAuth, (req, res) => {
+  const db          = getDb();
+  const total       = db.rsvps.length;
+  const attending   = db.rsvps.filter(r => r.attending === 'yes').length;
+  const notAttending = db.rsvps.filter(r => r.attending === 'no').length;
+  const totalGuests = db.rsvps.filter(r => r.attending === 'yes').reduce((s, r) => s + (r.guest_count || 1), 0);
+  res.json({ total, attending, notAttending, totalGuests });
+});
+
+// ---------------------------------------------------------------------------
+// API — Admin: QR / Tokens
+// ---------------------------------------------------------------------------
+app.post('/api/admin/qr/generate', requireAdminAuth, async (req, res) => {
+  try {
+    const { guestName, groupName, email, maxGuests, customUrl } = req.body;
+    if (!guestName) return res.status(400).json({ error: 'Guest name is required' });
+
+    const token   = uuidv4();
+    const siteUrl = process.env.SITE_URL || `http://localhost:${PORT}`;
+    const rsvpUrl = customUrl || `${siteUrl}/rsvp?token=${token}`;
+
+    const db = getDb();
+    const id = db.guestTokens.length ? Math.max(...db.guestTokens.map(t => t.id)) + 1 : 1;
+    db.guestTokens.push({
+      id,
+      token,
+      guestName,
+      groupName:  groupName || null,
+      email:      email || null,
+      maxGuests:  parseInt(maxGuests, 10) || 1,
+      createdAt:  new Date().toISOString()
+    });
+    writeDb(db);
+
+    const qrCode = await QRCode.toDataURL(rsvpUrl, {
+      width: 300, margin: 2,
+      color: { dark: '#4a3728', light: '#faf7f2' }
+    });
+
+    res.json({ token, url: rsvpUrl, qrCode, guestName });
+  } catch (err) {
+    console.error('QR generation error:', err);
+    res.status(500).json({ error: 'Failed to generate QR code' });
+  }
+});
+
+app.get('/api/admin/tokens', requireAdminAuth, (req, res) => {
+  const db = getDb();
+  res.json([...db.guestTokens].reverse());
+});
+
+app.post('/api/admin/guests/import', requireAdminAuth, (req, res) => {
+  const { guests } = req.body;
+  if (!Array.isArray(guests) || !guests.length) {
+    return res.status(400).json({ error: 'guests array is required' });
+  }
+
+  const db = getDb();
+  let imported = 0;
+  let skipped  = 0;
+  const results = [];
+
+  for (const g of guests) {
+    const name = (g.guestName || '').trim();
+    if (!name) { skipped++; continue; }
+
+    const token = uuidv4();
+    const id    = db.guestTokens.length ? Math.max(...db.guestTokens.map(t => t.id)) + 1 : 1;
+    db.guestTokens.push({
+      id,
+      token,
+      guestName:  name,
+      groupName:  (g.groupName || '').trim() || null,
+      email:      (g.email     || '').trim() || null,
+      maxGuests:  Math.max(1, parseInt(g.maxGuests, 10) || 1),
+      createdAt:  new Date().toISOString()
+    });
+    imported++;
+    results.push({ guestName: name, token });
+  }
+
+  writeDb(db);
+  res.json({ imported, skipped, results });
+});
+
+app.delete('/api/admin/tokens/:id', requireAdminAuth, (req, res) => {
+  const db  = getDb();
+  const idx = db.guestTokens.findIndex(t => t.id === parseInt(req.params.id, 10));
+  if (idx === -1) return res.status(404).json({ error: 'Token not found' });
+  db.guestTokens.splice(idx, 1);
+  writeDb(db);
+  res.json({ success: true });
+});
+
+// ---------------------------------------------------------------------------
+// API — Admin: Photo management
+// ---------------------------------------------------------------------------
+
+// Replace a site background photo
+app.post('/api/admin/photos/site/:slot', requireAdminAuth, upload.single('photo'), (req, res) => {
+  const slot       = req.params.slot;
+  const targetFile = SITE_PHOTO_SLOTS[slot];
+
+  if (!targetFile) {
+    if (req.file) fs.unlinkSync(path.join(imagesDir, req.file.filename));
+    return res.status(400).json({ error: 'Invalid photo slot' });
+  }
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const tmpPath    = path.join(imagesDir, req.file.filename);
+  const targetPath = path.join(imagesDir, targetFile);
+  fs.renameSync(tmpPath, targetPath);
+  res.json({ success: true, filename: targetFile });
+});
+
+// Get gallery list (admin)
+app.get('/api/admin/gallery', requireAdminAuth, (req, res) => {
+  const db = getDb();
+  res.json(db.gallery);
+});
+
+// Add a gallery photo
+app.post('/api/admin/gallery', requireAdminAuth, upload.single('photo'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const db  = getDb();
+  const id  = db.gallery.length ? Math.max(...db.gallery.map(g => g.id)) + 1 : 1;
+  const ext = path.extname(req.file.filename);
+  const filename = `gallery-${id}${ext}`;
+
+  fs.renameSync(
+    path.join(imagesDir, req.file.filename),
+    path.join(imagesDir, filename)
+  );
+
+  const alt = (req.body.alt || '').trim() || 'Jack and Maja';
+  db.gallery.push({ id, filename, alt });
+  writeDb(db);
+
+  res.json({ success: true, photo: db.gallery[db.gallery.length - 1] });
+});
+
+// Remove a gallery photo
+app.delete('/api/admin/gallery/:id', requireAdminAuth, (req, res) => {
+  const db  = getDb();
+  const idx = db.gallery.findIndex(g => g.id === parseInt(req.params.id, 10));
+  if (idx === -1) return res.status(404).json({ error: 'Photo not found' });
+
+  const photo    = db.gallery[idx];
+  const filePath = path.join(imagesDir, photo.filename);
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+  db.gallery.splice(idx, 1);
+  writeDb(db);
+  res.json({ success: true });
+});
+
+// Get wedding party (admin)
+app.get('/api/admin/party', requireAdminAuth, (req, res) => {
+  const db = getDb();
+  res.json(db.weddingParty);
+});
+
+// Update a wedding party member (name, description, and/or photo)
+app.post('/api/admin/party/:slot', requireAdminAuth, upload.single('photo'), (req, res) => {
+  const { slot } = req.params;
+  const db       = getDb();
+
+  const member =
+    db.weddingParty.bridal.find(m => m.slot === slot) ||
+    db.weddingParty.groomsmen.find(m => m.slot === slot);
+
+  if (!member) {
+    if (req.file) fs.unlinkSync(path.join(imagesDir, req.file.filename));
+    return res.status(404).json({ error: 'Party member slot not found' });
+  }
+
+  if (req.body.name        !== undefined) member.name        = req.body.name.trim();
+  if (req.body.description !== undefined) member.description = req.body.description.trim();
+
+  if (req.file) {
+    const ext      = path.extname(req.file.filename);
+    const filename = `party-${slot}${ext}`;
+
+    fs.renameSync(
+      path.join(imagesDir, req.file.filename),
+      path.join(imagesDir, filename)
+    );
+
+    // Remove old photo file if it had a different extension
+    if (member.photo && member.photo !== filename) {
+      const oldPath = path.join(imagesDir, member.photo);
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+    member.photo = filename;
+  }
+
+  writeDb(db);
+  res.json({ success: true, member });
+});
+
+// ---------------------------------------------------------------------------
+// Start
+// ---------------------------------------------------------------------------
+app.listen(PORT, () => {
+  console.log(`\n  Wedding website → http://localhost:${PORT}`);
+  console.log(`  Admin panel     → http://localhost:${PORT}/admin\n`);
+});

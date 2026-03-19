@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Admin dashboard for the wedding website.">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Dashboard — Admin</title>
+  <link rel="stylesheet" href="/CSS/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar" role="navigation" aria-label="Admin navigation">
+      <div class="sidebar-brand">
+        <!-- TODO: Replace placeholder couple names -->
+        <span class="sidebar-brand-script">J &amp; M</span>
+        <span class="sidebar-brand-label">Admin Panel</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-section">Main</div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/dashboard" class="sidebar-nav-link active" aria-current="page">
+            <span class="sidebar-nav-icon" aria-hidden="true">📊</span> Dashboard
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/qr-generator" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📷</span> QR Generator
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/photos" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">🖼</span> Photos
+          </a>
+        </div>
+        <div class="sidebar-nav-section">Actions</div>
+        <div class="sidebar-nav-item">
+          <a href="#" class="sidebar-nav-link" id="exportCsvBtn">
+            <span class="sidebar-nav-icon" aria-hidden="true">📥</span> Export CSV
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="#" class="sidebar-nav-link" id="adminLogoutBtn">
+            <span class="sidebar-nav-icon" aria-hidden="true">🚪</span> Logout
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/home" class="sidebar-back-link">← View Wedding Site</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+
+      <!-- Top Bar -->
+      <header class="admin-topbar">
+        <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+          ☰
+        </button>
+        <h1 class="admin-topbar-title">Dashboard</h1>
+        <div class="admin-topbar-actions">
+          <button class="btn btn-secondary btn-sm" onclick="loadAll()">↻ Refresh</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="admin-content">
+
+        <!-- Stats -->
+        <section aria-labelledby="statsTitle">
+          <h2 class="visually-hidden" id="statsTitle">RSVP Statistics</h2>
+          <div class="admin-stats-grid">
+            <div class="admin-card admin-card-stat stat-accent-gold">
+              <div>
+                <div class="admin-card-number" id="statTotal">—</div>
+                <div class="admin-card-label">Total RSVPs</div>
+              </div>
+              <div class="admin-card-icon" aria-hidden="true">📋</div>
+            </div>
+            <div class="admin-card admin-card-stat stat-accent-sage">
+              <div>
+                <div class="admin-card-number" id="statAttending">—</div>
+                <div class="admin-card-label">Attending</div>
+              </div>
+              <div class="admin-card-icon" aria-hidden="true">✅</div>
+            </div>
+            <div class="admin-card admin-card-stat stat-accent-blush">
+              <div>
+                <div class="admin-card-number" id="statNotAttending">—</div>
+                <div class="admin-card-label">Not Attending</div>
+              </div>
+              <div class="admin-card-icon" aria-hidden="true">❌</div>
+            </div>
+            <div class="admin-card admin-card-stat">
+              <div>
+                <div class="admin-card-number" id="statTotalGuests">—</div>
+                <div class="admin-card-label">Total Guests</div>
+              </div>
+              <div class="admin-card-icon" aria-hidden="true">👥</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RSVP Status Toggle -->
+        <section class="rsvp-status-card" aria-labelledby="rsvpStatusTitle">
+          <div class="rsvp-status-info">
+            <h3 id="rsvpStatusTitle">RSVP Status</h3>
+            <p>Control whether guests can submit new RSVPs.</p>
+          </div>
+          <div class="toggle-wrap">
+            <span class="toggle-status-label" id="toggleLabel">Loading…</span>
+            <label class="toggle-switch" for="rsvpToggle" aria-label="Toggle RSVP open/closed">
+              <input type="checkbox" id="rsvpToggle" onchange="toggleRsvp()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Alert -->
+        <div class="admin-alert admin-alert-error" id="dashboardError" role="alert" aria-live="polite"></div>
+        <div class="admin-alert admin-alert-success" id="dashboardSuccess" role="status" aria-live="polite"></div>
+
+        <!-- RSVPs Table -->
+        <section class="admin-table-card" aria-labelledby="rsvpTableTitle">
+          <div class="admin-table-header">
+            <h3 id="rsvpTableTitle">RSVP Responses</h3>
+            <button class="btn btn-secondary btn-sm" onclick="exportCsv()">📥 Export CSV</button>
+          </div>
+
+          <div class="admin-table-wrap" role="region" aria-label="RSVP table" tabindex="0">
+            <table class="admin-table" aria-label="RSVP responses">
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Attending</th>
+                  <th scope="col">Guests</th>
+                  <th scope="col">Dietary</th>
+                  <th scope="col">Message</th>
+                  <th scope="col">Submitted</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rsvpTableBody">
+                <tr>
+                  <td colspan="8">
+                    <div class="empty-state">
+                      <div class="empty-state-icon" aria-hidden="true">📋</div>
+                      <p>Loading RSVPs…</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="/JS/admin.js"></script>
+  <script>
+    // Mobile sidebar toggle
+    const sidebarToggle  = document.getElementById('sidebarToggle');
+    const adminSidebar   = document.getElementById('adminSidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    sidebarToggle.addEventListener('click', () => {
+      adminSidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('visible');
+    });
+    sidebarOverlay.addEventListener('click', () => {
+      adminSidebar.classList.remove('open');
+      sidebarOverlay.classList.remove('visible');
+    });
+
+    // Export button in sidebar
+    document.getElementById('exportCsvBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      exportCsv();
+    });
+
+    // Admin logout
+    document.getElementById('adminLogoutBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await fetch('/api/admin/logout', { method: 'POST' });
+      window.location.href = '/admin/login';
+    });
+
+    function loadAll() {
+      loadStats();
+      loadRsvpStatus();
+      loadRsvps();
+    }
+
+    loadAll();
+  </script>
+
+  <style>
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+    }
+  </style>
+
+</body>
+</html>

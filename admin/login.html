@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Admin login for the wedding website.">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin Login — Jack &amp; Maja</title>
+  <link rel="stylesheet" href="/CSS/admin.css">
+</head>
+<body>
+
+  <main class="admin-login-page" role="main">
+    <div class="admin-login-card">
+
+      <div class="admin-login-icon" aria-hidden="true">🔐</div>
+      <h1 class="admin-login-title">Admin Panel</h1>
+      <!-- TODO: Replace placeholder couple names -->
+      <p class="admin-login-subtitle">Jack &amp; Maja's Wedding Website</p>
+
+      <form id="adminLoginForm" novalidate>
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label class="form-label" for="adminPassword">Admin Password</label>
+          <input
+            type="password"
+            id="adminPassword"
+            name="password"
+            class="form-input"
+            placeholder="Enter admin password"
+            autocomplete="current-password"
+            autofocus
+            required
+          >
+        </div>
+
+        <div class="admin-alert admin-alert-error" id="loginError" role="alert" aria-live="polite">
+          Incorrect password. Please try again.
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="loginBtn">
+          Log In
+        </button>
+      </form>
+
+      <p style="margin-top:1.5rem; font-size:0.78rem; color:#aaa;">
+        <a href="/home" style="color:#aaa; text-decoration:underline;">← Back to wedding site</a>
+      </p>
+
+    </div>
+  </main>
+
+  <script>
+    const form  = document.getElementById('adminLoginForm');
+    const error = document.getElementById('loginError');
+    const btn   = document.getElementById('loginBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('adminPassword').value.trim();
+      if (!password) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Logging in…';
+      error.classList.remove('visible');
+
+      try {
+        const res = await fetch('/api/admin/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+
+        if (res.ok) {
+          window.location.href = '/admin/dashboard';
+        } else {
+          error.classList.add('visible');
+          document.getElementById('adminPassword').value = '';
+          document.getElementById('adminPassword').focus();
+          btn.disabled = false;
+          btn.textContent = 'Log In';
+        }
+      } catch (err) {
+        error.textContent = 'Something went wrong. Please try again.';
+        error.classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Log In';
+      }
+    });
+  </script>
+
+</body>
+</html>

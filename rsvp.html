@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- TODO: Replace placeholder couple names and RSVP deadline -->
+  <meta name="description" content="RSVP for Jack & Maja's wedding — let us know if you can make it!">
+  <title>RSVP — Jack &amp; Maja</title>
+  <link rel="stylesheet" href="/CSS/style.css">
+</head>
+<body class="theme-chartreuse">
+
+  <!-- Fixed background layer for iOS (parallax fallback) -->
+  <div class="site-bg-fixed" style="background-image: url('/Images/photo-rsvp.jpg');" aria-hidden="true"></div>
+
+  <!-- Navigation -->
+  <nav class="nav nav-solid" id="mainNav" aria-label="Main navigation">
+    <!-- TODO: Replace placeholder couple names -->
+    <a href="/home" class="nav-brand" aria-label="Home">J &amp; M</a>
+
+    <button class="nav-hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav-menu" id="navMenu" role="list">
+      <li><a href="/home"          class="nav-link" data-page="home">Home</a></li>
+      <li><a href="/details"       class="nav-link" data-page="details">Details</a></li>
+      <li><a href="/schedule"      class="nav-link" data-page="schedule">Schedule</a></li>
+      <li><a href="/wedding-party" class="nav-link" data-page="wedding-party">Wedding Party</a></li>
+      <li><a href="/gallery"       class="nav-link" data-page="gallery">Gallery</a></li>
+      <li><a href="/registry"      class="nav-link" data-page="registry">Gifts</a></li>
+      <li><a href="/rsvp"          class="nav-link" data-page="rsvp">RSVP</a></li>
+      <li><a href="/contact"       class="nav-link" data-page="contact">Contact</a></li>
+      <li><a href="#" class="nav-link nav-logout" id="logoutBtn">Logout</a></li>
+      <li><a href="/admin"         class="nav-link nav-admin">Admin</a></li>
+    </ul>
+  </nav>
+
+  <!-- Page Hero -->
+  <section class="hero-page" aria-label="Page header">
+    <div class="hero-content">
+      <p class="hero-date">We Hope to See You There</p>
+      <h1 class="hero-script">RSVP</h1>
+    </div>
+  </section>
+
+  <!-- Photo Strip -->
+  <div class="photo-strip" style="background-image: url('/Images/photo-rsvp.jpg');" aria-hidden="true"></div>
+
+  <!-- RSVP Content -->
+  <section class="section" aria-labelledby="rsvpTitle">
+    <div class="container" style="max-width: 680px;">
+
+      <p class="deadline-notice fade-in">
+        ✦ Please RSVP by <strong>April 1, 2027</strong> ✦
+      </p>
+
+      <!-- RSVP Closed (shown when closed) -->
+      <div class="rsvp-closed fade-in" id="rsvpClosed" role="status" aria-live="polite">
+        <h2 class="section-title" style="font-size:2rem; margin-bottom:0.75rem;">RSVP Is Closed</h2>
+        <p style="color: #888; font-family: var(--font-heading); font-style: italic;">
+          RSVPs are currently closed. If you have questions or need to make changes,
+          please <a href="/contact" style="color: var(--blush);">contact us directly</a>.
+        </p>
+      </div>
+
+      <!-- RSVP Form (shown when open) -->
+      <div id="rsvpFormWrap" class="fade-in">
+        <form id="rsvpForm" novalidate aria-labelledby="rsvpTitle">
+
+          <!-- Guest Name -->
+          <div class="form-group">
+            <label class="form-label" for="guestName">
+              Full Name <span class="required" aria-label="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="guestName"
+              name="guest_name"
+              class="form-input"
+              placeholder="Your full name"
+              autocomplete="name"
+              required
+            >
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="form-input"
+              placeholder="you@example.com"
+              autocomplete="email"
+            >
+          </div>
+
+          <!-- Phone -->
+          <div class="form-group">
+            <label class="form-label" for="phone">Phone Number</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              class="form-input"
+              placeholder="+1 (555) 000-0000"
+              autocomplete="tel"
+            >
+          </div>
+
+          <!-- Attending -->
+          <div class="form-group">
+            <fieldset>
+              <legend class="form-label">
+                Will you be attending? <span class="required" aria-label="required">*</span>
+              </legend>
+              <div class="radio-group" role="radiogroup">
+                <label class="radio-label">
+                  <input type="radio" name="attending" value="yes" id="attendingYes" required>
+                  Joyfully accepts
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="attending" value="no" id="attendingNo">
+                  Regretfully declines
+                </label>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- Guest Count (shown when attending yes) -->
+          <div class="form-group" id="guestCountWrap" style="display:none;">
+            <label class="form-label" for="guestCount">
+              Number of Guests (including yourself)
+            </label>
+            <input
+              type="number"
+              id="guestCount"
+              name="guest_count"
+              class="form-input"
+              value="1"
+              min="1"
+              max="8"
+              style="max-width:120px;"
+            >
+          </div>
+
+          <!-- Dietary Restrictions (shown when attending yes) -->
+          <div class="form-group" id="dietaryWrap" style="display:none;">
+            <label class="form-label" for="dietary">
+              Dietary Restrictions or Allergies
+            </label>
+            <textarea
+              id="dietary"
+              name="dietary_restrictions"
+              class="form-textarea"
+              placeholder="Please list any dietary restrictions or allergies for your party…"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <!-- Message -->
+          <div class="form-group">
+            <label class="form-label" for="message">Message to Jack &amp; Maja</label>
+            <!-- TODO: Replace placeholder couple names in label -->
+            <textarea
+              id="message"
+              name="message"
+              class="form-textarea"
+              placeholder="Share a message, song request, or well-wishes…"
+              rows="4"
+            ></textarea>
+          </div>
+
+          <!-- Error -->
+          <div class="form-error" id="rsvpError" role="alert" aria-live="polite"></div>
+
+          <!-- Submit -->
+          <button type="submit" class="btn btn-primary" id="rsvpSubmitBtn" style="width:100%;">
+            Send My RSVP
+          </button>
+
+        </form>
+
+        <!-- Success Message -->
+        <div class="rsvp-success" id="rsvpSuccess" role="status" aria-live="polite">
+          <div class="success-checkmark" aria-hidden="true">✓</div>
+          <h2 class="section-title" style="font-size:2rem; margin-bottom:0.5rem;">
+            Thank You!
+          </h2>
+          <p style="font-family: var(--font-heading); font-style: italic; color: #888; font-size:1rem;">
+            We've received your RSVP and can't wait to celebrate with you!
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer-script">Jack &amp; Maja</div>
+    <div class="footer-date">August 29, 2027</div>
+    <p class="footer-tagline">With love, laughter, and happily ever after</p>
+    <nav class="footer-links" aria-label="Footer navigation">
+      <a href="/details">Details</a>
+      <a href="/schedule">Schedule</a>
+      <a href="/gallery">Gallery</a>
+      <a href="/rsvp">RSVP</a>
+      <a href="/contact">Contact</a>
+    </nav>
+    <p class="footer-copy">&copy; 2027 Jack &amp; Maja</p>
+  </footer>
+
+  <script src="/JS/main.js"></script>
+  <script src="/JS/rsvp.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="You're invited — enter the password to access Jack & Maja's wedding website.">
+  <!-- TODO: Replace placeholder couple names -->
+  <title>You're Invited — Jack &amp; Maja</title>
+  <link rel="stylesheet" href="/CSS/style.css">
+  <style>
+    /* Extra decorative petals for the enter page */
+    .petal {
+      position: fixed;
+      pointer-events: none;
+      opacity: 0;
+      font-size: 1.2rem;
+      animation: petalFall linear infinite;
+    }
+    @keyframes petalFall {
+      0%   { opacity: 0; transform: translateY(-20px) rotate(0deg); }
+      10%  { opacity: 0.6; }
+      90%  { opacity: 0.3; }
+      100% { opacity: 0; transform: translateY(100vh) rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="enter-page" id="enterPage">
+    <div class="enter-card" role="main">
+
+      <!-- TODO: Replace placeholder couple names -->
+      <div class="enter-monogram" aria-label="J and M monogram">J &amp; M</div>
+
+      <p class="enter-title">You're Invited</p>
+      <!-- TODO: Replace placeholder couple names -->
+      <p class="enter-names">Jack &amp; Maja</p>
+
+      <div class="ornament enter-divider" aria-hidden="true">
+        <div class="ornament-diamond"></div>
+      </div>
+
+      <p class="enter-hint">Please enter the password to access our wedding website.</p>
+
+      <form id="enterForm" novalidate>
+        <div class="enter-input-wrap">
+          <label for="sitePassword" class="visually-hidden">Wedding website password</label>
+          <input
+            type="password"
+            id="sitePassword"
+            name="password"
+            class="enter-input"
+            placeholder="Enter password"
+            autocomplete="current-password"
+            autofocus
+            required
+          >
+        </div>
+
+        <div class="enter-error" id="enterError" role="alert" aria-live="polite">
+          Incorrect password. Please try again.
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top:1rem;">
+          Enter
+        </button>
+      </form>
+
+      <p style="margin-top:1.5rem; font-size:0.75rem; color:#aaa;">
+        August 29, 2027
+      </p>
+
+    </div>
+  </main>
+
+  <script>
+    const form  = document.getElementById('enterForm');
+    const error = document.getElementById('enterError');
+    const input = document.getElementById('sitePassword');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = input.value.trim();
+      if (!password) return;
+
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Checking…';
+      error.classList.remove('visible');
+
+      try {
+        const res = await fetch('/api/auth/site', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+
+        if (res.ok) {
+          window.location.href = '/home';
+        } else {
+          error.classList.add('visible');
+          input.value = '';
+          input.focus();
+          btn.disabled = false;
+          btn.textContent = 'Enter';
+        }
+      } catch (err) {
+        error.textContent = 'Something went wrong. Please try again.';
+        error.classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Enter';
+      }
+    });
+
+    // Allow Enter key
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') form.dispatchEvent(new Event('submit'));
+    });
+  </script>
+
+</body>
+</html>
