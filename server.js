@@ -421,7 +421,8 @@ app.post('/api/rsvp', async (req, res) => {
   writeDb(db);
 
   // Add song to Spotify playlist if provided and guest is attending
-  if (att === 'yes' && song_uri && db.settings.spotifyRefreshToken) {
+  const hasSpotifyToken = process.env.SPOTIFY_REFRESH_TOKEN || db.settings.spotifyRefreshToken;
+  if (att === 'yes' && song_uri && hasSpotifyToken) {
     try {
       await addTrackToPlaylist(song_uri);
     } catch (err) {
