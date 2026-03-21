@@ -174,9 +174,35 @@ Photos are referenced in two places per page: the `.site-bg-fixed` div (inline s
 
 > "Please park on the far end of the lot to avoid overcrowding near the ceremony tent"
 
+## Mobile Background Photos
+
+Every page has two background divs:
+1. `.site-bg-fixed` — always shown (desktop photo)
+2. `.site-bg-mobile` — shown only on ≤768px (mobile photo, `display:none` on desktop)
+
+Mobile filenames: `photo-{slot}-mobile.jpg`. If no mobile photo uploaded, the mobile div has no background and the desktop div shows through (natural fallback). Admin → Photos → Site Photos shows both desktop and mobile upload slots per card. Dresscode has no mobile slot.
+
+SITE_PHOTO_SLOTS in server.js includes both `home` and `home-mobile` variants for each page.
+
 ## RSVP Form Fields (current)
 
-Name, email, phone, attending yes/no, guest count (shown when attending), dietary restrictions (shown when attending), song request — Spotify search + pick (shown when attending), message to Jack & Maja
+Name, email, phone, attending yes/no, guest count (shown when attending), events checklist (shown when attending — see below), dietary restrictions (shown when attending), song request — Spotify search + pick (shown when attending), message to Jack & Maja
+
+## RSVP Event Checkboxes
+
+When attending = yes, guests see "Which events will you be joining us for?" with checkboxes grouped by day:
+
+| Value | Label | Day |
+|-------|-------|-----|
+| `welcome-reception` | Welcome Reception | Friday, Aug 27 |
+| `rehearsal-dinner` | Rehearsal Dinner | Friday, Aug 27 |
+| `saturday-activities` | Activities & Exploring | Saturday, Aug 28 |
+| `wedding` | Ceremony & Reception | Sunday, Aug 29 (pre-checked) |
+| `farewell-brunch` | Farewell Brunch | Monday, Aug 30 |
+
+Events stored as an array on each RSVP in `db.json`. Admin dashboard has an "Event Attendance" section with per-event counts. RSVP table has an Events column. CSV export includes Events column.
+
+`EVENT_IDS` constant in `server.js` and `EVENT_LABELS` in `JS/admin.js` define the canonical list. If events become dynamic (admin-managed), these will need to be replaced with db.json lookups.
 
 ## Claude Instructions
 
