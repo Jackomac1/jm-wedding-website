@@ -439,7 +439,7 @@ app.post('/api/rsvp', async (req, res) => {
     return res.status(403).json({ error: 'RSVP is currently closed' });
   }
 
-  const { guest_name, email, phone, attending, guest_count, dietary_restrictions, message, token, song_uri, song_name } = req.body;
+  const { guest_name, email, phone, attending, guest_count, dietary_restrictions, events, message, token, song_uri, song_name } = req.body;
 
   if (!guest_name || !attending) {
     return res.status(400).json({ error: 'Name and attendance are required' });
@@ -471,6 +471,7 @@ app.post('/api/rsvp', async (req, res) => {
     dietary_restrictions: dietary_restrictions || null,
     message:              message || null,
     token:                token || null,
+    events:               Array.isArray(events) ? events : [],
     song_uri:             song_uri || null,
     song_name:            song_name || null,
     submitted_at:         new Date().toISOString()
@@ -536,15 +537,23 @@ app.delete('/api/admin/rsvps/:id', requireAdminAuth, (req, res) => {
 app.get('/api/admin/rsvps/export', requireAdminAuth, (req, res) => {
   const db   = getDb();
   const esc  = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const header = 'ID,Name,Email,Phone,Attending,Guests,Dietary,Message,Token,Submitted\n';
+  const header = 'ID,Name,Email,Phone,Attending,Guests,Dietary,Events,Message,Token,Submitted\n';
   const rows   = db.rsvps.map(r =>
     [r.id, r.guest_name, r.email, r.phone, r.attending, r.guest_count,
-     r.dietary_restrictions, r.message, r.token, r.submitted_at].map(esc).join(',')
+     r.dietary_restrictions, (r.events || []).join('; '), r.message, r.token, r.submitted_at].map(esc).join(',')
   );
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="rsvps.csv"');
   res.send(header + rows.join('\n'));
 });
+
+const EVENT_IDS = [
+  'welcome-reception',
+  'rehearsal-dinner',
+  'saturday-activities',
+  'wedding',
+  'farewell-brunch'
+];
 
 app.get('/api/admin/stats', requireAdminAuth, (req, res) => {
   const db          = getDb();
@@ -552,7 +561,13 @@ app.get('/api/admin/stats', requireAdminAuth, (req, res) => {
   const attending   = db.rsvps.filter(r => r.attending === 'yes').length;
   const notAttending = db.rsvps.filter(r => r.attending === 'no').length;
   const totalGuests = db.rsvps.filter(r => r.attending === 'yes').reduce((s, r) => s + (r.guest_count || 1), 0);
-  res.json({ total, attending, notAttending, totalGuests });
+
+  const eventCounts = {};
+  EVENT_IDS.forEach(id => {
+    eventCounts[id] = db.rsvps.filter(r => Array.isArray(r.events) && r.events.includes(id)).length;
+  });
+
+  res.json({ total, attending, notAttending, totalGuests, eventCounts });
 });
 
 // ---------------------------------------------------------------------------

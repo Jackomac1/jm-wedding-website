@@ -67,20 +67,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // ----------------------------------------------------------
-  // 3. Attending radio: show/hide guest count, dietary & song
+  // 3. Attending radio: show/hide guest count, events, dietary & song
   // ----------------------------------------------------------
   const songRequestWrap = document.getElementById('songRequestWrap');
+  const eventsWrap      = document.getElementById('eventsWrap');
 
   function updateAttendingFields() {
     const attendingYes = document.getElementById('attendingYes');
     const isYes = attendingYes && attendingYes.checked;
 
     if (guestCountWrap)  guestCountWrap.style.display  = isYes ? 'block' : 'none';
+    if (eventsWrap)      eventsWrap.style.display      = isYes ? 'block' : 'none';
     if (dietaryWrap)     dietaryWrap.style.display     = isYes ? 'block' : 'none';
     if (songRequestWrap) songRequestWrap.style.display = isYes ? 'block' : 'none';
 
     if (!isYes && guestCountInput) {
       guestCountInput.value = 1;
+    }
+
+    // Reset event checkboxes when switching to No, restore wedding default for Yes
+    if (!isYes) {
+      document.querySelectorAll('input[name="events"]').forEach(cb => { cb.checked = false; });
+    } else {
+      const weddingCb = document.getElementById('evtWedding');
+      if (weddingCb) weddingCb.checked = true;
     }
   }
 
@@ -202,6 +212,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const attending = attendingRadio.value;
 
+    // Collect checked events
+    const checkedEvents = attending === 'yes'
+      ? [...document.querySelectorAll('input[name="events"]:checked')].map(cb => cb.value)
+      : [];
+
     // Build payload
     const payload = {
       guest_name:           guestName,
@@ -210,6 +225,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       attending:            attending,
       guest_count:          attending === 'yes' ? (parseInt(guestCountInput?.value, 10) || 1) : 1,
       dietary_restrictions: attending === 'yes' ? (document.getElementById('dietary')?.value.trim() || '') : '',
+      events:               checkedEvents,
       message:              document.getElementById('message')?.value.trim() || '',
       token:                token || '',
       song_uri:             attending === 'yes' ? (document.getElementById('songUri')?.value || '') : '',

@@ -1137,6 +1137,41 @@ h1, h2, h3, h4 {
   cursor: pointer;
 }
 
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--brown);
+  margin-bottom: 0.4rem;
+}
+
+.check-label input[type="checkbox"] {
+  accent-color: var(--blush);
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.events-day {
+  margin-bottom: 1rem;
+}
+
+.events-day:last-child {
+  margin-bottom: 0;
+}
+
+.events-day-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--grape-fizz);
+  margin-bottom: 0.5rem;
+}
+
 /* Error / Success messages */
 .form-error {
   background: #fdf0f0;

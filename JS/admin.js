@@ -8,6 +8,14 @@
 // ----------------------------------------------------------
 // 1. Load Stats
 // ----------------------------------------------------------
+const EVENT_LABELS = {
+  'welcome-reception':   'Welcome Reception (Fri Aug 27)',
+  'rehearsal-dinner':    'Rehearsal Dinner (Fri Aug 27)',
+  'saturday-activities': 'Activities & Exploring (Sat Aug 28)',
+  'wedding':             'Ceremony & Reception (Sun Aug 29)',
+  'farewell-brunch':     'Farewell Brunch (Mon Aug 30)'
+};
+
 async function loadStats() {
   try {
     const res  = await fetch('/api/admin/stats');
@@ -23,6 +31,19 @@ async function loadStats() {
     set('statAttending',    data.attending);
     set('statNotAttending', data.notAttending);
     set('statTotalGuests',  data.totalGuests);
+
+    // Event breakdown
+    const breakdown = document.getElementById('eventBreakdown');
+    if (breakdown && data.eventCounts) {
+      breakdown.innerHTML = Object.entries(EVENT_LABELS).map(([id, label]) => {
+        const count = data.eventCounts[id] || 0;
+        return `
+          <div style="background:var(--admin-bg);border:1px solid var(--admin-border);border-radius:var(--radius-sm);padding:0.6rem 0.875rem;display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
+            <span style="font-size:0.82rem;color:var(--admin-text);">${label}</span>
+            <span style="font-size:1.1rem;font-weight:700;color:var(--admin-accent);min-width:2ch;text-align:right;">${count}</span>
+          </div>`;
+      }).join('');
+    }
 
   } catch (err) {
     console.warn('loadStats error:', err);
@@ -85,7 +106,7 @@ async function loadRsvps() {
 
   tbody.innerHTML = `
     <tr>
-      <td colspan="8">
+      <td colspan="9">
         <div class="empty-state">
           <div class="empty-state-icon">⏳</div>
           <p>Loading…</p>
@@ -101,7 +122,7 @@ async function loadRsvps() {
     if (!rows.length) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8">
+          <td colspan="9">
             <div class="empty-state">
               <div class="empty-state-icon">📋</div>
               <p>No RSVPs yet.</p>
@@ -121,12 +142,15 @@ async function loadRsvps() {
         year: 'numeric', month: 'short', day: 'numeric'
       });
 
+      const eventNames = (row.events || []).map(id => EVENT_LABELS[id] || id).join(', ');
+
       return `
         <tr>
           <td class="cell-name">${escHtml(row.guest_name)}</td>
           <td class="cell-muted cell-wrap">${escHtml(row.email || '—')}</td>
           <td>${badge}</td>
           <td>${attending ? row.guest_count : '—'}</td>
+          <td class="cell-muted cell-wrap" title="${escHtml(eventNames)}">${attending ? escHtml(truncate(eventNames, 50)) || '—' : '—'}</td>
           <td class="cell-muted cell-wrap" title="${escHtml(row.dietary_restrictions || '')}">${escHtml(truncate(row.dietary_restrictions, 40))}</td>
           <td class="cell-muted cell-wrap" title="${escHtml(row.message || '')}">${escHtml(truncate(row.message, 50))}</td>
           <td class="cell-muted" style="white-space:nowrap;">${date}</td>
@@ -141,7 +165,7 @@ async function loadRsvps() {
   } catch (err) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align:center;color:#999;padding:2rem;">
+        <td colspan="9" style="text-align:center;color:#999;padding:2rem;">
           Failed to load RSVPs. Please refresh.
         </td>
       </tr>`;
