@@ -556,11 +556,12 @@ app.post('/api/rsvp', async (req, res) => {
 
   if (token) {
     const tok = db.guestTokens.find(t => t.token === token);
-    if (tok) {
-      const count = parseInt(guest_count, 10) || 1;
-      if (count > tok.maxGuests) {
-        return res.status(400).json({ error: `Maximum ${tok.maxGuests} guest(s) allowed for this invitation` });
-      }
+    if (!tok) {
+      return res.status(400).json({ error: 'Invalid invitation link. Please contact us for help.' });
+    }
+    const count = parseInt(guest_count, 10) || 1;
+    if (count > tok.maxGuests) {
+      return res.status(400).json({ error: `Your invitation allows up to ${tok.maxGuests} guest(s).` });
     }
   }
 
