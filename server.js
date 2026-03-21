@@ -398,7 +398,8 @@ app.get('/api/spotify/auth', requireAdminAuth, (req, res) => {
     response_type: 'code',
     client_id:     process.env.SPOTIFY_CLIENT_ID,
     scope:         SPOTIFY_SCOPES,
-    redirect_uri:  `${process.env.SITE_URL}/api/spotify/callback`
+    redirect_uri:  `${process.env.SITE_URL}/api/spotify/callback`,
+    show_dialog:   'true'
   });
   res.redirect(`https://accounts.spotify.com/authorize?${params}`);
 });
