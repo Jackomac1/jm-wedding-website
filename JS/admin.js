@@ -196,7 +196,50 @@ async function deleteRsvp(id, name) {
 }
 
 // ----------------------------------------------------------
-// 6. Export CSV
+// 6. Song Requests
+// ----------------------------------------------------------
+async function loadSongRequests() {
+  const el = document.getElementById('songRequestsList');
+  if (!el) return;
+
+  try {
+    const res  = await fetch('/api/admin/rsvps');
+    if (!res.ok) throw new Error();
+    const rows = await res.json();
+
+    const songs = rows.filter(r => r.attending === 'yes' && r.song_name);
+
+    if (!songs.length) {
+      el.innerHTML = '<span style="color:var(--admin-muted);font-size:0.875rem;">No song requests yet.</span>';
+      return;
+    }
+
+    el.innerHTML = `
+      <table class="admin-table" style="min-width:0;">
+        <thead>
+          <tr>
+            <th scope="col">Guest</th>
+            <th scope="col">Song</th>
+            <th scope="col">Spotify URI</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${songs.map(r => `
+            <tr>
+              <td class="cell-name">${escHtml(r.guest_name)}</td>
+              <td>${escHtml(r.song_name)}</td>
+              <td class="cell-muted" style="font-size:0.8rem;word-break:break-all;">${escHtml(r.song_uri || '—')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  } catch {
+    el.innerHTML = '<span style="color:var(--admin-muted);font-size:0.875rem;">Failed to load song requests.</span>';
+  }
+}
+
+// ----------------------------------------------------------
+// 7. Export CSV
 // ----------------------------------------------------------
 function exportCsv() {
   window.location.href = '/api/admin/rsvps/export';

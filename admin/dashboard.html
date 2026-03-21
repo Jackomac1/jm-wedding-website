@@ -145,6 +145,16 @@
         <div class="admin-alert admin-alert-error" id="dashboardError" role="alert" aria-live="polite"></div>
         <div class="admin-alert admin-alert-success" id="dashboardSuccess" role="status" aria-live="polite"></div>
 
+        <!-- Song Requests -->
+        <section aria-labelledby="songRequestsTitle" style="margin-bottom:1.5rem;">
+          <div class="admin-card" style="padding:1.25rem 1.5rem;">
+            <h3 id="songRequestsTitle" style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--admin-muted);margin:0 0 1rem;">Song Requests</h3>
+            <div id="songRequestsList">
+              <span style="color:var(--admin-muted);font-size:0.875rem;">Loading&hellip;</span>
+            </div>
+          </div>
+        </section>
+
         <!-- RSVPs Table -->
         <section class="admin-table-card" aria-labelledby="rsvpTableTitle">
           <div class="admin-table-header">
@@ -218,6 +228,7 @@
       await loadStats();      // populates eventLabels before loadRsvps uses them
       loadRsvpStatus();
       loadRsvps();
+      loadSongRequests();
     }
 
     loadAll();
