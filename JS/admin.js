@@ -239,7 +239,35 @@ async function loadSongRequests() {
 }
 
 // ----------------------------------------------------------
-// 7. Export CSV
+// 7. Export Song URIs
+// ----------------------------------------------------------
+async function exportSongUris() {
+  try {
+    const res  = await fetch('/api/admin/rsvps');
+    if (!res.ok) throw new Error();
+    const rows = await res.json();
+
+    const songs = rows.filter(r => r.attending === 'yes' && r.song_uri);
+    if (!songs.length) {
+      showDashboardMessage('No song requests to export.', 'error');
+      return;
+    }
+
+    const lines = songs.map(r => `${r.song_uri}  # ${r.song_name} (${r.guest_name})`).join('\n');
+    const blob  = new Blob([lines], { type: 'text/plain' });
+    const url   = URL.createObjectURL(blob);
+    const a     = document.createElement('a');
+    a.href      = url;
+    a.download  = 'song-requests.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    showDashboardMessage('Failed to export song requests.', 'error');
+  }
+}
+
+// ----------------------------------------------------------
+// 8. Export CSV
 // ----------------------------------------------------------
 function exportCsv() {
   window.location.href = '/api/admin/rsvps/export';

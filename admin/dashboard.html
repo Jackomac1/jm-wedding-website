@@ -148,7 +148,10 @@
         <!-- Song Requests -->
         <section aria-labelledby="songRequestsTitle" style="margin-bottom:1.5rem;">
           <div class="admin-card" style="padding:1.25rem 1.5rem;">
-            <h3 id="songRequestsTitle" style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--admin-muted);margin:0 0 1rem;">Song Requests</h3>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+              <h3 id="songRequestsTitle" style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--admin-muted);margin:0;">Song Requests</h3>
+              <button class="btn btn-secondary btn-sm" onclick="exportSongUris()">Download URIs</button>
+            </div>
             <div id="songRequestsList">
               <span style="color:var(--admin-muted);font-size:0.875rem;">Loading&hellip;</span>
             </div>
