@@ -25,11 +25,11 @@
 - **Auth:** bcryptjs + express-session. Two passwords: site (guests) and admin
 - **Config:** `.env` file — `SITE_PASSWORD`, `ADMIN_PASSWORD`, `SESSION_SECRET`, `PORT`, `SITE_URL`, `RESEND_API_KEY`, `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_PLAYLIST_ID`, `SPOTIFY_REFRESH_TOKEN`
 - **Email:** Resend — contact form POSTs to `/api/contact` → email sent via Resend API to `majaandjack@gmail.com`. From address: `noreply@majaandjack.ca`. Domain verified in Resend.
-- **Spotify:** Song request on RSVP form — guests search Spotify and pick a song. Song name + URI stored with RSVP. Server attempts to add to playlist `2yGEUvxvBzCpGob3JwgLQB` ("Maja and Jacks Guest Requests") via Spotify Web API. **Note:** Spotify write API returning 403 — suspected new app restriction. Retry after recreating the Spotify Developer app (rate limited — try again after 2026-03-20). Spotify auth done via `/api/spotify/auth` (admin only) → refresh token stored as `SPOTIFY_REFRESH_TOKEN` env var.
+- **Spotify:** Song request on RSVP form — guests search Spotify and pick a song. Song name + URI stored with RSVP. **Auto-add to playlist is abandoned** — Spotify write API returns 403 despite correct scopes and a recreated app. Songs are shown in the admin dashboard "Song Requests" section with a "Download URIs" button that exports `song-requests.txt` (one URI per line + guest name) for manual playlist building. Spotify auth flow (`/api/spotify/auth`) still works for search. Playlist ID: `2yGEUvxvBzCpGob3JwgLQB`.
 - **Fonts:** Playfair Display (headings/section titles), Cormorant Garamond italic (hero script + footer + nav brand + enter monogram — `--font-script`), Lato (body) — Google Fonts
 - **No build tools** — plain HTML/CSS/JS served as static files from Express
 - **File uploads:** `multer` handles multipart uploads — saved to `/Images/` with auto-generated filenames. Site photos overwrite fixed filenames. Party photos: `party-{slot}.jpg`. Gallery photos: `gallery-{id}.jpg`.
-- **Deployment:** Railway — connected to GitHub repo `Jackomac1/jm-wedding-website`, auto-deploys on push to `main`. Live at `https://jm-wedding.up.railway.app`. Custom domain `majaandjack.ca` purchased on Namecheap, CNAME pointing to Railway — DNS propagating.
+- **Deployment:** Railway — connected to GitHub repo `Jackomac1/jm-wedding-website`, auto-deploys on push to `main`. Live at `https://majaandjack.ca`. Custom domain configured on Railway; `www.majaandjack.ca` is the primary domain. **Note:** Railway filesystem is ephemeral — `db.json` is wiped on each redeploy. A Railway Volume should be set up at `/data` to persist data.
 
 ## File Structure
 
@@ -50,9 +50,10 @@ JM_Wedding_Website/
 ├── schedule.html          Multi-day timeline: Fri Aug 27 / Sat Aug 28 / Sun Aug 29 (Big Day) / Mon Aug 30 — click-to-flip cards with Google Maps links
 ├── admin/
 │   ├── login.html
-│   ├── dashboard.html     RSVP toggle, stats, table, CSV export
-│   ├── qr-generator.html  Single QR + bulk CSV import
-│   └── photos.html        Photo manager: site backgrounds, gallery, wedding party
+│   ├── dashboard.html     RSVP toggle, stats, song requests, table, CSV export
+│   ├── qr-generator.html  Single QR + bulk CSV import + printable QR sheet
+│   ├── photos.html        Photo manager: site backgrounds, gallery, wedding party
+│   └── schedule.html      Schedule event CRUD (add/edit/delete events + RSVP flags)
 ├── CSS/style.css          Main stylesheet (~1600 lines)
 ├── CSS/admin.css          Admin panel styles (~830 lines)
 ├── JS/main.js             Nav scroll, hamburger, countdown, fade-ins
@@ -93,6 +94,13 @@ JM_Wedding_Website/
 | GET | `/api/admin/party` | admin | Wedding party data |
 | POST | `/api/admin/party/:slot` | admin | Update party member name/description/photo |
 | POST | `/api/contact` | — | Contact form → email via Resend to majaandjack@gmail.com |
+| GET | `/api/schedule` | site | All schedule events sorted by dayOrder/sortOrder |
+| GET | `/api/rsvp/events` | — | Events with showOnRsvp=true (used by RSVP form checkboxes) |
+| GET | `/api/admin/events` | admin | All schedule events |
+| POST | `/api/admin/events` | admin | Create schedule event |
+| PUT | `/api/admin/events/:id` | admin | Update schedule event |
+| DELETE | `/api/admin/events/:id` | admin | Delete schedule event |
+| GET | `/api/admin/qr/print-sheet` | admin | Printable HTML page of all QR codes |
 | GET | `/api/spotify/auth` | admin | One-time Spotify OAuth — redirects to Spotify consent screen |
 | GET | `/api/spotify/callback` | admin | OAuth callback — saves refresh token, displays it for copying to env |
 | GET | `/api/spotify/search` | — | Search Spotify tracks (used by RSVP form) |
@@ -130,7 +138,7 @@ JM_Wedding_Website/
 - **Ornament dividers:** `.ornament` with `.ornament-diamond` (chartreuse)
 - **Fade-in:** `.fade-in` + IntersectionObserver → `.visible` class (stagger via `delay-1` through `delay-4`)
 - **Countdown:** targets `2027-08-29T16:00:00` in `JS/main.js`
-- **Timeline cards** (`schedule.html`): click-to-flip — front shows event info + "Tap for directions" hint, back shows venue name, address, and Google Maps link. All items use uniform HTML order (`content → dot → spacer`); CSS `nth-child(odd/even)` handles alternating left/right layout. `.timeline-content.flipped` triggers `rotateY(180deg)` on `.timeline-card-inner`. Back button unflips. Fri/Sat/Mon items show "Location TBD" (no Maps link yet). `.timeline-day-title` background uses `var(--dark-bg)` so it rotates with page theme. Schedule is 4 days: Fri Aug 27 / Sat Aug 28 / Sun Aug 29 (Big Day — fully populated) / Mon Aug 30.
+- **Timeline cards** (`schedule.html`): **fully dynamic** — rendered from `GET /api/schedule` (requires site auth). Events stored in `db.json` as `scheduleEvents` array, managed via Admin → Schedule. Each event has: `id`, `slug`, `title`, `time`, `dayLabel`, `dayDate`, `dayOrder`, `sortOrder`, `description`, `venue`, `address`, `mapsUrl`, `showOnRsvp`, `rsvpLabel`. Click-to-flip cards; back shows venue + Maps link if `mapsUrl` is set. Schedule is 4 days: Fri Aug 27 / Sat Aug 28 / Sun Aug 29 (Big Day) / Mon Aug 30.
 
 ## Per-Page Colour Themes
 
@@ -165,10 +173,10 @@ Photos are referenced in two places per page: the `.site-bg-fixed` div (inline s
 - **Contact phone**: `+1 (555) 000-0000` — replace when known
 - **Wedding planner**: "Jane Planner" / `planner@example.com` — replace or remove if not applicable
 - **Malcolm Hotel booking link**: `href="#"` on the Book Now button in `details.html`
-- **Spotify write fix**: Delete and recreate the Spotify Developer app (currently rate-limited, try after 2026-03-20) — new app may bypass the 403 write restriction on the current app
+- **Spotify write**: Abandoned — auto-add returns 403 despite correct scopes. Songs collected in admin dashboard instead (Download URIs button).
 - **Wedding party names + photos**: Managed via admin → Photos → Wedding Party tab. Names, descriptions, and photos are stored in `db.json` and rendered dynamically. Party photos saved as `party-{slot}.jpg` in `/Images/`.
 - **Gallery photos**: Managed via admin → Photos → Gallery tab. Photos stored in `db.json`, filenames saved as `gallery-{id}.jpg`. Gallery page renders dynamically from `/api/gallery`.
-- **Schedule placeholder events**: Friday Aug 27 (welcome reception + rehearsal dinner), Saturday Aug 28 (activities TBD), and Monday Aug 30 (farewell brunch) items in `schedule.html` are placeholder — fill in times, venues, details. Sunday Aug 29 is fully populated (ceremony + reception).
+- **Schedule events**: All events now editable via Admin → Schedule. Fri/Sat/Mon events are placeholder (times/venues TBD). Sun Aug 29 is fully populated.
 
 ## Parking Note
 
@@ -190,19 +198,11 @@ Name, email, phone, attending yes/no, guest count (shown when attending), events
 
 ## RSVP Event Checkboxes
 
-When attending = yes, guests see "Which events will you be joining us for?" with checkboxes grouped by day:
+When attending = yes, guests see "Which events will you be joining us for?" with checkboxes loaded dynamically from `GET /api/rsvp/events` (no auth required). Only events with `showOnRsvp: true` appear. Grouped by `dayOrder`. The event with `slug === 'wedding'` is pre-checked by default.
 
-| Value | Label | Day |
-|-------|-------|-----|
-| `welcome-reception` | Welcome Reception | Friday, Aug 27 |
-| `rehearsal-dinner` | Rehearsal Dinner | Friday, Aug 27 |
-| `saturday-activities` | Activities & Exploring | Saturday, Aug 28 |
-| `wedding` | Ceremony & Reception | Sunday, Aug 29 (pre-checked) |
-| `farewell-brunch` | Farewell Brunch | Monday, Aug 30 |
+Events stored as an array of slugs on each RSVP in `db.json`. Admin dashboard has an "Event Attendance" section with per-event counts (dynamic from db). RSVP table has an Events column. CSV export includes Events column.
 
-Events stored as an array on each RSVP in `db.json`. Admin dashboard has an "Event Attendance" section with per-event counts. RSVP table has an Events column. CSV export includes Events column.
-
-`EVENT_IDS` constant in `server.js` and `EVENT_LABELS` in `JS/admin.js` define the canonical list. If events become dynamic (admin-managed), these will need to be replaced with db.json lookups.
+Event list is managed via Admin → Schedule — no hardcoded constants remain.
 
 ## Claude Instructions
 
