@@ -86,6 +86,108 @@ function getDb() {
     changed = true;
   }
 
+  // Migrate: add scheduleEvents if missing
+  if (!db.scheduleEvents) {
+    db.scheduleEvents = [
+      {
+        id: 1, slug: 'welcome-reception',
+        title: 'Welcome Reception', time: 'Evening',
+        dayLabel: 'Day One', dayDate: 'Friday, August 27, 2027', dayOrder: 1, sortOrder: 1,
+        description: 'Details coming soon. Stay tuned!',
+        venue: 'Location TBD', address: 'Details coming soon.', mapsUrl: '',
+        showOnRsvp: true, rsvpLabel: 'Welcome Reception'
+      },
+      {
+        id: 2, slug: 'rehearsal-dinner',
+        title: 'Rehearsal Dinner', time: 'Evening',
+        dayLabel: 'Day One', dayDate: 'Friday, August 27, 2027', dayOrder: 1, sortOrder: 2,
+        description: 'Details coming soon. Stay tuned!',
+        venue: 'Location TBD', address: 'Details coming soon.', mapsUrl: '',
+        showOnRsvp: true, rsvpLabel: 'Rehearsal Dinner'
+      },
+      {
+        id: 3, slug: 'saturday-activities',
+        title: 'Activities & Exploring', time: 'All Day',
+        dayLabel: 'Day Two', dayDate: 'Saturday, August 28, 2027', dayOrder: 2, sortOrder: 1,
+        description: 'Details coming soon. Stay tuned!',
+        venue: 'Location TBD', address: 'Details coming soon.', mapsUrl: '',
+        showOnRsvp: true, rsvpLabel: 'Activities & Exploring'
+      },
+      {
+        id: 4, slug: 'doors-open',
+        title: 'Doors Open — Guest Arrival', time: '3:30 PM',
+        dayLabel: 'Day Three — The Big Day', dayDate: 'Sunday, August 29, 2027', dayOrder: 3, sortOrder: 1,
+        description: 'Stewart Creek Golf & Country Club\n4100 Stewart Creek Dr, Canmore, AB\n\nPlease arrive and find your seat before the ceremony begins. Ushers will be on hand to help.',
+        venue: 'Stewart Creek Golf & Country Club', address: '4100 Stewart Creek Dr\nCanmore, AB T1W 2V3',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=4100+Stewart+Creek+Dr+Canmore+AB+T1W+2V3',
+        showOnRsvp: false, rsvpLabel: ''
+      },
+      {
+        id: 5, slug: 'wedding',
+        title: 'Ceremony', time: '4:00 PM',
+        dayLabel: 'Day Three — The Big Day', dayDate: 'Sunday, August 29, 2027', dayOrder: 3, sortOrder: 2,
+        description: 'Stewart Creek Golf & Country Club\n\nJack and Maja say "I Do." Approximately 30-45 minutes.',
+        venue: 'Stewart Creek Golf & Country Club', address: '4100 Stewart Creek Dr\nCanmore, AB T1W 2V3',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=4100+Stewart+Creek+Dr+Canmore+AB+T1W+2V3',
+        showOnRsvp: true, rsvpLabel: 'Ceremony & Reception'
+      },
+      {
+        id: 6, slug: 'photos-mingling',
+        title: 'Photos & Mingling', time: '5:00 PM',
+        dayLabel: 'Day Three — The Big Day', dayDate: 'Sunday, August 29, 2027', dayOrder: 3, sortOrder: 3,
+        description: 'Make your way to Bridgette Bar Canmore for the start of the evening. Rideshares and personal vehicles welcome.',
+        venue: 'Bridgette Bar Canmore', address: '1030 Spring Creek Dr\nCanmore, AB T1W 0C8',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=1030+Spring+Creek+Dr+Canmore+AB+T1W+0C8',
+        showOnRsvp: false, rsvpLabel: ''
+      },
+      {
+        id: 7, slug: 'cocktail-hour',
+        title: 'Cocktail Hour', time: '5:30 PM',
+        dayLabel: 'Day Three — The Big Day', dayDate: 'Sunday, August 29, 2027', dayOrder: 3, sortOrder: 4,
+        description: 'Bridgette Bar Canmore\n1030 Spring Creek Dr, Canmore, AB\n\nDrinks, appetizers, and good company.',
+        venue: 'Bridgette Bar Canmore', address: '1030 Spring Creek Dr\nCanmore, AB T1W 0C8',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=1030+Spring+Creek+Dr+Canmore+AB+T1W+0C8',
+        showOnRsvp: false, rsvpLabel: ''
+      },
+      {
+        id: 8, slug: 'dinner-speeches',
+        title: 'Dinner & Speeches', time: '6:30 PM',
+        dayLabel: 'Day Three — The Big Day', dayDate: 'Sunday, August 29, 2027', dayOrder: 3, sortOrder: 5,
+        description: 'Bridgette Bar Canmore\n\nSit-down dinner with toasts from the wedding party.',
+        venue: 'Bridgette Bar Canmore', address: '1030 Spring Creek Dr\nCanmore, AB T1W 0C8',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=1030+Spring+Creek+Dr+Canmore+AB+T1W+0C8',
+        showOnRsvp: false, rsvpLabel: ''
+      },
+      {
+        id: 9, slug: 'dancing',
+        title: 'Dancing & Celebration', time: 'Evening',
+        dayLabel: 'Day Three — The Big Day', dayDate: 'Sunday, August 29, 2027', dayOrder: 3, sortOrder: 6,
+        description: 'Bridgette Bar Canmore\n\nThe dance floor opens. Celebrate with us all night long.',
+        venue: 'Bridgette Bar Canmore', address: '1030 Spring Creek Dr\nCanmore, AB T1W 0C8',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=1030+Spring+Creek+Dr+Canmore+AB+T1W+0C8',
+        showOnRsvp: false, rsvpLabel: ''
+      },
+      {
+        id: 10, slug: 'last-dance',
+        title: 'Last Dance', time: '1:00 AM',
+        dayLabel: 'Day Three — The Big Day', dayDate: 'Sunday, August 29, 2027', dayOrder: 3, sortOrder: 7,
+        description: 'The night wraps up at 1:00 AM. Thank you for celebrating with us — we cannot wait to dance with you.',
+        venue: 'Bridgette Bar Canmore', address: '1030 Spring Creek Dr\nCanmore, AB T1W 0C8',
+        mapsUrl: 'https://www.google.com/maps/search/?api=1&query=1030+Spring+Creek+Dr+Canmore+AB+T1W+0C8',
+        showOnRsvp: false, rsvpLabel: ''
+      },
+      {
+        id: 11, slug: 'farewell-brunch',
+        title: 'Farewell Brunch', time: 'Morning',
+        dayLabel: 'Day Four', dayDate: 'Monday, August 30, 2027', dayOrder: 4, sortOrder: 1,
+        description: 'Details coming soon. Stay tuned!',
+        venue: 'Location TBD', address: 'Details coming soon.', mapsUrl: '',
+        showOnRsvp: true, rsvpLabel: 'Farewell Brunch'
+      }
+    ];
+    changed = true;
+  }
+
   if (changed) writeDb(db);
   return db;
 }
@@ -183,6 +285,7 @@ app.get('/admin',              requireAdminAuth, (req, res) => res.redirect('/ad
 app.get('/admin/dashboard',    requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'dashboard.html')));
 app.get('/admin/qr-generator', requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'qr-generator.html')));
 app.get('/admin/photos',       requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'photos.html')));
+app.get('/admin/schedule',     requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'schedule.html')));
 
 // ---------------------------------------------------------------------------
 // API — authentication
@@ -506,6 +609,87 @@ app.get('/api/party', requireSiteAuth, (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// API — Schedule (public / site-auth)
+// ---------------------------------------------------------------------------
+app.get('/api/schedule', requireSiteAuth, (req, res) => {
+  const db = getDb();
+  const sorted = [...db.scheduleEvents].sort((a, b) => a.dayOrder - b.dayOrder || a.sortOrder - b.sortOrder);
+  res.json(sorted);
+});
+
+// Events that appear on the RSVP form (no auth — needed before form submission)
+app.get('/api/rsvp/events', (req, res) => {
+  const db = getDb();
+  const events = (db.scheduleEvents || [])
+    .filter(e => e.showOnRsvp)
+    .sort((a, b) => a.dayOrder - b.dayOrder || a.sortOrder - b.sortOrder);
+  res.json(events);
+});
+
+// ---------------------------------------------------------------------------
+// API — Admin: Schedule events CRUD
+// ---------------------------------------------------------------------------
+app.get('/api/admin/events', requireAdminAuth, (req, res) => {
+  const db = getDb();
+  const sorted = [...db.scheduleEvents].sort((a, b) => a.dayOrder - b.dayOrder || a.sortOrder - b.sortOrder);
+  res.json(sorted);
+});
+
+app.post('/api/admin/events', requireAdminAuth, (req, res) => {
+  const db = getDb();
+  const { slug, title, time, dayLabel, dayDate, dayOrder, sortOrder, description, venue, address, mapsUrl, showOnRsvp, rsvpLabel } = req.body;
+  if (!title || !dayDate) return res.status(400).json({ error: 'Title and day date are required' });
+
+  const id = db.scheduleEvents.length ? Math.max(...db.scheduleEvents.map(e => e.id)) + 1 : 1;
+  const generatedSlug = (slug || title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const event = {
+    id,
+    slug:        generatedSlug,
+    title,
+    time:        time        || '',
+    dayLabel:    dayLabel    || '',
+    dayDate,
+    dayOrder:    parseInt(dayOrder,  10) || 1,
+    sortOrder:   parseInt(sortOrder, 10) || 1,
+    description: description || '',
+    venue:       venue       || '',
+    address:     address     || '',
+    mapsUrl:     mapsUrl     || '',
+    showOnRsvp:  showOnRsvp === true || showOnRsvp === 'true',
+    rsvpLabel:   rsvpLabel   || ''
+  };
+  db.scheduleEvents.push(event);
+  writeDb(db);
+  res.json({ success: true, event });
+});
+
+app.put('/api/admin/events/:id', requireAdminAuth, (req, res) => {
+  const db  = getDb();
+  const idx = db.scheduleEvents.findIndex(e => e.id === parseInt(req.params.id, 10));
+  if (idx === -1) return res.status(404).json({ error: 'Event not found' });
+
+  const evt = db.scheduleEvents[idx];
+  const fields = ['slug','title','time','dayLabel','dayDate','description','venue','address','mapsUrl','rsvpLabel'];
+  fields.forEach(f => { if (req.body[f] !== undefined) evt[f] = req.body[f]; });
+
+  if (req.body.dayOrder  !== undefined) evt.dayOrder  = parseInt(req.body.dayOrder,  10);
+  if (req.body.sortOrder !== undefined) evt.sortOrder = parseInt(req.body.sortOrder, 10);
+  if (req.body.showOnRsvp !== undefined) evt.showOnRsvp = req.body.showOnRsvp === true || req.body.showOnRsvp === 'true';
+
+  writeDb(db);
+  res.json({ success: true, event: evt });
+});
+
+app.delete('/api/admin/events/:id', requireAdminAuth, (req, res) => {
+  const db  = getDb();
+  const idx = db.scheduleEvents.findIndex(e => e.id === parseInt(req.params.id, 10));
+  if (idx === -1) return res.status(404).json({ error: 'Event not found' });
+  db.scheduleEvents.splice(idx, 1);
+  writeDb(db);
+  res.json({ success: true });
+});
+
+// ---------------------------------------------------------------------------
 // API — Admin: RSVPs
 // ---------------------------------------------------------------------------
 app.get('/api/admin/rsvps', requireAdminAuth, (req, res) => {
@@ -547,27 +731,25 @@ app.get('/api/admin/rsvps/export', requireAdminAuth, (req, res) => {
   res.send(header + rows.join('\n'));
 });
 
-const EVENT_IDS = [
-  'welcome-reception',
-  'rehearsal-dinner',
-  'saturday-activities',
-  'wedding',
-  'farewell-brunch'
-];
-
 app.get('/api/admin/stats', requireAdminAuth, (req, res) => {
-  const db          = getDb();
-  const total       = db.rsvps.length;
-  const attending   = db.rsvps.filter(r => r.attending === 'yes').length;
+  const db           = getDb();
+  const total        = db.rsvps.length;
+  const attending    = db.rsvps.filter(r => r.attending === 'yes').length;
   const notAttending = db.rsvps.filter(r => r.attending === 'no').length;
-  const totalGuests = db.rsvps.filter(r => r.attending === 'yes').reduce((s, r) => s + (r.guest_count || 1), 0);
+  const totalGuests  = db.rsvps.filter(r => r.attending === 'yes').reduce((s, r) => s + (r.guest_count || 1), 0);
+
+  const rsvpEvents = (db.scheduleEvents || [])
+    .filter(e => e.showOnRsvp)
+    .sort((a, b) => a.dayOrder - b.dayOrder || a.sortOrder - b.sortOrder);
 
   const eventCounts = {};
-  EVENT_IDS.forEach(id => {
-    eventCounts[id] = db.rsvps.filter(r => Array.isArray(r.events) && r.events.includes(id)).length;
+  const eventLabels = {};
+  rsvpEvents.forEach(evt => {
+    eventCounts[evt.slug] = db.rsvps.filter(r => Array.isArray(r.events) && r.events.includes(evt.slug)).length;
+    eventLabels[evt.slug] = evt.rsvpLabel || evt.title;
   });
 
-  res.json({ total, attending, notAttending, totalGuests, eventCounts });
+  res.json({ total, attending, notAttending, totalGuests, eventCounts, eventLabels });
 });
 
 // ---------------------------------------------------------------------------

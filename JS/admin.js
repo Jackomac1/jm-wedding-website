@@ -5,17 +5,12 @@
 // Used by: admin/dashboard.html
 // ============================================================
 
+// Populated by loadStats() — used by loadRsvps() for the Events column
+let eventLabels = {};
+
 // ----------------------------------------------------------
 // 1. Load Stats
 // ----------------------------------------------------------
-const EVENT_LABELS = {
-  'welcome-reception':   'Welcome Reception (Fri Aug 27)',
-  'rehearsal-dinner':    'Rehearsal Dinner (Fri Aug 27)',
-  'saturday-activities': 'Activities & Exploring (Sat Aug 28)',
-  'wedding':             'Ceremony & Reception (Sun Aug 29)',
-  'farewell-brunch':     'Farewell Brunch (Mon Aug 30)'
-};
-
 async function loadStats() {
   try {
     const res  = await fetch('/api/admin/stats');
@@ -32,17 +27,25 @@ async function loadStats() {
     set('statNotAttending', data.notAttending);
     set('statTotalGuests',  data.totalGuests);
 
+    // Cache labels for use by loadRsvps
+    if (data.eventLabels) eventLabels = data.eventLabels;
+
     // Event breakdown
     const breakdown = document.getElementById('eventBreakdown');
-    if (breakdown && data.eventCounts) {
-      breakdown.innerHTML = Object.entries(EVENT_LABELS).map(([id, label]) => {
-        const count = data.eventCounts[id] || 0;
-        return `
-          <div style="background:var(--admin-bg);border:1px solid var(--admin-border);border-radius:var(--radius-sm);padding:0.6rem 0.875rem;display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
-            <span style="font-size:0.82rem;color:var(--admin-text);">${label}</span>
-            <span style="font-size:1.1rem;font-weight:700;color:var(--admin-accent);min-width:2ch;text-align:right;">${count}</span>
-          </div>`;
-      }).join('');
+    if (breakdown) {
+      const entries = data.eventLabels ? Object.entries(data.eventLabels) : [];
+      if (!entries.length) {
+        breakdown.innerHTML = '<span style="color:var(--admin-muted);font-size:0.875rem;">No RSVP events configured.</span>';
+      } else {
+        breakdown.innerHTML = entries.map(([id, label]) => {
+          const count = (data.eventCounts && data.eventCounts[id]) || 0;
+          return `
+            <div style="background:var(--admin-bg);border:1px solid var(--admin-border);border-radius:var(--radius-sm);padding:0.6rem 0.875rem;display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
+              <span style="font-size:0.82rem;color:var(--admin-text);">${label}</span>
+              <span style="font-size:1.1rem;font-weight:700;color:var(--admin-accent);min-width:2ch;text-align:right;">${count}</span>
+            </div>`;
+        }).join('');
+      }
     }
 
   } catch (err) {
@@ -142,7 +145,7 @@ async function loadRsvps() {
         year: 'numeric', month: 'short', day: 'numeric'
       });
 
-      const eventNames = (row.events || []).map(id => EVENT_LABELS[id] || id).join(', ');
+      const eventNames = (row.events || []).map(id => eventLabels[id] || id).join(', ');
 
       return `
         <tr>

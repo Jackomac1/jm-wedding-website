@@ -67,10 +67,72 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // ----------------------------------------------------------
-  // 3. Attending radio: show/hide guest count, events, dietary & song
+  // 3. Load RSVP events from API and render checkboxes
   // ----------------------------------------------------------
-  const songRequestWrap = document.getElementById('songRequestWrap');
-  const eventsWrap      = document.getElementById('eventsWrap');
+  const songRequestWrap    = document.getElementById('songRequestWrap');
+  const eventsWrap         = document.getElementById('eventsWrap');
+  const eventsCheckboxes   = document.getElementById('eventsCheckboxes');
+  let   rsvpEvents         = [];   // populated after API call
+  let   defaultCheckedSlug = null; // first event with dayOrder === highest among wedding-day
+
+  async function loadRsvpEvents() {
+    try {
+      const res    = await fetch('/api/rsvp/events');
+      if (!res.ok) throw new Error();
+      rsvpEvents = await res.json();
+    } catch {
+      rsvpEvents = [];
+    }
+
+    if (!rsvpEvents.length) {
+      if (eventsCheckboxes) eventsCheckboxes.innerHTML = '<span style="color:#aaa;font-size:0.9rem;">No events configured yet.</span>';
+      return;
+    }
+
+    // Find the highest dayOrder (wedding day) to pre-check its first event
+    const maxDay = Math.max(...rsvpEvents.map(e => e.dayOrder));
+    const weddingDayEvent = rsvpEvents.find(e => e.dayOrder === maxDay - 1) // day 3 of 4
+      || rsvpEvents.find(e => e.dayOrder === Math.max(...rsvpEvents.map(d => d.dayOrder)));
+    // Pre-check the event with slug 'wedding' if it exists, otherwise none
+    const weddingEvent = rsvpEvents.find(e => e.slug === 'wedding');
+    defaultCheckedSlug = weddingEvent ? weddingEvent.slug : null;
+
+    // Group by dayOrder
+    const groups = [];
+    const map    = {};
+    rsvpEvents.forEach(evt => {
+      if (!map[evt.dayOrder]) {
+        map[evt.dayOrder] = { dayDate: evt.dayDate, dayOrder: evt.dayOrder, events: [] };
+        groups.push(map[evt.dayOrder]);
+      }
+      map[evt.dayOrder].events.push(evt);
+    });
+    groups.sort((a, b) => a.dayOrder - b.dayOrder);
+
+    let html = '';
+    groups.forEach(group => {
+      html += '<div class="events-day">';
+      html += '<div class="events-day-label">' + escText(group.dayDate) + '</div>';
+      group.events.forEach(evt => {
+        const checked = evt.slug === defaultCheckedSlug ? ' checked' : '';
+        html += '<label class="check-label">';
+        html += '<input type="checkbox" name="events" value="' + escText(evt.slug) + '" id="evt-' + escText(evt.slug) + '"' + checked + '>';
+        html += ' ' + escText(evt.rsvpLabel || evt.title);
+        html += '</label>';
+      });
+      html += '</div>';
+    });
+
+    if (eventsCheckboxes) eventsCheckboxes.innerHTML = html;
+  }
+
+  function escText(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Load events immediately (runs in parallel with rest of page setup)
+  loadRsvpEvents();
 
   function updateAttendingFields() {
     const attendingYes = document.getElementById('attendingYes');
@@ -85,12 +147,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       guestCountInput.value = 1;
     }
 
-    // Reset event checkboxes when switching to No, restore wedding default for Yes
+    // Reset all event checkboxes when switching to No; restore defaults for Yes
     if (!isYes) {
       document.querySelectorAll('input[name="events"]').forEach(cb => { cb.checked = false; });
-    } else {
-      const weddingCb = document.getElementById('evtWedding');
-      if (weddingCb) weddingCb.checked = true;
+    } else if (defaultCheckedSlug) {
+      const defaultCb = document.getElementById('evt-' + defaultCheckedSlug);
+      if (defaultCb) defaultCb.checked = true;
     }
   }
 

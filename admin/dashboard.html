@@ -38,6 +38,11 @@
             <span class="sidebar-nav-icon" aria-hidden="true">🖼</span> Photos
           </a>
         </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/schedule" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📅</span> Schedule
+          </a>
+        </div>
         <div class="sidebar-nav-section">Actions</div>
         <div class="sidebar-nav-item">
           <a href="#" class="sidebar-nav-link" id="exportCsvBtn">
@@ -209,8 +214,8 @@
       window.location.href = '/admin/login';
     });
 
-    function loadAll() {
-      loadStats();
+    async function loadAll() {
+      await loadStats();      // populates eventLabels before loadRsvps uses them
       loadRsvpStatus();
       loadRsvps();
     }

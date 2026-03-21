@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Schedule management — Admin">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Schedule — Admin</title>
+  <link rel="stylesheet" href="/CSS/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    .event-form-card {
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .event-form-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--admin-muted);
+      margin: 0 0 1.25rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .form-grid .full-width { grid-column: 1 / -1; }
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .full-width { grid-column: 1; }
+    }
+    .form-field { display: flex; flex-direction: column; gap: 0.3rem; }
+    .form-field label { font-size: 0.8rem; font-weight: 600; color: var(--admin-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .form-field input, .form-field textarea {
+      padding: 0.55rem 0.75rem;
+      font-size: 0.9rem;
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-sm);
+      background: var(--admin-bg);
+      color: var(--admin-text);
+      font-family: inherit;
+    }
+    .form-field textarea { resize: vertical; min-height: 80px; }
+    .form-field input:focus, .form-field textarea:focus {
+      outline: none;
+      border-color: var(--admin-accent);
+    }
+    .form-field-check {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0;
+    }
+    .form-field-check input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--admin-accent); }
+    .form-field-check label { font-size: 0.9rem; color: var(--admin-text); font-weight: 500; cursor: pointer; }
+    .form-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; }
+    .rsvp-label-wrap { display: none; }
+    .rsvp-label-wrap.visible { display: block; }
+
+    /* Event list */
+    .day-group { margin-bottom: 2rem; }
+    .day-group-header {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--admin-accent);
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--admin-border);
+    }
+    .event-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.5rem;
+    }
+    .event-row-time {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--admin-muted);
+      min-width: 70px;
+      flex-shrink: 0;
+    }
+    .event-row-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--admin-text);
+      flex: 1;
+    }
+    .event-row-rsvp {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 99px;
+      flex-shrink: 0;
+    }
+    .rsvp-yes { background: rgba(var(--sage-rgb, 168, 180, 204), 0.15); color: var(--admin-accent); }
+    .rsvp-no  { background: var(--admin-bg); color: var(--admin-muted); }
+    .event-row-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+    .hint-text { font-size: 0.75rem; color: var(--admin-muted); margin-top: 0.2rem; }
+  </style>
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar" role="navigation" aria-label="Admin navigation">
+      <div class="sidebar-brand">
+        <span class="sidebar-brand-script">J &amp; M</span>
+        <span class="sidebar-brand-label">Admin Panel</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-section">Main</div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/dashboard" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📊</span> Dashboard
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/qr-generator" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📷</span> QR Generator
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/photos" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">🖼</span> Photos
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/schedule" class="sidebar-nav-link active" aria-current="page">
+            <span class="sidebar-nav-icon" aria-hidden="true">📅</span> Schedule
+          </a>
+        </div>
+        <div class="sidebar-nav-section">Actions</div>
+        <div class="sidebar-nav-item">
+          <a href="#" class="sidebar-nav-link" id="adminLogoutBtn">
+            <span class="sidebar-nav-icon" aria-hidden="true">🚪</span> Logout
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/home" class="sidebar-back-link">← View Wedding Site</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+
+      <!-- Top Bar -->
+      <header class="admin-topbar">
+        <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+        <h1 class="admin-topbar-title">Schedule</h1>
+        <div class="admin-topbar-actions">
+          <button class="btn btn-primary btn-sm" id="addEventBtn">+ Add Event</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="admin-content">
+
+        <!-- Alerts -->
+        <div class="admin-alert admin-alert-error"   id="scheduleError"   role="alert"  aria-live="polite"></div>
+        <div class="admin-alert admin-alert-success" id="scheduleSuccess" role="status" aria-live="polite"></div>
+
+        <!-- Add / Edit Form -->
+        <div id="eventFormCard" class="event-form-card" style="display:none;">
+          <h3 class="event-form-title" id="eventFormTitle">Add New Event</h3>
+          <form id="eventForm" novalidate>
+            <input type="hidden" id="editingId" value="">
+
+            <div class="form-grid">
+
+              <!-- Title -->
+              <div class="form-field full-width">
+                <label for="fTitle">Title <span style="color:var(--berry);">*</span></label>
+                <input type="text" id="fTitle" placeholder="e.g. Welcome Reception" required>
+              </div>
+
+              <!-- Slug -->
+              <div class="form-field full-width">
+                <label for="fSlug">Slug (used in RSVP data)</label>
+                <input type="text" id="fSlug" placeholder="auto-generated from title">
+                <span class="hint-text">Only lowercase letters, numbers, and hyphens. Leave blank to auto-generate.</span>
+              </div>
+
+              <!-- Time -->
+              <div class="form-field">
+                <label for="fTime">Time</label>
+                <input type="text" id="fTime" placeholder="e.g. 4:00 PM, Evening, All Day">
+              </div>
+
+              <!-- Day Label -->
+              <div class="form-field">
+                <label for="fDayLabel">Day Label</label>
+                <input type="text" id="fDayLabel" placeholder="e.g. Day One, Day Three — The Big Day">
+              </div>
+
+              <!-- Day Date -->
+              <div class="form-field">
+                <label for="fDayDate">Day Date <span style="color:var(--berry);">*</span></label>
+                <input type="text" id="fDayDate" placeholder="e.g. Friday, August 27, 2027" required>
+                <span class="hint-text">Events with the same Day Date are grouped together on the schedule.</span>
+              </div>
+
+              <!-- Day Order -->
+              <div class="form-field">
+                <label for="fDayOrder">Day Order</label>
+                <input type="number" id="fDayOrder" placeholder="e.g. 1" min="1" style="max-width:120px;">
+                <span class="hint-text">Lower = earlier. Days are sorted by this number.</span>
+              </div>
+
+              <!-- Sort Order -->
+              <div class="form-field">
+                <label for="fSortOrder">Sort Order (within day)</label>
+                <input type="number" id="fSortOrder" placeholder="e.g. 1" min="1" style="max-width:120px;">
+              </div>
+
+              <!-- Description -->
+              <div class="form-field full-width">
+                <label for="fDescription">Description (shown on card front)</label>
+                <textarea id="fDescription" rows="4" placeholder="Event details shown to guests. Use new lines for line breaks."></textarea>
+              </div>
+
+              <!-- Venue -->
+              <div class="form-field">
+                <label for="fVenue">Venue Name (shown on card back)</label>
+                <input type="text" id="fVenue" placeholder="e.g. Bridgette Bar Canmore">
+              </div>
+
+              <!-- Address -->
+              <div class="form-field">
+                <label for="fAddress">Address (shown on card back)</label>
+                <textarea id="fAddress" rows="2" placeholder="e.g. 1030 Spring Creek Dr&#10;Canmore, AB T1W 0C8"></textarea>
+              </div>
+
+              <!-- Maps URL -->
+              <div class="form-field full-width">
+                <label for="fMapsUrl">Google Maps URL (leave blank to hide directions button)</label>
+                <input type="text" id="fMapsUrl" placeholder="https://www.google.com/maps/search/?api=1&query=...">
+              </div>
+
+              <!-- Show on RSVP -->
+              <div class="form-field full-width">
+                <div class="form-field-check">
+                  <input type="checkbox" id="fShowOnRsvp">
+                  <label for="fShowOnRsvp">Show as a checkbox on the RSVP form</label>
+                </div>
+
+                <div class="rsvp-label-wrap" id="rsvpLabelWrap">
+                  <label for="fRsvpLabel" style="font-size:0.8rem;font-weight:600;color:var(--admin-muted);text-transform:uppercase;letter-spacing:0.04em;">RSVP Checkbox Label</label>
+                  <input type="text" id="fRsvpLabel" placeholder="e.g. Ceremony &amp; Reception" style="margin-top:0.3rem;">
+                  <span class="hint-text">This label appears next to the checkbox on the RSVP form.</span>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="eventFormSubmit">Save Event</button>
+              <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Event List -->
+        <div id="eventList">
+          <div style="text-align:center;padding:3rem;color:var(--admin-muted);font-size:0.9rem;">Loading events…</div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    // ── Sidebar ────────────────────────────────────────────────
+    const sidebarToggle  = document.getElementById('sidebarToggle');
+    const adminSidebar   = document.getElementById('adminSidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    sidebarToggle.addEventListener('click', () => {
+      adminSidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('visible');
+    });
+    sidebarOverlay.addEventListener('click', () => {
+      adminSidebar.classList.remove('open');
+      sidebarOverlay.classList.remove('visible');
+    });
+    document.getElementById('adminLogoutBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await fetch('/api/admin/logout', { method: 'POST' });
+      window.location.href = '/admin/login';
+    });
+
+    // ── Helpers ────────────────────────────────────────────────
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function showMsg(msg, type) {
+      const s = document.getElementById('scheduleSuccess');
+      const e = document.getElementById('scheduleError');
+      s.classList.remove('visible');
+      e.classList.remove('visible');
+      if (type === 'success') {
+        s.textContent = msg; s.classList.add('visible');
+        setTimeout(() => s.classList.remove('visible'), 4000);
+      } else {
+        e.textContent = msg; e.classList.add('visible');
+        setTimeout(() => e.classList.remove('visible'), 6000);
+      }
+    }
+
+    // ── Show/hide RSVP label field ──────────────────────────────
+    const fShowOnRsvp  = document.getElementById('fShowOnRsvp');
+    const rsvpLabelWrap = document.getElementById('rsvpLabelWrap');
+    fShowOnRsvp.addEventListener('change', () => {
+      rsvpLabelWrap.classList.toggle('visible', fShowOnRsvp.checked);
+    });
+
+    // ── Form open / close ──────────────────────────────────────
+    const eventFormCard = document.getElementById('eventFormCard');
+    const eventFormTitle = document.getElementById('eventFormTitle');
+    const editingId     = document.getElementById('editingId');
+
+    document.getElementById('addEventBtn').addEventListener('click', () => {
+      openForm(null);
+    });
+    document.getElementById('cancelFormBtn').addEventListener('click', () => {
+      eventFormCard.style.display = 'none';
+    });
+
+    function openForm(event) {
+      editingId.value = event ? event.id : '';
+      eventFormTitle.textContent = event ? 'Edit Event' : 'Add New Event';
+      document.getElementById('fTitle').value       = event ? event.title       : '';
+      document.getElementById('fSlug').value        = event ? event.slug        : '';
+      document.getElementById('fTime').value        = event ? event.time        : '';
+      document.getElementById('fDayLabel').value    = event ? event.dayLabel    : '';
+      document.getElementById('fDayDate').value     = event ? event.dayDate     : '';
+      document.getElementById('fDayOrder').value    = event ? event.dayOrder    : '';
+      document.getElementById('fSortOrder').value   = event ? event.sortOrder   : '';
+      document.getElementById('fDescription').value = event ? event.description : '';
+      document.getElementById('fVenue').value       = event ? event.venue       : '';
+      document.getElementById('fAddress').value     = event ? event.address     : '';
+      document.getElementById('fMapsUrl').value     = event ? event.mapsUrl     : '';
+      fShowOnRsvp.checked                           = event ? event.showOnRsvp  : false;
+      document.getElementById('fRsvpLabel').value   = event ? event.rsvpLabel   : '';
+      rsvpLabelWrap.classList.toggle('visible', fShowOnRsvp.checked);
+      eventFormCard.style.display = 'block';
+      eventFormCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ── Form submission ────────────────────────────────────────
+    document.getElementById('eventForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id      = editingId.value;
+      const title   = document.getElementById('fTitle').value.trim();
+      const dayDate = document.getElementById('fDayDate').value.trim();
+
+      if (!title)   { showMsg('Title is required.', 'error'); return; }
+      if (!dayDate) { showMsg('Day Date is required.', 'error'); return; }
+
+      const payload = {
+        title,
+        dayDate,
+        slug:        document.getElementById('fSlug').value.trim(),
+        time:        document.getElementById('fTime').value.trim(),
+        dayLabel:    document.getElementById('fDayLabel').value.trim(),
+        dayOrder:    parseInt(document.getElementById('fDayOrder').value, 10) || 1,
+        sortOrder:   parseInt(document.getElementById('fSortOrder').value, 10) || 1,
+        description: document.getElementById('fDescription').value.trim(),
+        venue:       document.getElementById('fVenue').value.trim(),
+        address:     document.getElementById('fAddress').value.trim(),
+        mapsUrl:     document.getElementById('fMapsUrl').value.trim(),
+        showOnRsvp:  fShowOnRsvp.checked,
+        rsvpLabel:   document.getElementById('fRsvpLabel').value.trim()
+      };
+
+      const url    = id ? `/api/admin/events/${id}` : '/api/admin/events';
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const res  = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showMsg(id ? 'Event updated.' : 'Event added.', 'success');
+          eventFormCard.style.display = 'none';
+          loadEvents();
+        } else {
+          showMsg(data.error || 'Failed to save event.', 'error');
+        }
+      } catch {
+        showMsg('Network error. Please try again.', 'error');
+      }
+    });
+
+    // ── Delete ─────────────────────────────────────────────────
+    async function deleteEvent(id, title) {
+      if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+      try {
+        const res = await fetch(`/api/admin/events/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          showMsg(`Deleted "${title}".`, 'success');
+          loadEvents();
+        } else {
+          showMsg('Failed to delete event.', 'error');
+        }
+      } catch {
+        showMsg('Network error. Please try again.', 'error');
+      }
+    }
+
+    // ── Load & render ──────────────────────────────────────────
+    let allEvents = [];
+
+    async function loadEvents() {
+      const list = document.getElementById('eventList');
+      try {
+        const res    = await fetch('/api/admin/events');
+        if (!res.ok) throw new Error();
+        allEvents = await res.json();
+
+        if (!allEvents.length) {
+          list.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--admin-muted);font-size:0.9rem;">No events yet. Click &ldquo;Add Event&rdquo; to get started.</div>';
+          return;
+        }
+
+        // Group by dayOrder
+        const groups = [];
+        const map    = {};
+        allEvents.forEach(evt => {
+          if (!map[evt.dayOrder]) {
+            map[evt.dayOrder] = { dayLabel: evt.dayLabel, dayDate: evt.dayDate, dayOrder: evt.dayOrder, events: [] };
+            groups.push(map[evt.dayOrder]);
+          }
+          map[evt.dayOrder].events.push(evt);
+        });
+        groups.sort((a, b) => a.dayOrder - b.dayOrder);
+
+        let html = '';
+        groups.forEach(group => {
+          html += `
+            <div class="day-group">
+              <div class="day-group-header">${escHtml(group.dayDate)}${group.dayLabel ? ' &mdash; ' + escHtml(group.dayLabel) : ''}</div>
+          `;
+          group.events.forEach(evt => {
+            const rsvpBadge = evt.showOnRsvp
+              ? `<span class="event-row-rsvp rsvp-yes">RSVP: ${escHtml(evt.rsvpLabel || evt.title)}</span>`
+              : `<span class="event-row-rsvp rsvp-no">Not on RSVP</span>`;
+            html += `
+              <div class="event-row">
+                <span class="event-row-time">${escHtml(evt.time)}</span>
+                <span class="event-row-title">${escHtml(evt.title)}</span>
+                ${rsvpBadge}
+                <div class="event-row-actions">
+                  <button class="btn btn-secondary btn-sm" onclick="editEvent(${evt.id})">Edit</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteEvent(${evt.id}, '${escHtml(evt.title)}')">Delete</button>
+                </div>
+              </div>
+            `;
+          });
+          html += '</div>';
+        });
+
+        list.innerHTML = html;
+      } catch {
+        list.innerHTML = '<div style="text-align:center;padding:2rem;color:#999;">Failed to load events. Please refresh.</div>';
+      }
+    }
+
+    function editEvent(id) {
+      const evt = allEvents.find(e => e.id === id);
+      if (evt) openForm(evt);
+    }
+
+    loadEvents();
+  </script>
+
+</body>
+</html>
