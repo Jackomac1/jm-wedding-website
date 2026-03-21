@@ -829,6 +829,57 @@ app.post('/api/admin/guests/import', requireAdminAuth, (req, res) => {
   res.json({ imported, skipped, results });
 });
 
+app.get('/api/admin/qr/print-sheet', requireAdminAuth, async (req, res) => {
+  const db      = getDb();
+  const tokens  = [...db.guestTokens];
+  const siteUrl = process.env.SITE_URL || `http://localhost:${PORT}`;
+
+  const cards = await Promise.all(tokens.map(async tok => {
+    const url    = `${siteUrl}/rsvp?token=${tok.token}`;
+    const qrData = await QRCode.toDataURL(url, { width: 240, margin: 2, color: { dark: '#2e1618', light: '#ffffff' } });
+    const guests = tok.maxGuests > 1 ? `Up to ${tok.maxGuests} guests` : '1 guest';
+    return `
+      <div class="card">
+        <img src="${qrData}" alt="QR code for ${tok.guestName}" width="180" height="180">
+        <div class="name">${tok.guestName.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
+        <div class="guests">${guests}</div>
+      </div>`;
+  }));
+
+  res.setHeader('Content-Type', 'text/html');
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Codes — Print Sheet</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, serif; background: #fff; color: #2e1618; }
+    .toolbar { padding: 1rem 1.5rem; background: #f5f0eb; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 1rem; }
+    .toolbar h1 { font-size: 1rem; font-weight: 600; }
+    .toolbar button { padding: 0.5rem 1.25rem; background: #6c1420; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding: 1.5rem; }
+    .card { border: 1px solid #d4c9be; border-radius: 8px; padding: 1rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; break-inside: avoid; }
+    .card img { display: block; }
+    .name { font-size: 0.95rem; font-weight: 600; }
+    .guests { font-size: 0.75rem; color: #888; }
+    @media print {
+      .toolbar { display: none; }
+      .grid { padding: 0; gap: 0.5rem; }
+      body { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <h1>QR Print Sheet — ${tokens.length} invitation${tokens.length !== 1 ? 's' : ''}</h1>
+    <button onclick="window.print()">Print / Save as PDF</button>
+  </div>
+  <div class="grid">${cards.join('')}</div>
+</body>
+</html>`);
+});
+
 app.delete('/api/admin/tokens/:id', requireAdminAuth, (req, res) => {
   const db  = getDb();
   const idx = db.guestTokens.findIndex(t => t.id === parseInt(req.params.id, 10));

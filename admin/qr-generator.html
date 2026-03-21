@@ -224,7 +224,10 @@
         <section class="admin-table-card" aria-labelledby="tokensTableTitle">
           <div class="admin-table-header">
             <h3 id="tokensTableTitle">Existing Tokens</h3>
-            <button class="btn btn-secondary btn-sm" onclick="loadTokens()">↻ Refresh</button>
+            <div style="display:flex;gap:0.5rem;">
+              <button class="btn btn-secondary btn-sm" onclick="window.open('/api/admin/qr/print-sheet', '_blank')">Print QR Sheet</button>
+              <button class="btn btn-secondary btn-sm" onclick="loadTokens()">↻ Refresh</button>
+            </div>
           </div>
 
           <div class="admin-table-wrap" role="region" aria-label="Tokens table" tabindex="0">
