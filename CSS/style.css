@@ -542,6 +542,14 @@ h1, h2, h3, h4 {
   background-position: center center;
   background-repeat: no-repeat;
 }
+.site-bg-mobile {
+  display: none;
+}
+@media (max-width: 768px) {
+  .site-bg-mobile {
+    display: block;
+  }
+}
 
 /* On mobile, photo strips use the fixed background div instead of
    their own image (background-attachment:fixed doesn't work on mobile

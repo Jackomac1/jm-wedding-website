@@ -113,12 +113,17 @@ const upload = multer({
 
 // Site photo slot → filename map
 const SITE_PHOTO_SLOTS = {
-  home:      'photo-home.jpg',
-  details:   'photo-details.jpg',
-  rsvp:      'photo-rsvp.jpg',
-  registry:  'photo-registry.jpg',
-  contact:   'photo-contact.jpg',
-  dresscode: 'photo-dresscode.jpg'
+  home:            'photo-home.jpg',
+  details:         'photo-details.jpg',
+  rsvp:            'photo-rsvp.jpg',
+  registry:        'photo-registry.jpg',
+  contact:         'photo-contact.jpg',
+  dresscode:       'photo-dresscode.jpg',
+  'home-mobile':     'photo-home-mobile.jpg',
+  'details-mobile':  'photo-details-mobile.jpg',
+  'rsvp-mobile':     'photo-rsvp-mobile.jpg',
+  'registry-mobile': 'photo-registry-mobile.jpg',
+  'contact-mobile':  'photo-contact-mobile.jpg'
 };
 
 // ---------------------------------------------------------------------------

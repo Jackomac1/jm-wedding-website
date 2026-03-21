@@ -338,7 +338,7 @@
         <!-- ── Panel: Site Photos ─────────────────────── -->
         <div class="photo-panel active" id="panel-site" role="tabpanel">
           <p style="color:var(--admin-muted);font-size:0.875rem;margin-bottom:1.5rem;">
-            Click a card to replace the background photo used on that page. Max file size: 15 MB.
+            Each page has a desktop and mobile background photo. The mobile version is shown on screens 768px wide or narrower. If no mobile photo is uploaded, the desktop photo is used as fallback. Max file size: 15 MB.
           </p>
           <div class="site-photos-grid" id="sitePhotosGrid">
             <!-- rendered by JS -->
@@ -431,34 +431,56 @@
 
     // ── Site Photos ─────────────────────────────────────────────────
     const SITE_SLOTS = [
-      { slot: 'home',      label: 'Homepage Hero',     usedOn: 'Homepage full-height hero' },
-      { slot: 'details',   label: 'Details Page',      usedOn: 'Details hero & photo strip' },
-      { slot: 'rsvp',      label: 'RSVP / Schedule',   usedOn: 'RSVP & Schedule hero and strips' },
-      { slot: 'registry',  label: 'Registry Page',     usedOn: 'Registry hero & photo strip' },
-      { slot: 'contact',   label: 'Contact Page',      usedOn: 'Contact hero & photo strip' },
-      { slot: 'dresscode', label: 'Dress Code Photo',  usedOn: 'Dress code card on Details page' }
+      { slot: 'home',      label: 'Homepage Hero',     usedOn: 'Homepage full-height hero',         hasMobile: true },
+      { slot: 'details',   label: 'Details Page',      usedOn: 'Details hero & photo strip',        hasMobile: true },
+      { slot: 'rsvp',      label: 'RSVP / Schedule',   usedOn: 'RSVP & Schedule hero and strips',   hasMobile: true },
+      { slot: 'registry',  label: 'Registry Page',     usedOn: 'Registry hero & photo strip',       hasMobile: true },
+      { slot: 'contact',   label: 'Contact Page',      usedOn: 'Contact hero & photo strip',        hasMobile: true },
+      { slot: 'dresscode', label: 'Dress Code Photo',  usedOn: 'Dress code card on Details page',   hasMobile: false }
     ];
 
     const SLOT_FILE = {
       home: 'photo-home.jpg', details: 'photo-details.jpg', rsvp: 'photo-rsvp.jpg',
-      registry: 'photo-registry.jpg', contact: 'photo-contact.jpg', dresscode: 'photo-dresscode.jpg'
+      registry: 'photo-registry.jpg', contact: 'photo-contact.jpg', dresscode: 'photo-dresscode.jpg',
+      'home-mobile': 'photo-home-mobile.jpg', 'details-mobile': 'photo-details-mobile.jpg',
+      'rsvp-mobile': 'photo-rsvp-mobile.jpg', 'registry-mobile': 'photo-registry-mobile.jpg',
+      'contact-mobile': 'photo-contact-mobile.jpg'
     };
 
     function renderSitePhotos() {
       const grid = document.getElementById('sitePhotosGrid');
-      grid.innerHTML = SITE_SLOTS.map(s => `
-        <div class="site-photo-card">
-          <img class="site-photo-thumb" src="/Images/${SLOT_FILE[s.slot]}?t=${Date.now()}" alt="${s.label}" id="thumb-${s.slot}">
-          <div class="site-photo-info">
-            <div class="site-photo-label">${s.label}</div>
-            <div class="site-photo-used">${s.usedOn}</div>
-            <label style="display:block;width:100%;">
-              <input type="file" accept="image/*" style="display:none;" onchange="uploadSitePhoto('${s.slot}', this)">
-              <span class="btn btn-secondary btn-sm" style="display:block;text-align:center;cursor:pointer;">Replace Photo</span>
+      grid.innerHTML = SITE_SLOTS.map(s => {
+        const mobileSlot = s.slot + '-mobile';
+        const mobileSection = s.hasMobile ? `
+          <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--admin-border);">
+            <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--admin-muted);font-weight:700;margin-bottom:0.4rem;">Mobile Version</div>
+            <img class="site-photo-thumb" src="/Images/${SLOT_FILE[mobileSlot]}?t=${Date.now()}" alt="${s.label} mobile"
+              id="thumb-${mobileSlot}"
+              style="height:100px;object-fit:cover;"
+              onerror="this.style.display='none';document.getElementById('mobile-placeholder-${s.slot}').style.display='flex';">
+            <div id="mobile-placeholder-${s.slot}" style="display:none;height:100px;background:var(--admin-border);border-radius:4px;align-items:center;justify-content:center;font-size:0.75rem;color:var(--admin-muted);">No mobile photo uploaded</div>
+            <label style="display:block;width:100%;margin-top:0.5rem;">
+              <input type="file" accept="image/*" style="display:none;" onchange="uploadSitePhoto('${mobileSlot}', this)">
+              <span class="btn btn-secondary btn-sm" style="display:block;text-align:center;cursor:pointer;font-size:0.78rem;">Replace Mobile Photo</span>
             </label>
           </div>
-        </div>
-      `).join('');
+        ` : '';
+
+        return `
+          <div class="site-photo-card">
+            <img class="site-photo-thumb" src="/Images/${SLOT_FILE[s.slot]}?t=${Date.now()}" alt="${s.label}" id="thumb-${s.slot}">
+            <div class="site-photo-info">
+              <div class="site-photo-label">${s.label}</div>
+              <div class="site-photo-used">${s.usedOn}</div>
+              <label style="display:block;width:100%;">
+                <input type="file" accept="image/*" style="display:none;" onchange="uploadSitePhoto('${s.slot}', this)">
+                <span class="btn btn-secondary btn-sm" style="display:block;text-align:center;cursor:pointer;">Replace Desktop Photo</span>
+              </label>
+              ${mobileSection}
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     async function uploadSitePhoto(slot, input) {
@@ -473,7 +495,14 @@
 
         // Refresh thumbnail with cache-bust
         const thumb = document.getElementById(`thumb-${slot}`);
-        if (thumb) thumb.src = `/Images/${SLOT_FILE[slot]}?t=${Date.now()}`;
+        if (thumb) {
+          thumb.style.display = 'block';
+          thumb.src = `/Images/${SLOT_FILE[slot]}?t=${Date.now()}`;
+          // Hide the placeholder if it exists
+          const baseSlot = slot.replace('-mobile', '');
+          const placeholder = document.getElementById(`mobile-placeholder-${baseSlot}`);
+          if (placeholder) placeholder.style.display = 'none';
+        }
         showToast('Photo updated successfully');
       } catch (err) {
         showToast(err.message, 'error');
