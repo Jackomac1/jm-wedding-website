@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Background music management — Admin">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Music — Admin</title>
+  <link rel="stylesheet" href="/CSS/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    .music-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--admin-border);
+      margin-bottom: 1.5rem;
+    }
+    .music-tab {
+      padding: 0.6rem 1.4rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      color: var(--admin-muted);
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .music-tab.active {
+      color: var(--admin-accent);
+      border-bottom-color: var(--admin-accent);
+    }
+    .music-panel { display: none; }
+    .music-panel.active { display: block; }
+
+    /* Spotify search */
+    .music-search-wrap { position: relative; }
+    .music-search-input {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      color: var(--admin-text);
+      box-sizing: border-box;
+    }
+    .music-search-input:focus { outline: 2px solid var(--admin-accent); outline-offset: 1px; }
+    .music-results {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: #fff;
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      z-index: 50;
+      max-height: 300px;
+      overflow-y: auto;
+      display: none;
+    }
+    .music-results.visible { display: block; }
+    .music-result-item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.6rem 0.85rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .music-result-item:hover { background: var(--admin-bg); }
+    .music-result-item img { border-radius: 3px; flex-shrink: 0; }
+    .music-result-name   { font-size: 0.875rem; font-weight: 600; color: var(--admin-text); display: block; }
+    .music-result-artist { font-size: 0.78rem;  color: var(--admin-muted); display: block; }
+    .music-result-no-preview { font-size: 0.75rem; color: #e57373; }
+
+    /* Selected track */
+    .music-selected {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: var(--admin-bg);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--admin-border);
+      margin-top: 0.75rem;
+    }
+    .music-selected.visible { display: flex; }
+    .music-selected img { border-radius: 4px; flex-shrink: 0; }
+    .music-selected-info { flex: 1; min-width: 0; }
+    .music-selected-name   { font-weight: 600; font-size: 0.9rem; color: var(--admin-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+    .music-selected-artist { font-size: 0.8rem; color: var(--admin-muted); display: block; }
+    .music-clear-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--admin-muted); font-size: 1.1rem; padding: 0.2rem 0.4rem;
+      flex-shrink: 0;
+    }
+    .music-clear-btn:hover { color: var(--admin-text); }
+
+    /* Current song card */
+    .current-song-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--admin-bg);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--admin-border);
+      margin-bottom: 1.25rem;
+    }
+    .current-song-card img { border-radius: 4px; flex-shrink: 0; }
+    .current-song-info { flex: 1; min-width: 0; }
+    .current-song-name   { font-weight: 600; font-size: 0.95rem; color: var(--admin-text); }
+    .current-song-artist { font-size: 0.82rem; color: var(--admin-muted); margin-top: 0.15rem; }
+    .current-song-badge  { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #fff; background: var(--admin-accent); border-radius: 3px; padding: 0.15rem 0.5rem; display: inline-block; margin-top: 0.3rem; }
+  </style>
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar" role="navigation" aria-label="Admin navigation">
+      <div class="sidebar-brand">
+        <span class="sidebar-brand-script">J &amp; M</span>
+        <span class="sidebar-brand-label">Admin Panel</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-section">Main</div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/dashboard" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📊</span> Dashboard
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/qr-generator" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📷</span> QR Generator
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/photos" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">🖼</span> Photos
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/schedule" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📅</span> Schedule
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/music" class="sidebar-nav-link active" aria-current="page">
+            <span class="sidebar-nav-icon" aria-hidden="true">&#9834;</span> Music
+          </a>
+        </div>
+        <div class="sidebar-nav-section">Actions</div>
+        <div class="sidebar-nav-item">
+          <a href="#" class="sidebar-nav-link" id="adminLogoutBtn">
+            <span class="sidebar-nav-icon" aria-hidden="true">🚪</span> Logout
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/home" class="sidebar-back-link">← View Wedding Site</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+
+      <!-- Top Bar -->
+      <header class="admin-topbar">
+        <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+        <h1 class="admin-topbar-title">Music</h1>
+        <div class="admin-topbar-actions">
+          <button class="btn btn-secondary btn-sm" onclick="loadMusic()">↻ Refresh</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="admin-content">
+
+        <div class="admin-alert admin-alert-error"   id="musicError"   role="alert"  aria-live="polite"></div>
+        <div class="admin-alert admin-alert-success" id="musicSuccess" role="status" aria-live="polite"></div>
+
+        <!-- Current song + enable toggle -->
+        <section aria-labelledby="currentTitle" style="margin-bottom:1.5rem;">
+          <div class="admin-card" style="padding:1.5rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.25rem;">
+              <h2 id="currentTitle" style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--admin-muted);margin:0;">Background Music</h2>
+              <div style="display:flex;align-items:center;gap:0.75rem;">
+                <span id="enabledLabel" style="font-size:0.85rem;color:var(--admin-muted);">Loading&hellip;</span>
+                <label class="toggle-switch" for="musicEnabled" aria-label="Enable background music">
+                  <input type="checkbox" id="musicEnabled" onchange="toggleEnabled()">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Current song display -->
+            <div id="currentSongCard" class="current-song-card" style="display:none;">
+              <img id="currentAlbumArt" src="" alt="" width="52" height="52" style="display:none;">
+              <div class="current-song-info">
+                <div class="current-song-name"  id="currentSongName"></div>
+                <div class="current-song-artist" id="currentSongArtist"></div>
+                <span class="current-song-badge" id="currentSourceBadge"></span>
+              </div>
+              <button class="btn btn-sm" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;flex-shrink:0;" onclick="deleteSong()">Remove</button>
+            </div>
+            <div id="noSongNotice" style="font-size:0.875rem;color:var(--admin-muted);">No song set — use the tabs below to add one.</div>
+
+            <!-- Display name -->
+            <div style="display:flex;gap:0.75rem;align-items:flex-end;flex-wrap:wrap;margin-top:1.25rem;">
+              <div style="flex:1;min-width:200px;">
+                <label style="display:block;font-size:0.8rem;font-weight:600;color:var(--admin-muted);margin-bottom:0.35rem;" for="displayNameInput">Button tooltip (optional override)</label>
+                <input type="text" id="displayNameInput" placeholder="e.g. Our Song — Artist" style="width:100%;padding:0.55rem 0.75rem;border:1px solid var(--admin-border);border-radius:var(--radius-sm);font-size:0.9rem;color:var(--admin-text);">
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="saveDisplayName()">Save</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Source picker -->
+        <section aria-labelledby="sourceTitle">
+          <div class="admin-card" style="padding:1.5rem;">
+            <h2 id="sourceTitle" style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--admin-muted);margin:0 0 1.25rem;">Set Song</h2>
+
+            <div class="music-tabs" role="tablist">
+              <button class="music-tab active" role="tab" id="tab-spotify" aria-selected="true"  aria-controls="panel-spotify" onclick="switchTab('spotify')">Spotify Preview</button>
+              <button class="music-tab"        role="tab" id="tab-upload"  aria-selected="false" aria-controls="panel-upload"  onclick="switchTab('upload')">Upload File</button>
+            </div>
+
+            <!-- Spotify panel -->
+            <div class="music-panel active" id="panel-spotify" role="tabpanel" aria-labelledby="tab-spotify">
+              <p style="font-size:0.875rem;color:var(--admin-muted);margin-bottom:1rem;">Searches Spotify and plays the free 30-second preview clip on loop. No login required for guests.</p>
+
+              <div class="music-search-wrap">
+                <input type="text" id="spotifySearch" class="music-search-input" placeholder="Search for a song&hellip;" autocomplete="off" aria-label="Search Spotify">
+                <ul class="music-results" id="spotifyResults" role="listbox" aria-label="Search results"></ul>
+              </div>
+
+              <div class="music-selected" id="spotifySelected">
+                <img id="spotifySelectedImg" src="" alt="" width="44" height="44" style="display:none;">
+                <div class="music-selected-info">
+                  <span class="music-selected-name"   id="spotifySelectedName"></span>
+                  <span class="music-selected-artist" id="spotifySelectedArtist"></span>
+                </div>
+                <button type="button" class="music-clear-btn" id="spotifyClearBtn" aria-label="Clear selection">&#x2715;</button>
+              </div>
+
+              <div style="margin-top:1rem;">
+                <button class="btn btn-primary btn-sm" id="saveSpotifyBtn" onclick="saveSpotify()" disabled>Set as Background Song</button>
+              </div>
+            </div>
+
+            <!-- Upload panel -->
+            <div class="music-panel" id="panel-upload" role="tabpanel" aria-labelledby="tab-upload">
+              <p style="font-size:0.875rem;color:var(--admin-muted);margin-bottom:1rem;">Upload an MP3 or M4A for the full track. Max 30 MB. Replaces any existing upload.</p>
+              <form id="uploadForm" onsubmit="uploadSong(event)">
+                <div style="display:flex;gap:0.75rem;align-items:flex-end;flex-wrap:wrap;">
+                  <div style="flex:1;min-width:200px;">
+                    <label style="display:block;font-size:0.8rem;font-weight:600;color:var(--admin-muted);margin-bottom:0.35rem;" for="audioFile">Audio file</label>
+                    <input type="file" id="audioFile" accept="audio/*" required style="width:100%;padding:0.45rem 0;font-size:0.875rem;">
+                  </div>
+                  <button type="submit" class="btn btn-primary btn-sm" id="uploadBtn">Upload</button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="/JS/admin.js"></script>
+  <script>
+    // ── Tab switching ────────────────────────────────────────────
+    function switchTab(name) {
+      document.querySelectorAll('.music-tab').forEach(t => {
+        t.classList.toggle('active', t.id === 'tab-' + name);
+        t.setAttribute('aria-selected', String(t.id === 'tab-' + name));
+      });
+      document.querySelectorAll('.music-panel').forEach(p => {
+        p.classList.toggle('active', p.id === 'panel-' + name);
+      });
+    }
+
+    // ── Alerts ───────────────────────────────────────────────────
+    function showErr(msg) {
+      const el = document.getElementById('musicError');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 6000);
+    }
+    function showOk(msg) {
+      const el = document.getElementById('musicSuccess');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 3500);
+    }
+
+    // ── Load current settings ────────────────────────────────────
+    async function loadMusic() {
+      const data = await fetch('/api/admin/music').then(r => r.json()).catch(() => null);
+      if (!data) return;
+
+      document.getElementById('musicEnabled').checked     = !!data.enabled;
+      document.getElementById('enabledLabel').textContent = data.enabled ? 'Enabled' : 'Disabled';
+      document.getElementById('displayNameInput').value   = data.displayName || '';
+
+      const hasSource = data.source === 'spotify' ? !!data.previewUrl : !!data.filename;
+
+      if (hasSource) {
+        document.getElementById('currentSongCard').style.display = 'flex';
+        document.getElementById('noSongNotice').style.display    = 'none';
+
+        if (data.source === 'spotify') {
+          document.getElementById('currentSongName').textContent   = data.trackName || 'Unknown track';
+          document.getElementById('currentSongArtist').textContent = data.artist    || '';
+          document.getElementById('currentSourceBadge').textContent = 'Spotify preview';
+          const art = document.getElementById('currentAlbumArt');
+          if (data.albumArt) { art.src = data.albumArt; art.style.display = 'block'; }
+          else               { art.style.display = 'none'; }
+        } else {
+          document.getElementById('currentSongName').textContent   = data.filename  || 'Uploaded file';
+          document.getElementById('currentSongArtist').textContent = '';
+          document.getElementById('currentSourceBadge').textContent = 'Uploaded file';
+          document.getElementById('currentAlbumArt').style.display = 'none';
+        }
+      } else {
+        document.getElementById('currentSongCard').style.display = 'none';
+        document.getElementById('noSongNotice').style.display    = 'block';
+      }
+    }
+
+    // ── Enable toggle ────────────────────────────────────────────
+    async function toggleEnabled() {
+      const enabled = document.getElementById('musicEnabled').checked;
+      const r = await fetch('/api/admin/music/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled })
+      });
+      if (r.ok) {
+        document.getElementById('enabledLabel').textContent = enabled ? 'Enabled' : 'Disabled';
+        showOk(enabled ? 'Music enabled — guests will see the player.' : 'Music disabled.');
+      } else {
+        showErr('Failed to update setting.');
+        loadMusic();
+      }
+    }
+
+    // ── Display name ─────────────────────────────────────────────
+    async function saveDisplayName() {
+      const displayName = document.getElementById('displayNameInput').value.trim();
+      const r = await fetch('/api/admin/music/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName })
+      });
+      if (r.ok) showOk('Tooltip saved.');
+      else      showErr('Failed to save.');
+    }
+
+    // ── Delete song ──────────────────────────────────────────────
+    async function deleteSong() {
+      if (!confirm('Remove the current song?')) return;
+      const r = await fetch('/api/admin/music', { method: 'DELETE' });
+      if (r.ok) { showOk('Song removed.'); loadMusic(); }
+      else      showErr('Failed to remove song.');
+    }
+
+    // ── Upload ───────────────────────────────────────────────────
+    async function uploadSong(e) {
+      e.preventDefault();
+      const file = document.getElementById('audioFile').files[0];
+      if (!file) return;
+      const btn = document.getElementById('uploadBtn');
+      btn.disabled = true; btn.textContent = 'Uploading…';
+      const form = new FormData();
+      form.append('audio', file);
+      const r = await fetch('/api/admin/music/upload', { method: 'POST', body: form });
+      btn.disabled = false; btn.textContent = 'Upload';
+      if (r.ok) {
+        document.getElementById('uploadForm').reset();
+        showOk('Song uploaded.');
+        loadMusic();
+      } else {
+        const err = await r.json().catch(() => ({}));
+        showErr(err.error || 'Upload failed.');
+      }
+    }
+
+    // ── Spotify search ───────────────────────────────────────────
+    let selectedTrack  = null;
+    let searchTimeout  = null;
+
+    const searchInput  = document.getElementById('spotifySearch');
+    const resultsEl    = document.getElementById('spotifyResults');
+    const selectedEl   = document.getElementById('spotifySelected');
+    const saveBtn      = document.getElementById('saveSpotifyBtn');
+
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      const q = searchInput.value.trim();
+      if (q.length < 2) { resultsEl.innerHTML = ''; resultsEl.classList.remove('visible'); return; }
+      searchTimeout = setTimeout(async () => {
+        try {
+          const res  = await fetch('/api/spotify/search?q=' + encodeURIComponent(q));
+          const data = await res.json();
+          resultsEl.innerHTML = '';
+          if (!data.tracks || !data.tracks.length) { resultsEl.classList.remove('visible'); return; }
+          data.tracks.forEach(track => {
+            const li = document.createElement('li');
+            li.setAttribute('role', 'option');
+            li.className = 'music-result-item';
+            li.innerHTML =
+              (track.image ? '<img src="' + track.image + '" alt="" width="36" height="36">' : '') +
+              '<div>' +
+                '<span class="music-result-name">' + esc(track.name) + '</span>' +
+                '<span class="music-result-artist">' + esc(track.artist) + '</span>' +
+                (!track.preview_url ? '<span class="music-result-no-preview">No preview available</span>' : '') +
+              '</div>';
+            if (track.preview_url) {
+              li.addEventListener('click', () => pickTrack(track));
+            } else {
+              li.style.opacity = '0.5';
+              li.style.cursor  = 'default';
+            }
+            resultsEl.appendChild(li);
+          });
+          resultsEl.classList.add('visible');
+        } catch { /* ignore */ }
+      }, 350);
+    });
+
+    document.addEventListener('click', e => {
+      if (!searchInput.contains(e.target) && !resultsEl.contains(e.target)) {
+        resultsEl.classList.remove('visible');
+      }
+    });
+
+    document.getElementById('spotifyClearBtn').addEventListener('click', clearSelection);
+
+    function pickTrack(track) {
+      selectedTrack = track;
+      document.getElementById('spotifySelectedName').textContent   = track.name;
+      document.getElementById('spotifySelectedArtist').textContent = track.artist;
+      const img = document.getElementById('spotifySelectedImg');
+      if (track.image) { img.src = track.image; img.style.display = 'block'; }
+      else               img.style.display = 'none';
+      selectedEl.classList.add('visible');
+      searchInput.style.display = 'none';
+      resultsEl.innerHTML = '';
+      resultsEl.classList.remove('visible');
+      saveBtn.disabled = false;
+    }
+
+    function clearSelection() {
+      selectedTrack = null;
+      searchInput.style.display = 'block';
+      searchInput.value = '';
+      selectedEl.classList.remove('visible');
+      saveBtn.disabled = true;
+    }
+
+    async function saveSpotify() {
+      if (!selectedTrack) return;
+      saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+      const r = await fetch('/api/admin/music/spotify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          previewUrl: selectedTrack.preview_url,
+          trackName:  selectedTrack.name,
+          artist:     selectedTrack.artist,
+          albumArt:   selectedTrack.image || ''
+        })
+      });
+      saveBtn.disabled = false; saveBtn.textContent = 'Set as Background Song';
+      if (r.ok) {
+        showOk('Song set. Toggle it on above to go live.');
+        clearSelection();
+        loadMusic();
+      } else {
+        const err = await r.json().catch(() => ({}));
+        showErr(err.error || 'Failed to save.');
+      }
+    }
+
+    function esc(str) {
+      return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    loadMusic();
+  </script>
+
+</body>
+</html>

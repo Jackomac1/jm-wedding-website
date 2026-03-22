@@ -2201,6 +2201,46 @@ body.theme-bluebell-grassland {
 .faq-answer a { color: var(--gold); }
 
 /* ============================================================
+   Music player — floating toggle button
+   ============================================================ */
+.music-toggle-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 1.5rem;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--espresso);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.65);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+}
+.music-toggle-btn:hover {
+  background: var(--grape-fizz);
+  color: #fff;
+  transform: scale(1.07);
+}
+.music-toggle-btn.playing {
+  background: var(--grape-fizz);
+  color: #fff;
+}
+.music-toggle-btn[data-waiting="true"] {
+  animation: music-pulse 1.6s ease-in-out infinite;
+}
+@keyframes music-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+/* ============================================================
    Media query additions for new pages
    ============================================================ */
 @media (max-width: 768px) {

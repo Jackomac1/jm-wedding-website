@@ -160,7 +160,94 @@
 })();
 
 // ============================================================
-// 6. Logout button
+// 6. Background music player
+// ============================================================
+(function initMusicPlayer() {
+  fetch('/api/music')
+    .then(r => r.json())
+    .then(data => {
+      if (!data.enabled || !data.src) return;
+
+      const btn = document.createElement('button');
+      btn.className = 'music-toggle-btn';
+      btn.setAttribute('aria-label', 'Play music');
+      btn.setAttribute('title', data.displayName || 'Background music');
+      btn.innerHTML = '&#9834;'; // ♪
+      document.body.appendChild(btn);
+
+      const audio = new Audio(data.src);
+      audio.loop   = true;
+      audio.volume = 0.35;
+
+      let isPlaying  = false;
+      let hasStarted = false;
+
+      function setPlaying(state) {
+        isPlaying = state;
+        btn.classList.toggle('playing', state);
+        btn.setAttribute('aria-label', state ? 'Pause music' : 'Play music');
+        btn.removeAttribute('data-waiting');
+      }
+
+      function tryPlay() {
+        // Calculate elapsed time so cross-page audio feels continuous
+        const startedAt = sessionStorage.getItem('musicStartedAt');
+        if (startedAt && audio.duration) {
+          const elapsed = (Date.now() - parseInt(startedAt, 10)) / 1000;
+          audio.currentTime = elapsed % audio.duration;
+        }
+        btn.setAttribute('data-waiting', 'true');
+        audio.play()
+          .then(() => { setPlaying(true); hasStarted = true; })
+          .catch(() => { btn.removeAttribute('data-waiting'); });
+      }
+
+      // Seek once metadata is ready, then play (handles case where duration unknown at load time)
+      audio.addEventListener('loadedmetadata', () => {
+        if (sessionStorage.getItem('musicEnabled') === 'true' && !hasStarted) {
+          tryPlay();
+        }
+      });
+
+      // If metadata already loaded, try immediately
+      if (sessionStorage.getItem('musicEnabled') === 'true') {
+        if (audio.readyState >= 1) {
+          tryPlay();
+        }
+        // else loadedmetadata event above will fire
+      }
+
+      btn.addEventListener('click', () => {
+        if (isPlaying) {
+          audio.pause();
+          setPlaying(false);
+          sessionStorage.removeItem('musicEnabled');
+          sessionStorage.removeItem('musicStartedAt');
+        } else {
+          if (!sessionStorage.getItem('musicStartedAt')) {
+            sessionStorage.setItem('musicStartedAt', String(Date.now()));
+          }
+          btn.setAttribute('data-waiting', 'true');
+          audio.play()
+            .then(() => { setPlaying(true); hasStarted = true; sessionStorage.setItem('musicEnabled', 'true'); })
+            .catch(() => { btn.removeAttribute('data-waiting'); });
+        }
+      });
+
+      // Before navigating away, update stored start time to reflect current position
+      window.addEventListener('beforeunload', () => {
+        if (isPlaying) {
+          const adjustedStart = Date.now() - Math.round(audio.currentTime * 1000);
+          sessionStorage.setItem('musicStartedAt', String(adjustedStart));
+          sessionStorage.setItem('musicEnabled', 'true');
+        }
+      });
+    })
+    .catch(() => {}); // silently ignore if music not configured
+})();
+
+// ============================================================
+// 7. Logout button (was 6)
 // ============================================================
 (function initLogout() {
   const btn = document.getElementById('logoutBtn');

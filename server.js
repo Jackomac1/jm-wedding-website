@@ -22,9 +22,11 @@ const PORT = process.env.PORT || 3000;
 const dataDir  = path.join(__dirname, 'data');
 const dbFile   = path.join(dataDir, 'db.json');
 const imagesDir = path.join(__dirname, 'Images');
+const audioDir  = path.join(__dirname, 'audio');
 
 if (!fs.existsSync(dataDir))   fs.mkdirSync(dataDir,   { recursive: true });
 if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+if (!fs.existsSync(audioDir))  fs.mkdirSync(audioDir,  { recursive: true });
 
 function readDb() {
   if (!fs.existsSync(dbFile)) return null;
@@ -188,6 +190,21 @@ function getDb() {
     changed = true;
   }
 
+  // Migrate: add music settings if missing
+  if (!db.music) {
+    db.music = { enabled: false, source: null, filename: null, previewUrl: null, trackName: '', artist: '', albumArt: '', displayName: '' };
+    changed = true;
+  }
+  // Migrate: ensure spotify fields exist on older records
+  if (db.music && db.music.source === undefined) {
+    db.music.source     = db.music.filename ? 'upload' : null;
+    db.music.previewUrl = db.music.previewUrl || null;
+    db.music.trackName  = db.music.trackName  || '';
+    db.music.artist     = db.music.artist     || '';
+    db.music.albumArt   = db.music.albumArt   || '';
+    changed = true;
+  }
+
   if (changed) writeDb(db);
   return db;
 }
@@ -211,6 +228,21 @@ const upload = multer({
     cb(new Error('Only image files are allowed'));
   },
   limits: { fileSize: 15 * 1024 * 1024 } // 15 MB
+});
+
+const musicUpload = multer({
+  storage: multer.diskStorage({
+    destination: audioDir,
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || '.mp3';
+      cb(null, `site-music${ext}`);
+    }
+  }),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('audio/')) return cb(null, true);
+    cb(new Error('Only audio files are allowed'));
+  },
+  limits: { fileSize: 30 * 1024 * 1024 } // 30 MB
 });
 
 // Site photo slot → filename map
@@ -243,6 +275,7 @@ app.use(session({
 app.use('/CSS',    express.static(path.join(__dirname, 'CSS')));
 app.use('/JS',     express.static(path.join(__dirname, 'JS')));
 app.use('/Images', express.static(path.join(__dirname, 'Images')));
+app.use('/audio',  express.static(audioDir));
 
 // ---------------------------------------------------------------------------
 // Auth middleware
@@ -509,10 +542,11 @@ app.get('/api/spotify/search', async (req, res) => {
     });
 
     const tracks = response.data.tracks.items.map(t => ({
-      uri:    t.uri,
-      name:   t.name,
-      artist: t.artists.map(a => a.name).join(', '),
-      image:  t.album.images[2]?.url || t.album.images[0]?.url || null
+      uri:         t.uri,
+      name:        t.name,
+      artist:      t.artists.map(a => a.name).join(', '),
+      image:       t.album.images[2]?.url || t.album.images[0]?.url || null,
+      preview_url: t.preview_url || null
     }));
 
     res.json({ tracks });
@@ -995,6 +1029,91 @@ app.post('/api/admin/party/:slot', requireAdminAuth, upload.single('photo'), (re
 
   writeDb(db);
   res.json({ success: true, member });
+});
+
+// ---------------------------------------------------------------------------
+// Admin page — Music
+// ---------------------------------------------------------------------------
+app.get('/admin/music', requireAdminAuth, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'music.html')));
+
+// ---------------------------------------------------------------------------
+// Music API
+// ---------------------------------------------------------------------------
+
+// Public: returns enabled state + src (used by guest pages to show the player)
+app.get('/api/music', (_req, res) => {
+  const db = getDb();
+  const m  = db.music || {};
+  if (!m.enabled) return res.json({ enabled: false });
+  if (m.source === 'spotify' && m.previewUrl) {
+    return res.json({ enabled: true, src: m.previewUrl, displayName: m.displayName || m.trackName || '', albumArt: m.albumArt || '', trackName: m.trackName || '', artist: m.artist || '' });
+  }
+  if (m.source === 'upload' && m.filename) {
+    return res.json({ enabled: true, src: `/audio/${m.filename}`, displayName: m.displayName || '' });
+  }
+  res.json({ enabled: false });
+});
+
+// Admin: full settings
+app.get('/api/admin/music', requireAdminAuth, (_req, res) => {
+  const db = getDb();
+  res.json(db.music || { enabled: false, filename: null, displayName: '' });
+});
+
+// Admin: upload audio file
+app.post('/api/admin/music/upload', requireAdminAuth, musicUpload.single('audio'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No audio file provided' });
+  const db = getDb();
+  if (!db.music) db.music = { enabled: false, source: null, filename: null, previewUrl: null, trackName: '', artist: '', albumArt: '', displayName: '' };
+
+  // Delete old file if it had a different name
+  if (db.music.filename && db.music.filename !== req.file.filename) {
+    const oldPath = path.join(audioDir, db.music.filename);
+    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+  }
+
+  db.music.source   = 'upload';
+  db.music.filename = req.file.filename;
+  if (req.body.displayName !== undefined) db.music.displayName = req.body.displayName.trim();
+  writeDb(db);
+  res.json({ success: true, filename: req.file.filename });
+});
+
+// Admin: save a Spotify preview selection
+app.post('/api/admin/music/spotify', requireAdminAuth, (req, res) => {
+  const { previewUrl, trackName, artist, albumArt } = req.body;
+  if (!previewUrl) return res.status(400).json({ error: 'previewUrl is required' });
+  const db = getDb();
+  if (!db.music) db.music = { enabled: false, source: null, filename: null, previewUrl: null, trackName: '', artist: '', albumArt: '', displayName: '' };
+  db.music.source     = 'spotify';
+  db.music.previewUrl = previewUrl;
+  db.music.trackName  = trackName  || '';
+  db.music.artist     = artist     || '';
+  db.music.albumArt   = albumArt   || '';
+  writeDb(db);
+  res.json({ success: true });
+});
+
+// Admin: update settings (enabled toggle, displayName)
+app.post('/api/admin/music/settings', requireAdminAuth, (req, res) => {
+  const db = getDb();
+  if (!db.music) db.music = { enabled: false, filename: null, displayName: '' };
+  if (req.body.enabled     !== undefined) db.music.enabled     = req.body.enabled === true || req.body.enabled === 'true';
+  if (req.body.displayName !== undefined) db.music.displayName = req.body.displayName.trim();
+  writeDb(db);
+  res.json({ success: true, music: db.music });
+});
+
+// Admin: delete song
+app.delete('/api/admin/music', requireAdminAuth, (_req, res) => {
+  const db = getDb();
+  if (db.music && db.music.filename) {
+    const filePath = path.join(audioDir, db.music.filename);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  }
+  db.music = { enabled: false, filename: null, displayName: '' };
+  writeDb(db);
+  res.json({ success: true });
 });
 
 // ---------------------------------------------------------------------------
