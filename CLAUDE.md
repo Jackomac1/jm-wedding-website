@@ -53,10 +53,11 @@ JM_Wedding_Website/
 │   ├── dashboard.html     RSVP toggle, stats, song requests, table, CSV export
 │   ├── qr-generator.html  Single QR + bulk CSV import + printable QR sheet
 │   ├── photos.html        Photo manager: site backgrounds, gallery, wedding party
-│   └── schedule.html      Schedule event CRUD (add/edit/delete events + RSVP flags)
-├── CSS/style.css          Main stylesheet (~1600 lines)
+│   ├── schedule.html      Schedule event CRUD (add/edit/delete events + RSVP flags)
+│   └── music.html         Background music: Spotify preview search or file upload, enable/disable
+├── CSS/style.css          Main stylesheet (~1640 lines)
 ├── CSS/admin.css          Admin panel styles (~830 lines)
-├── JS/main.js             Nav scroll, hamburger, countdown, fade-ins
+├── JS/main.js             Nav scroll, hamburger, countdown, fade-ins, background music player
 ├── JS/rsvp.js             RSVP form: status check, token pre-fill, submit
 ├── JS/admin.js            Dashboard: stats, table, toggle, delete, export
 └── Images/                All photos (see Photo Filenames below)
@@ -103,8 +104,14 @@ JM_Wedding_Website/
 | GET | `/api/admin/qr/print-sheet` | admin | Printable HTML page of all QR codes |
 | GET | `/api/spotify/auth` | admin | One-time Spotify OAuth — redirects to Spotify consent screen |
 | GET | `/api/spotify/callback` | admin | OAuth callback — saves refresh token, displays it for copying to env |
-| GET | `/api/spotify/search` | — | Search Spotify tracks (used by RSVP form) |
+| GET | `/api/spotify/search` | — | Search Spotify tracks (used by RSVP form + music admin); now includes `preview_url` field |
 | GET | `/api/spotify/test` | admin | Diagnostic: tests token, playlist read, and write access |
+| GET | `/api/music` | — | Public: returns music enabled state + src URL (used by guest pages) |
+| GET | `/api/admin/music` | admin | Full music settings from db |
+| POST | `/api/admin/music/upload` | admin | Upload audio file → saved as `audio/site-music.{ext}` |
+| POST | `/api/admin/music/spotify` | admin | Save a Spotify preview selection (previewUrl, trackName, artist, albumArt) |
+| POST | `/api/admin/music/settings` | admin | Update enabled toggle and/or displayName |
+| DELETE | `/api/admin/music` | admin | Remove current song and reset music settings |
 
 ## Colour Palette
 
@@ -203,6 +210,19 @@ When attending = yes, guests see "Which events will you be joining us for?" with
 Events stored as an array of slugs on each RSVP in `db.json`. Admin dashboard has an "Event Attendance" section with per-event counts (dynamic from db). RSVP table has an Events column. CSV export includes Events column.
 
 Event list is managed via Admin → Schedule — no hardcoded constants remain.
+
+## Background Music
+
+Music settings stored in `db.music`:
+```json
+{ "enabled": false, "source": null, "filename": null, "previewUrl": null, "trackName": "", "artist": "", "albumArt": "", "displayName": "" }
+```
+- `source`: `"spotify"` | `"upload"` | `null`
+- Audio files served from `/audio/` (static, no auth). Saved as `audio/site-music.{ext}`.
+- `GET /api/music` (public): returns `{ enabled, src, displayName, albumArt?, trackName?, artist? }` or `{ enabled: false }` — used by `JS/main.js` to conditionally show the floating button.
+- Guest pages: floating `♪` button (bottom-right, `.music-toggle-btn` in style.css). Click to play/pause. Cross-page continuity via `sessionStorage` (`musicEnabled`, `musicStartedAt` timestamp — elapsed time used to seek on next page load).
+- Admin → Music (`/admin/music`): two tabs — **Spotify Preview** (search → pick → save preview URL) and **Upload File** (MP3/M4A up to 30 MB). Enable/disable toggle. Remove button. Optional tooltip text.
+- Spotify preview note: Spotify has been removing preview URLs for many tracks since ~2023. Tracks without a preview show as grayed out in search results.
 
 ## Claude Instructions
 
