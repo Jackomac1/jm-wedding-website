@@ -196,21 +196,24 @@
           const elapsed = (Date.now() - parseInt(startedAt, 10)) / 1000;
           audio.currentTime = elapsed % audio.duration;
         }
+        if (!sessionStorage.getItem('musicStartedAt')) {
+          sessionStorage.setItem('musicStartedAt', String(Date.now()));
+        }
         btn.setAttribute('data-waiting', 'true');
         audio.play()
-          .then(() => { setPlaying(true); hasStarted = true; })
-          .catch(() => { btn.removeAttribute('data-waiting'); });
+          .then(() => { setPlaying(true); hasStarted = true; sessionStorage.setItem('musicEnabled', 'true'); })
+          .catch(() => { btn.removeAttribute('data-waiting'); sessionStorage.removeItem('musicStartedAt'); });
       }
 
       // Seek once metadata is ready, then play (handles case where duration unknown at load time)
       audio.addEventListener('loadedmetadata', () => {
-        if (sessionStorage.getItem('musicEnabled') === 'true' && !hasStarted) {
+        if (sessionStorage.getItem('musicEnabled') !== 'false' && !hasStarted) {
           tryPlay();
         }
       });
 
-      // If metadata already loaded, try immediately
-      if (sessionStorage.getItem('musicEnabled') === 'true') {
+      // If metadata already loaded, try immediately (autoplay on first visit; skip if user paused)
+      if (sessionStorage.getItem('musicEnabled') !== 'false') {
         if (audio.readyState >= 1) {
           tryPlay();
         }
@@ -221,7 +224,7 @@
         if (isPlaying) {
           audio.pause();
           setPlaying(false);
-          sessionStorage.removeItem('musicEnabled');
+          sessionStorage.setItem('musicEnabled', 'false');
           sessionStorage.removeItem('musicStartedAt');
         } else {
           if (!sessionStorage.getItem('musicStartedAt')) {
