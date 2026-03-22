@@ -593,7 +593,7 @@ h1, h2, h3, h4 {
 
 .section-label {
   font-family: var(--font-body);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--grape-fizz);
