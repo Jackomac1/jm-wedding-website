@@ -320,7 +320,7 @@ h1, h2, h3, h4 {
 .hero-subtitle {
   font-family: var(--font-heading);
   font-size: clamp(0.9rem, 2vw, 1.1rem);
-  color: var(--accent);
+  color: rgba(255,255,255,0.85);
   letter-spacing: 0.1em;
   margin-top: 0.75rem;
   animation: fadeInUp 1s ease 0.35s both;
@@ -406,7 +406,7 @@ h1, h2, h3, h4 {
 }
 
 .hero-page .hero-date {
-  color: var(--accent);
+  color: rgba(255,255,255,0.75);
   margin-bottom: 1.25rem;
 }
 
