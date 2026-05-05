@@ -725,6 +725,18 @@ app.delete('/api/admin/events/:id', requireAdminAuth, (req, res) => {
   res.json({ success: true });
 });
 
+app.put('/api/admin/days/:dayOrder', requireAdminAuth, (req, res) => {
+  const db       = getDb();
+  const dayOrder = parseInt(req.params.dayOrder, 10);
+  const { dayLabel, dayDate } = req.body;
+  if (!dayDate) return res.status(400).json({ error: 'Day Date is required' });
+  const affected = db.scheduleEvents.filter(e => e.dayOrder === dayOrder);
+  if (!affected.length) return res.status(404).json({ error: 'No events found for that day' });
+  affected.forEach(e => { e.dayLabel = dayLabel || ''; e.dayDate = dayDate; });
+  writeDb(db);
+  res.json({ success: true, updated: affected.length });
+});
+
 // ---------------------------------------------------------------------------
 // API — Admin: RSVPs
 // ---------------------------------------------------------------------------

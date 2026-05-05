@@ -111,6 +111,36 @@
     .event-row-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
 
     .hint-text { font-size: 0.75rem; color: var(--admin-muted); margin-top: 0.2rem; }
+
+    /* Day headers section */
+    .day-headers-card {
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .day-header-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--admin-border);
+    }
+    .day-header-row:last-child { border-bottom: none; }
+    .day-header-info { flex: 1; }
+    .day-header-label { font-size: 0.95rem; font-weight: 600; color: var(--admin-text); }
+    .day-header-date  { font-size: 0.8rem; color: var(--admin-muted); margin-top: 0.1rem; }
+    .day-edit-form {
+      display: none;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 0.75rem 0 0.5rem;
+    }
+    .day-edit-form.open { display: flex; }
+    .day-edit-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .day-edit-row .form-field { flex: 1; min-width: 180px; }
+    .day-edit-actions { display: flex; gap: 0.5rem; }
   </style>
 </head>
 <body>
@@ -286,6 +316,14 @@
           </form>
         </div>
 
+        <!-- Day Headers -->
+        <div class="day-headers-card">
+          <h3 class="event-form-title" style="margin-bottom:1rem;">Day Headers</h3>
+          <div id="dayHeadersList">
+            <div style="color:var(--admin-muted);font-size:0.9rem;">Loading…</div>
+          </div>
+        </div>
+
         <!-- Event List -->
         <div id="eventList">
           <div style="text-align:center;padding:3rem;color:var(--admin-muted);font-size:0.9rem;">Loading events…</div>
@@ -452,6 +490,7 @@
 
         if (!allEvents.length) {
           list.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--admin-muted);font-size:0.9rem;">No events yet. Click &ldquo;Add Event&rdquo; to get started.</div>';
+          document.getElementById('dayHeadersList').innerHTML = '<div style="color:var(--admin-muted);font-size:0.9rem;">No days yet.</div>';
           return;
         }
 
@@ -466,6 +505,8 @@
           map[evt.dayOrder].events.push(evt);
         });
         groups.sort((a, b) => a.dayOrder - b.dayOrder);
+
+        renderDayHeaders(groups);
 
         let html = '';
         groups.forEach(group => {
@@ -501,6 +542,70 @@
     function editEvent(id) {
       const evt = allEvents.find(e => e.id === id);
       if (evt) openForm(evt);
+    }
+
+    // ── Day Headers ────────────────────────────────────────────
+    function renderDayHeaders(groups) {
+      const container = document.getElementById('dayHeadersList');
+      if (!groups.length) { container.innerHTML = '<div style="color:var(--admin-muted);font-size:0.9rem;">No days yet.</div>'; return; }
+
+      container.innerHTML = groups.map(g => `
+        <div class="day-header-row" id="dhr-${g.dayOrder}">
+          <div class="day-header-info">
+            <div class="day-header-label" id="dhl-label-${g.dayOrder}">${escHtml(g.dayLabel || '(no label)')}</div>
+            <div class="day-header-date"  id="dhl-date-${g.dayOrder}">${escHtml(g.dayDate)}</div>
+            <div class="day-edit-form" id="def-${g.dayOrder}">
+              <div class="day-edit-row">
+                <div class="form-field">
+                  <label>Day Label</label>
+                  <input type="text" id="def-label-${g.dayOrder}" value="${escHtml(g.dayLabel)}" placeholder="e.g. Day One, The Big Day">
+                </div>
+                <div class="form-field">
+                  <label>Day Date <span style="color:var(--berry);">*</span></label>
+                  <input type="text" id="def-date-${g.dayOrder}" value="${escHtml(g.dayDate)}" placeholder="e.g. Friday, August 27, 2027">
+                </div>
+              </div>
+              <div class="day-edit-actions">
+                <button class="btn btn-primary btn-sm" onclick="saveDayHeader(${g.dayOrder})">Save</button>
+                <button class="btn btn-secondary btn-sm" onclick="cancelDayEdit(${g.dayOrder})">Cancel</button>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="openDayEdit(${g.dayOrder})" id="def-editbtn-${g.dayOrder}">Edit</button>
+        </div>
+      `).join('');
+    }
+
+    function openDayEdit(dayOrder) {
+      document.getElementById(`def-${dayOrder}`).classList.add('open');
+      document.getElementById(`def-editbtn-${dayOrder}`).style.display = 'none';
+    }
+
+    function cancelDayEdit(dayOrder) {
+      document.getElementById(`def-${dayOrder}`).classList.remove('open');
+      document.getElementById(`def-editbtn-${dayOrder}`).style.display = '';
+    }
+
+    async function saveDayHeader(dayOrder) {
+      const label = document.getElementById(`def-label-${dayOrder}`).value.trim();
+      const date  = document.getElementById(`def-date-${dayOrder}`).value.trim();
+      if (!date) { showMsg('Day Date is required.', 'error'); return; }
+      try {
+        const res = await fetch(`/api/admin/days/${dayOrder}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dayLabel: label, dayDate: date })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showMsg('Day header updated.', 'success');
+          loadEvents();
+        } else {
+          showMsg(data.error || 'Failed to update.', 'error');
+        }
+      } catch {
+        showMsg('Network error. Please try again.', 'error');
+      }
     }
 
     loadEvents();
