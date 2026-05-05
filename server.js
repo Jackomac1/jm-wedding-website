@@ -1005,6 +1005,37 @@ app.get('/api/admin/party', requireAdminAuth, (req, res) => {
   res.json(db.weddingParty);
 });
 
+// Add a wedding party member
+app.post('/api/admin/party', requireAdminAuth, (req, res) => {
+  const { side, role } = req.body;
+  if (!side || !['bridal', 'groomsmen'].includes(side)) return res.status(400).json({ error: 'side must be bridal or groomsmen' });
+  if (!role || !role.trim()) return res.status(400).json({ error: 'role is required' });
+  const db     = getDb();
+  const slot   = `custom-${Date.now()}`;
+  const member = { slot, role: role.trim(), name: '', description: '', photo: null };
+  db.weddingParty[side].push(member);
+  writeDb(db);
+  res.json({ success: true, member });
+});
+
+// Delete a wedding party member
+app.delete('/api/admin/party/:slot', requireAdminAuth, (req, res) => {
+  const { slot } = req.params;
+  const db = getDb();
+  let removed = null;
+  ['bridal', 'groomsmen'].forEach(side => {
+    const idx = db.weddingParty[side].findIndex(m => m.slot === slot);
+    if (idx !== -1) { [removed] = db.weddingParty[side].splice(idx, 1); }
+  });
+  if (!removed) return res.status(404).json({ error: 'Member not found' });
+  if (removed.photo) {
+    const photoPath = path.join(imagesDir, removed.photo);
+    if (fs.existsSync(photoPath)) try { fs.unlinkSync(photoPath); } catch {}
+  }
+  writeDb(db);
+  res.json({ success: true });
+});
+
 // Update a wedding party member (name, description, and/or photo)
 app.post('/api/admin/party/:slot', requireAdminAuth, upload.single('photo'), (req, res) => {
   const { slot } = req.params;

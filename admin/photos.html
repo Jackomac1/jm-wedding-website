@@ -384,11 +384,23 @@
           <div class="party-admin-grid" id="bridalGrid">
             <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--admin-muted);">Loading&hellip;</div>
           </div>
+          <div id="add-form-bridal" style="display:none;margin-bottom:1.5rem;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+            <input type="text" id="add-role-bridal" placeholder="Role (e.g. Bridesmaid)" style="padding:0.45rem 0.75rem;font-size:0.88rem;border:1px solid var(--admin-border);border-radius:var(--radius-sm);background:var(--admin-bg);color:var(--admin-text);font-family:inherit;min-width:200px;">
+            <button class="btn btn-primary btn-sm" onclick="addPartyMember('bridal')">Add</button>
+            <button class="btn btn-secondary btn-sm" onclick="cancelAddForm('bridal')">Cancel</button>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="show-add-bridal" onclick="showAddForm('bridal')" style="margin-bottom:2rem;">+ Add Member</button>
 
           <p class="party-section-label">Jack's Side — Groomsmen</p>
           <div class="party-admin-grid" id="groomsmenGrid">
             <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--admin-muted);">Loading&hellip;</div>
           </div>
+          <div id="add-form-groomsmen" style="display:none;margin-bottom:1.5rem;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+            <input type="text" id="add-role-groomsmen" placeholder="Role (e.g. Groomsman)" style="padding:0.45rem 0.75rem;font-size:0.88rem;border:1px solid var(--admin-border);border-radius:var(--radius-sm);background:var(--admin-bg);color:var(--admin-text);font-family:inherit;min-width:200px;">
+            <button class="btn btn-primary btn-sm" onclick="addPartyMember('groomsmen')">Add</button>
+            <button class="btn btn-secondary btn-sm" onclick="cancelAddForm('groomsmen')">Cancel</button>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="show-add-groomsmen" onclick="showAddForm('groomsmen')" style="margin-bottom:2rem;">+ Add Member</button>
         </div>
 
       </main>
@@ -629,7 +641,10 @@
               <div class="party-admin-role">${m.role}</div>
               <input type="text" id="party-name-${m.slot}" value="${m.name || ''}" placeholder="Name" aria-label="Name">
               <textarea id="party-desc-${m.slot}" placeholder="Short description for flip card">${m.description || ''}</textarea>
-              <button class="party-save-btn" onclick="savePartyMember('${m.slot}')">Save</button>
+              <div style="display:flex;gap:0.4rem;">
+                <button class="party-save-btn" style="flex:1;" onclick="savePartyMember('${m.slot}')">Save</button>
+                <button class="party-save-btn" style="background:var(--berry);flex-shrink:0;" onclick="removePartyMember('${m.slot}', '${m.name || m.role}')">Remove</button>
+              </div>
             </div>
           </div>
         `;
@@ -676,6 +691,50 @@
         showToast(err.message, 'error');
       }
       if (btn) btn.disabled = false;
+    }
+
+    function showAddForm(side) {
+      document.getElementById(`add-form-${side}`).style.display = 'flex';
+      document.getElementById(`show-add-${side}`).style.display = 'none';
+      document.getElementById(`add-role-${side}`).focus();
+    }
+
+    function cancelAddForm(side) {
+      document.getElementById(`add-form-${side}`).style.display = 'none';
+      document.getElementById(`show-add-${side}`).style.display = '';
+      document.getElementById(`add-role-${side}`).value = '';
+    }
+
+    async function addPartyMember(side) {
+      const role = document.getElementById(`add-role-${side}`).value.trim();
+      if (!role) { showToast('Please enter a role', 'error'); return; }
+      try {
+        const r    = await fetch('/api/admin/party', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ side, role })
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Failed to add member');
+        cancelAddForm(side);
+        await loadParty();
+        showToast('Member added');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function removePartyMember(slot, label) {
+      if (!confirm(`Remove "${label}" from the wedding party? This cannot be undone.`)) return;
+      try {
+        const r    = await fetch(`/api/admin/party/${slot}`, { method: 'DELETE' });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Failed to remove');
+        await loadParty();
+        showToast('Member removed');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
     }
 
     // ── Init ────────────────────────────────────────────────────────
