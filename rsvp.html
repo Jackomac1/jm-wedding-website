@@ -130,21 +130,12 @@
             </fieldset>
           </div>
 
-          <!-- Guest Count (shown when attending yes) -->
-          <div class="form-group" id="guestCountWrap" style="display:none;">
-            <label class="form-label" for="guestCount">
-              Number of Guests (including yourself)
-            </label>
-            <input
-              type="number"
-              id="guestCount"
-              name="guest_count"
-              class="form-input"
-              value="1"
-              min="1"
-              max="20"
-              style="max-width:120px;"
-            >
+          <!-- Guest Names (shown when attending yes) -->
+          <div class="form-group" id="guestNamesWrap" style="display:none;">
+            <label class="form-label">Who will be attending?</label>
+            <div id="guestNamesList" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.75rem;"></div>
+            <button type="button" id="addGuestBtn" class="btn btn-secondary" style="font-size:0.85rem;padding:0.4rem 1rem;">+ Add Another Guest</button>
+            <p id="guestNamesLimit" style="display:none;font-size:0.8rem;color:var(--bluebell);margin-top:0.5rem;"></p>
           </div>
 
           <!-- Events (shown when attending yes — populated by rsvp.js) -->

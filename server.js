@@ -577,7 +577,7 @@ app.post('/api/rsvp', async (req, res) => {
     return res.status(403).json({ error: 'RSVP is currently closed' });
   }
 
-  const { guest_name, email, phone, attending, guest_count, dietary_restrictions, events, message, token, song_uri, song_name } = req.body;
+  const { guest_name, email, phone, attending, guest_count, guest_names, dietary_restrictions, events, message, token, song_uri, song_name } = req.body;
 
   if (!guest_name || !attending) {
     return res.status(400).json({ error: 'Name and attendance are required' });
@@ -588,12 +588,14 @@ app.post('/api/rsvp', async (req, res) => {
     return res.status(400).json({ error: 'Invalid attendance value' });
   }
 
+  const names = Array.isArray(guest_names) && guest_names.length ? guest_names.filter(Boolean) : null;
+  const count = names ? names.length : (parseInt(guest_count, 10) || 1);
+
   if (token) {
     const tok = db.guestTokens.find(t => t.token === token);
     if (!tok) {
       return res.status(400).json({ error: 'Invalid invitation link. Please contact us for help.' });
     }
-    const count = parseInt(guest_count, 10) || 1;
     if (count > tok.maxGuests) {
       return res.status(400).json({ error: `Your invitation allows up to ${tok.maxGuests} guest(s).` });
     }
@@ -606,7 +608,8 @@ app.post('/api/rsvp', async (req, res) => {
     email:                email || null,
     phone:                phone || null,
     attending:            att,
-    guest_count:          parseInt(guest_count, 10) || 1,
+    guest_count:          count,
+    guest_names:          names || [guest_name],
     dietary_restrictions: dietary_restrictions || null,
     message:              message || null,
     token:                token || null,
@@ -769,9 +772,10 @@ app.delete('/api/admin/rsvps/:id', requireAdminAuth, (req, res) => {
 app.get('/api/admin/rsvps/export', requireAdminAuth, (req, res) => {
   const db   = getDb();
   const esc  = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const header = 'ID,Name,Email,Phone,Attending,Guests,Dietary,Events,Message,Token,Submitted\n';
+  const header = 'ID,Name,Email,Phone,Attending,Guests,Guest Names,Dietary,Events,Message,Token,Submitted\n';
   const rows   = db.rsvps.map(r =>
     [r.id, r.guest_name, r.email, r.phone, r.attending, r.guest_count,
+     (r.guest_names || []).join('; '),
      r.dietary_restrictions, (r.events || []).join('; '), r.message, r.token, r.submitted_at].map(esc).join(',')
   );
   res.setHeader('Content-Type', 'text/csv');

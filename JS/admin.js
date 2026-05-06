@@ -152,7 +152,7 @@ async function loadRsvps() {
           <td class="cell-name">${escHtml(row.guest_name)}</td>
           <td class="cell-muted cell-wrap">${escHtml(row.email || '—')}</td>
           <td>${badge}</td>
-          <td>${attending ? row.guest_count : '—'}</td>
+          <td class="cell-muted cell-wrap" title="${escHtml((row.guest_names || []).join(', '))}">${attending ? escHtml(truncate((row.guest_names || []).join(', '), 40)) || row.guest_count : '—'}</td>
           <td class="cell-muted cell-wrap" title="${escHtml(eventNames)}">${attending ? escHtml(truncate(eventNames, 50)) || '—' : '—'}</td>
           <td class="cell-muted cell-wrap" title="${escHtml(row.dietary_restrictions || '')}">${escHtml(truncate(row.dietary_restrictions, 40))}</td>
           <td class="cell-muted cell-wrap" title="${escHtml(row.message || '')}">${escHtml(truncate(row.message, 50))}</td>

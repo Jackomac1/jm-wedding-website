@@ -13,9 +13,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const rsvpSuccess   = document.getElementById('rsvpSuccess');
   const rsvpSubmitBtn = document.getElementById('rsvpSubmitBtn');
   const guestNameInput = document.getElementById('guestName');
-  const guestCountWrap = document.getElementById('guestCountWrap');
+  const guestNamesWrap = document.getElementById('guestNamesWrap');
   const dietaryWrap    = document.getElementById('dietaryWrap');
-  const guestCountInput = document.getElementById('guestCount');
+  const addGuestBtn    = document.getElementById('addGuestBtn');
 
   let tokenData = null;
 
@@ -55,11 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (guestNameInput && tokenData.guestName) {
           guestNameInput.value = tokenData.guestName;
         }
-        // Set max guests limit
-        if (guestCountInput && tokenData.maxGuests) {
-          guestCountInput.max   = tokenData.maxGuests;
-          guestCountInput.value = 1;
-        }
+        // maxGuests from tokenData is used by renderGuestNames()
       }
     } catch (err) {
       console.warn('Could not validate token:', err);
@@ -138,14 +134,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const attendingYes = document.getElementById('attendingYes');
     const isYes = attendingYes && attendingYes.checked;
 
-    if (guestCountWrap)  guestCountWrap.style.display  = isYes ? 'block' : 'none';
+    if (guestNamesWrap) {
+      guestNamesWrap.style.display = isYes ? 'block' : 'none';
+      if (isYes) renderGuestNames();
+    }
     if (eventsWrap)      eventsWrap.style.display      = isYes ? 'block' : 'none';
     if (dietaryWrap)     dietaryWrap.style.display     = isYes ? 'block' : 'none';
     if (songRequestWrap) songRequestWrap.style.display = isYes ? 'block' : 'none';
 
-    if (!isYes && guestCountInput) {
-      guestCountInput.value = 1;
-    }
+    if (!isYes) additionalGuests = [];
 
     // Reset all event checkboxes when switching to No; restore defaults for Yes
     if (!isYes) {
@@ -159,6 +156,95 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('input[name="attending"]').forEach(radio => {
     radio.addEventListener('change', updateAttendingFields);
   });
+
+  // ── Guest names ──────────────────────────────────────────────
+  let additionalGuests = [];
+
+  function renderGuestNames() {
+    const list = document.getElementById('guestNamesList');
+    if (!list) return;
+    const maxGuests = tokenData ? tokenData.maxGuests : 20;
+    list.innerHTML = '';
+
+    // Primary (read-only, mirrors the main name field)
+    const primaryRow = document.createElement('div');
+    primaryRow.style.cssText = 'display:flex;align-items:center;gap:0.5rem;';
+    const primaryInput = document.createElement('input');
+    primaryInput.type = 'text';
+    primaryInput.className = 'form-input';
+    primaryInput.value = guestNameInput ? guestNameInput.value.trim() : '';
+    primaryInput.placeholder = 'Your name';
+    primaryInput.readOnly = true;
+    primaryInput.id = 'guestNameRow-primary';
+    primaryInput.style.cssText = 'flex:1;cursor:default;opacity:0.75;';
+    const youTag = document.createElement('span');
+    youTag.textContent = 'You';
+    youTag.style.cssText = 'font-size:0.8rem;color:var(--bluebell);min-width:30px;text-align:right;flex-shrink:0;';
+    primaryRow.appendChild(primaryInput);
+    primaryRow.appendChild(youTag);
+    list.appendChild(primaryRow);
+
+    // Additional guests
+    additionalGuests.forEach((name, idx) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:0.5rem;';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'form-input';
+      input.value = name;
+      input.placeholder = `Guest ${idx + 2} name`;
+      input.style.flex = '1';
+      input.addEventListener('input', () => { additionalGuests[idx] = input.value; });
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.innerHTML = '&times;';
+      removeBtn.style.cssText = 'background:none;border:none;cursor:pointer;color:var(--berry);font-size:1.4rem;line-height:1;padding:0 0.25rem;flex-shrink:0;';
+      removeBtn.setAttribute('aria-label', 'Remove guest');
+      removeBtn.addEventListener('click', () => {
+        additionalGuests.splice(idx, 1);
+        renderGuestNames();
+      });
+
+      row.appendChild(input);
+      row.appendChild(removeBtn);
+      list.appendChild(row);
+    });
+
+    // Add-button visibility
+    const total = 1 + additionalGuests.length;
+    if (addGuestBtn) addGuestBtn.style.display = total >= maxGuests ? 'none' : '';
+
+    // Max-guests message
+    const limitEl = document.getElementById('guestNamesLimit');
+    if (limitEl) {
+      if (tokenData && tokenData.maxGuests && total >= tokenData.maxGuests) {
+        limitEl.textContent = `Your invitation allows up to ${tokenData.maxGuests} guest(s).`;
+        limitEl.style.display = '';
+      } else {
+        limitEl.style.display = 'none';
+      }
+    }
+  }
+
+  if (addGuestBtn) {
+    addGuestBtn.addEventListener('click', () => {
+      const maxGuests = tokenData ? tokenData.maxGuests : 20;
+      if (1 + additionalGuests.length >= maxGuests) return;
+      additionalGuests.push('');
+      renderGuestNames();
+      const inputs = document.querySelectorAll('#guestNamesList input[type="text"]:not([readonly])');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    });
+  }
+
+  if (guestNameInput) {
+    guestNameInput.addEventListener('input', () => {
+      const primaryInput = document.getElementById('guestNameRow-primary');
+      if (primaryInput) primaryInput.value = guestNameInput.value.trim();
+    });
+  }
 
   // ----------------------------------------------------------
   // 3b. Song search
@@ -285,7 +371,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       email:                document.getElementById('email')?.value.trim() || '',
       phone:                document.getElementById('phone')?.value.trim() || '',
       attending:            attending,
-      guest_count:          attending === 'yes' ? (parseInt(guestCountInput?.value, 10) || 1) : 1,
+      guest_names:          attending === 'yes' ? [guestName, ...additionalGuests.map(n => n.trim()).filter(Boolean)] : [],
+      guest_count:          attending === 'yes' ? 1 + additionalGuests.filter(n => n.trim()).length : 1,
       dietary_restrictions: attending === 'yes' ? (document.getElementById('dietary')?.value.trim() || '') : '',
       events:               checkedEvents,
       message:              document.getElementById('message')?.value.trim() || '',
