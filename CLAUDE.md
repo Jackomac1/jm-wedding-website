@@ -117,13 +117,13 @@ JM_Wedding_Website/
 
 | Name | Hex | CSS Var | Role |
 |------|-----|---------|------|
-| Espresso | `#2e1618` | `--espresso` / `--brown` | Text, nav bg, footer bg, dark section bg |
-| Grape Fizz | `#6c1420` | `--grape-fizz` / `--gold` | Primary buttons, section labels, nav-card-1 |
-| Berry | `#c15252` | `--berry` / `--blush` | Form focus, decorative accents, nav-card-3 |
-| Bluebell | `#a8b4cc` | `--bluebell` / `--sage` | Muted text, light section backgrounds |
-| Grassland | `#7b7c2a` | `--grassland` | Green accent, nav-card-2 |
-| Chartreuse | `#c8d540` | `--chartreuse` | Hero subtitle, ornament diamonds, section labels on dark bg, footer date |
-| Cream | `#faf7f2` | `--cream` | Main page background, text on dark sections |
+| Espresso | `#2e3a10` | `--espresso` / `--brown` | Text, nav bg, footer bg, dark section bg |
+| Grape Fizz | `#c4307c` | `--grape-fizz` / `--gold` | Primary buttons, section labels, nav-card-1 |
+| Berry | `#d96599` | `--berry` / `--blush` | Form focus, decorative accents, nav-card-3 |
+| Bluebell | `#8a9e55` | `--bluebell` / `--sage` | Muted text, light section backgrounds |
+| Grassland | `#7a8535` | `--grassland` | Green accent, nav-card-2 |
+| Chartreuse | `#b2c838` | `--chartreuse` | Hero subtitle, ornament diamonds, section labels on dark bg, footer date |
+| Cream | `#ede8d8` | `--cream` | Main page background, text on dark sections |
 
 ## Design System
 
@@ -155,11 +155,11 @@ All three variables are defined in a single block in `CSS/style.css` — search 
 
 | Page(s) | Body class | `--grape-fizz` (labels/buttons) | `--accent` (diamonds/highlights) | `--dark-bg` (footer/dark sections) |
 |---------|-----------|----------------|-----------|---------|
-| Home, Registry | *(none)* | `#6c1420` grape-fizz | `#c8d540` chartreuse | `#2e1618` espresso |
-| Details, RSVP | `theme-chartreuse` | `#c8d540` chartreuse | `#c15252` berry | `#1e2608` dark olive |
-| Schedule, Contact | `theme-berry` | `#c15252` berry | `#a8b4cc` bluebell | `#2e1212` dark red |
-| Wedding Party | `theme-bluebell` | `#a8b4cc` bluebell | `#7b7c2a` grassland | `#131a2e` dark navy |
-| Gallery | `theme-bluebell-grassland` | `#a8b4cc` bluebell | `#c8d540` chartreuse | `#141604` dark forest |
+| Home, Registry | *(none)* | `#c4307c` magenta | `#b2c838` olive-chartreuse | `#2e3a10` dark olive |
+| Details, RSVP | `theme-chartreuse` | `#7a8535` olive | `#c4307c` magenta | `#1a2b08` dark olive |
+| Schedule, Contact | `theme-berry` | `#d96599` rose-magenta | `#8a9e55` sage | `#2e2010` dark warm olive |
+| Wedding Party | `theme-bluebell` | `#8a9e55` sage | `#7a8535` grassland | `#1a2e08` dark olive |
+| Gallery | `theme-bluebell-grassland` | `#8a9e55` sage | `#b2c838` olive-chartreuse | `#141e04` dark forest |
 
 ## Photo Filenames (all in `/Images/`)
 

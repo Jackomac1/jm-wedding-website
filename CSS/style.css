@@ -10,23 +10,23 @@
    ============================================================ */
 :root {
   /* ── Wedding Palette ─────────────────────────────────────────── */
-  --grassland:      #7b7c2a;   /* dark olive green   */
-  --bluebell:       #a8b4cc;   /* soft periwinkle    */
-  --espresso:       #2e1618;   /* near-black brown   */
-  --berry:          #c15252;   /* muted berry rose   */
-  --chartreuse:     #c8d540;   /* bright yellow-green */
-  --accent:         #c8d540;   /* per-page rotating accent — defaults to chartreuse */
-  --dark-bg:        #2e1618;   /* per-page dark section/footer bg — defaults to espresso */
-  --grape-fizz:     #6c1420;   /* deep wine/burgundy */
+  --grassland:      #7a8535;   /* warm olive green   */
+  --bluebell:       #8a9e55;   /* muted sage green   */
+  --espresso:       #2e3a10;   /* dark forest olive  */
+  --berry:          #d96599;   /* rose magenta       */
+  --chartreuse:     #b2c838;   /* olive chartreuse   */
+  --accent:         #b2c838;   /* per-page rotating accent — defaults to chartreuse */
+  --dark-bg:        #2e3a10;   /* per-page dark section/footer bg — defaults to espresso */
+  --grape-fizz:     #c4307c;   /* vivid magenta      */
 
   /* ── Tints (light section backgrounds) ──────────────────────── */
-  --light-berry:      #f5e5e5;
-  --light-bluebell:   #dde4f0;
-  --light-grassland:  #eaeccc;
+  --light-berry:      #f7e0ee;
+  --light-bluebell:   #dde8c0;
+  --light-grassland:  #e5ecb8;
 
   /* ── Neutral backgrounds ─────────────────────────────────────── */
-  --cream:          #faf7f2;
-  --warm-white:     #f5f0ea;
+  --cream:          #ede8d8;
+  --warm-white:     #e5e0d0;
 
   /* ── Semantic aliases (keep existing CSS working) ────────────── */
   --brown:       var(--espresso);
@@ -34,7 +34,7 @@
   --sage:        var(--bluebell);
   --gold:        var(--grape-fizz);
   --light-blush: var(--light-berry);
-  --dark-sage:   #8292b0;
+  --dark-sage:   #5a7030;
   --light-sage:  var(--light-bluebell);
 
   /* ── Typography ──────────────────────────────────────────────── */
@@ -1793,33 +1793,33 @@ h1, h2, h3, h4 {
    Page Themes — per-page colour palette overrides
    ============================================================ */
 
-/* Details + RSVP: Chartreuse labels · Berry accent · Dark olive bg */
+/* Details + RSVP: Olive labels · Magenta accent · Dark olive bg */
 body.theme-chartreuse {
-  --grape-fizz: #c8d540;
-  --accent:     #c15252;   /* berry */
-  --dark-bg:    #1e2608;   /* very dark olive */
+  --grape-fizz: #7a8535;
+  --accent:     #c4307c;   /* magenta */
+  --dark-bg:    #1a2b08;   /* very dark olive */
 }
 
-/* Schedule + Contact: Berry labels · Bluebell accent · Dark red bg */
+/* Schedule + Contact: Rose-magenta labels · Sage accent · Dark olive bg */
 body.theme-berry {
-  --grape-fizz: #c15252;
-  --accent:     #a8b4cc;   /* bluebell */
-  --dark-bg:    #2e1212;   /* very dark berry/red */
+  --grape-fizz: #d96599;
+  --accent:     #8a9e55;   /* sage */
+  --dark-bg:    #2e2010;   /* dark warm olive */
 }
 
-/* Wedding Party: Bluebell labels · Grassland accent · Dark navy bg */
+/* Wedding Party: Sage labels · Olive accent · Dark forest bg */
 body.theme-bluebell {
-  --grape-fizz: #a8b4cc;
-  --accent:     #7b7c2a;   /* grassland */
-  --dark-bg:    #131a2e;   /* very dark navy */
+  --grape-fizz: #8a9e55;
+  --accent:     #7a8535;   /* grassland */
+  --dark-bg:    #1a2e08;   /* dark olive */
 }
 
-/* Gallery: Bluebell labels · Chartreuse accent · Dark forest bg */
+/* Gallery: Sage labels · Olive-chartreuse accent · Dark forest bg */
 body.theme-bluebell-grassland {
-  --grape-fizz: #a8b4cc;
-  --berry:      #7b7c2a;
-  --accent:     #c8d540;   /* chartreuse */
-  --dark-bg:    #141604;   /* very dark grassland/forest */
+  --grape-fizz: #8a9e55;
+  --berry:      #7a8535;
+  --accent:     #b2c838;   /* olive chartreuse */
+  --dark-bg:    #141e04;   /* very dark forest */
 }
 
 /* ============================================================
