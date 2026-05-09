@@ -492,14 +492,25 @@ h1, h2, h3, h4 {
 }
 
 .section-blush {
-  background: #F5E6D3;
-  color: #3D6B4D;
+  background: transparent;
+  color: #F5E6D3;
   position: relative;
   overflow: hidden;
   padding: 220px 2rem 3rem;
 }
 
+/* Dark photo overlay — same approach as photo strips */
 .section-blush::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 58, 16, 0.52);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Swans — screen mode over dark overlay: white glows, hot pink stays vibrant */
+.section-blush::after {
   content: '';
   position: absolute;
   top: 0;
@@ -507,25 +518,31 @@ h1, h2, h3, h4 {
   right: 0;
   height: 220px;
   background: url('/assets/swans.png') top center / auto 200px no-repeat;
-  mix-blend-mode: multiply;
+  mix-blend-mode: screen;
   pointer-events: none;
+  z-index: 1;
+}
+
+.section-blush .container {
+  position: relative;
+  z-index: 2;
 }
 
 .section-blush h1, .section-blush h2, .section-blush h3 {
-  color: #3D6B4D;
+  color: #F5E6D3;
 }
 
 .section-blush .section-subtitle {
-  color: rgba(61,107,77,0.75);
+  color: rgba(245,230,211,0.75);
 }
 
 .section-blush blockquote p {
-  color: #3D6B4D !important;
+  color: #F5E6D3 !important;
 }
 
 .section-blush .ornament::before,
 .section-blush .ornament::after {
-  background: linear-gradient(to right, transparent, rgba(61,107,77,0.3));
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.35));
 }
 
 .section-sage {
