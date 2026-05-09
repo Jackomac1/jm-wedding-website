@@ -492,7 +492,7 @@ h1, h2, h3, h4 {
 }
 
 .section-blush {
-  background: var(--grape-fizz);
+  background: var(--brown);
   color: #fff;
 }
 
@@ -1984,7 +1984,7 @@ body.theme-bluebell-grassland {
   left: 0;
   right: 0;
   height: 1px;
-  background: rgba(200,213,64,0.2);
+  background: rgba(217,27,143,0.35);
   z-index: 0;
 }
 
@@ -1992,7 +1992,7 @@ body.theme-bluebell-grassland {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: var(--accent);
+  color: #D91B8F;
   font-family: var(--font-body);
   display: block;
   margin-bottom: 0.35rem;
