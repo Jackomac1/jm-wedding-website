@@ -492,25 +492,36 @@ h1, h2, h3, h4 {
 }
 
 .section-blush {
-  background: var(--brown);
-  color: #fff;
+  background: #F5E6D3;
+  color: #3D6B4D;
+  position: relative;
+  overflow: hidden;
+}
+
+.section-blush::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/assets/swans.png') center / auto 90% no-repeat;
+  mix-blend-mode: multiply;
+  pointer-events: none;
 }
 
 .section-blush h1, .section-blush h2, .section-blush h3 {
-  color: #fff;
+  color: #3D6B4D;
 }
 
 .section-blush .section-subtitle {
-  color: rgba(255,255,255,0.75);
+  color: rgba(61,107,77,0.75);
 }
 
 .section-blush blockquote p {
-  color: rgba(255,255,255,0.92) !important;
+  color: #3D6B4D !important;
 }
 
 .section-blush .ornament::before,
 .section-blush .ornament::after {
-  background: linear-gradient(to right, transparent, rgba(255,255,255,0.4));
+  background: linear-gradient(to right, transparent, rgba(61,107,77,0.3));
 }
 
 .section-sage {

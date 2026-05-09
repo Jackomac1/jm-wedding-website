@@ -275,6 +275,7 @@ app.use(session({
 app.use('/CSS',    express.static(path.join(__dirname, 'CSS')));
 app.use('/JS',     express.static(path.join(__dirname, 'JS')));
 app.use('/Images', express.static(path.join(__dirname, 'Images')));
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/audio',  express.static(audioDir));
 
 // ---------------------------------------------------------------------------
