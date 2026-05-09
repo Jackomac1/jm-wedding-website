@@ -85,11 +85,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Find the highest dayOrder (wedding day) to pre-check its first event
-    const maxDay = Math.max(...rsvpEvents.map(e => e.dayOrder));
-    const weddingDayEvent = rsvpEvents.find(e => e.dayOrder === maxDay - 1) // day 3 of 4
-      || rsvpEvents.find(e => e.dayOrder === Math.max(...rsvpEvents.map(d => d.dayOrder)));
-    // Pre-check the event with slug 'wedding' if it exists, otherwise none
     const weddingEvent = rsvpEvents.find(e => e.slug === 'wedding');
     defaultCheckedSlug = weddingEvent ? weddingEvent.slug : null;
 

@@ -411,6 +411,11 @@
   <div class="photo-toast" id="photoToast" role="status" aria-live="polite"></div>
 
   <script>
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
     // ── Sidebar toggle ──────────────────────────────────────────────
     const sidebarToggle  = document.getElementById('sidebarToggle');
     const adminSidebar   = document.getElementById('adminSidebar');
@@ -627,23 +632,23 @@
       grid.innerHTML = members.map(m => {
         const initial = m.name ? m.name.charAt(0).toUpperCase() : (m.role.charAt(0));
         const photoHtml = m.photo
-          ? `<img src="/Images/${m.photo}?t=${Date.now()}" alt="${m.name || m.role}">`
-          : `<div class="party-admin-placeholder">${initial}</div>`;
+          ? `<img src="/Images/${escHtml(m.photo)}?t=${Date.now()}" alt="${escHtml(m.name || m.role)}">`
+          : `<div class="party-admin-placeholder">${escHtml(initial)}</div>`;
 
         return `
-          <div class="party-admin-card" id="party-card-${m.slot}">
-            <div class="party-admin-photo-wrap" onclick="document.getElementById('party-file-${m.slot}').click()" role="button" tabindex="0" aria-label="Replace photo for ${m.role}">
+          <div class="party-admin-card" id="party-card-${escHtml(m.slot)}">
+            <div class="party-admin-photo-wrap" onclick="document.getElementById('party-file-${escHtml(m.slot)}').click()" role="button" tabindex="0" aria-label="Replace photo for ${escHtml(m.role)}">
               ${photoHtml}
               <div class="party-admin-photo-overlay">Click to replace</div>
-              <input type="file" accept="image/*" id="party-file-${m.slot}" onchange="uploadPartyPhoto('${m.slot}', this)">
+              <input type="file" accept="image/*" id="party-file-${escHtml(m.slot)}" onchange="uploadPartyPhoto('${escHtml(m.slot)}', this)">
             </div>
             <div class="party-admin-fields">
-              <div class="party-admin-role">${m.role}</div>
-              <input type="text" id="party-name-${m.slot}" value="${m.name || ''}" placeholder="Name" aria-label="Name">
-              <textarea id="party-desc-${m.slot}" placeholder="Short description for flip card">${m.description || ''}</textarea>
+              <div class="party-admin-role">${escHtml(m.role)}</div>
+              <input type="text" id="party-name-${escHtml(m.slot)}" value="${escHtml(m.name || '')}" placeholder="Name" aria-label="Name">
+              <textarea id="party-desc-${escHtml(m.slot)}" placeholder="Short description for flip card">${escHtml(m.description || '')}</textarea>
               <div style="display:flex;gap:0.4rem;">
-                <button class="party-save-btn" style="flex:1;" onclick="savePartyMember('${m.slot}')">Save</button>
-                <button class="party-save-btn" style="background:var(--berry);flex-shrink:0;" onclick="removePartyMember('${m.slot}', '${m.name || m.role}')">Remove</button>
+                <button class="party-save-btn" style="flex:1;" onclick="savePartyMember('${escHtml(m.slot)}')">Save</button>
+                <button class="party-save-btn" style="background:var(--berry);flex-shrink:0;" onclick="removePartyMember('${escHtml(m.slot)}', '${escHtml(m.name || m.role)}')">Remove</button>
               </div>
             </div>
           </div>
@@ -664,7 +669,21 @@
         const r    = await fetch(`/api/admin/party/${slot}`, { method: 'POST', body: fd });
         const data = await r.json();
         if (!r.ok) throw new Error(data.error || 'Upload failed');
-        await loadParty();
+        // Update only the affected thumbnail — preserves unsaved edits in other cards
+        const wrap = document.querySelector(`#party-card-${slot} .party-admin-photo-wrap`);
+        if (wrap && data.member?.photo) {
+          const src = `/Images/${data.member.photo}?t=${Date.now()}`;
+          const existing = wrap.querySelector('img');
+          if (existing) {
+            existing.src = src;
+          } else {
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = data.member.name || data.member.role;
+            wrap.querySelector('.party-admin-placeholder')?.remove();
+            wrap.insertBefore(img, wrap.firstChild);
+          }
+        }
         showToast('Photo updated');
       } catch (err) {
         showToast(err.message, 'error');

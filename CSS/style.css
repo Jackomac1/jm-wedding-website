@@ -454,20 +454,20 @@ h1, h2, h3, h4 {
 .section-alt {
   background: repeating-linear-gradient(
     90deg,
-    #B8C856 0px,
-    #B8C856 40px,
-    #F5E6D3 40px,
-    #F5E6D3 80px
+    var(--bluebell) 0px,
+    var(--bluebell) 40px,
+    var(--cream) 40px,
+    var(--cream) 80px
   );
-  color: #3D6B4D;
+  color: var(--espresso);
 }
 
 .section-alt h1, .section-alt h2, .section-alt h3, .section-alt h4 {
-  color: #3D6B4D;
+  color: var(--espresso);
 }
 
 .section-alt .section-label {
-  color: #D91B8F;
+  color: #D91B8F; /* intentionally fixed — not theme-dependent */
 }
 
 .section-alt .section-subtitle {
@@ -480,11 +480,11 @@ h1, h2, h3, h4 {
 }
 
 .section-alt .countdown-number {
-  color: #3D6B4D;
+  color: var(--espresso);
 }
 
 .section-alt .countdown-label {
-  color: #D91B8F;
+  color: #D91B8F; /* intentionally fixed — not theme-dependent */
 }
 
 .section-cream {
@@ -493,7 +493,7 @@ h1, h2, h3, h4 {
 
 .section-blush {
   background: transparent;
-  color: #F5E6D3;
+  color: var(--cream);
   position: relative;
   overflow: hidden;
   padding: 220px 2rem 3rem;
@@ -529,7 +529,7 @@ h1, h2, h3, h4 {
 }
 
 .section-blush h1, .section-blush h2, .section-blush h3 {
-  color: #F5E6D3;
+  color: var(--cream);
 }
 
 .section-blush .section-subtitle {
@@ -537,7 +537,7 @@ h1, h2, h3, h4 {
 }
 
 .section-blush blockquote p {
-  color: #F5E6D3 !important;
+  color: var(--cream) !important;
 }
 
 .section-blush .ornament::before,
@@ -2024,7 +2024,7 @@ body.theme-bluebell-grassland {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: #D91B8F;
+  color: var(--grape-fizz);
   font-family: var(--font-body);
   display: block;
   margin-bottom: 0.35rem;
