@@ -10,23 +10,23 @@
    ============================================================ */
 :root {
   /* ── Wedding Palette ─────────────────────────────────────────── */
-  --grassland:      #7a8535;   /* warm olive green   */
-  --bluebell:       #8a9e55;   /* muted sage green   */
-  --espresso:       #2e3a10;   /* dark forest olive  */
-  --berry:          #d96599;   /* rose magenta       */
-  --chartreuse:     #b2c838;   /* olive chartreuse   */
-  --accent:         #b2c838;   /* per-page rotating accent — defaults to chartreuse */
-  --dark-bg:        #2e3a10;   /* per-page dark section/footer bg — defaults to espresso */
-  --grape-fizz:     #c4307c;   /* vivid magenta      */
+  --grassland:      #3D6B4D;   /* forest green       */
+  --bluebell:       #B8C856;   /* sage green         */
+  --espresso:       #3D6B4D;   /* forest green       */
+  --berry:          #D91B8F;   /* hot pink           */
+  --chartreuse:     #B8C856;   /* sage green         */
+  --accent:         #B8C856;   /* per-page rotating accent — defaults to sage */
+  --dark-bg:        #3D6B4D;   /* per-page dark section/footer bg — forest green */
+  --grape-fizz:     #D91B8F;   /* hot pink           */
 
   /* ── Tints (light section backgrounds) ──────────────────────── */
-  --light-berry:      #f7e0ee;
-  --light-bluebell:   #dde8c0;
-  --light-grassland:  #e5ecb8;
+  --light-berry:      #F5D5E0;
+  --light-bluebell:   #E8F0C0;
+  --light-grassland:  #E8F0C0;
 
   /* ── Neutral backgrounds ─────────────────────────────────────── */
-  --cream:          #ede8d8;
-  --warm-white:     #e5e0d0;
+  --cream:          #F5E6D3;
+  --warm-white:     #F5E6D3;
 
   /* ── Semantic aliases (keep existing CSS working) ────────────── */
   --brown:       var(--espresso);
@@ -34,7 +34,7 @@
   --sage:        var(--bluebell);
   --gold:        var(--grape-fizz);
   --light-blush: var(--light-berry);
-  --dark-sage:   #5a7030;
+  --dark-sage:   #2A5038;
   --light-sage:  var(--light-bluebell);
 
   /* ── Typography ──────────────────────────────────────────────── */
@@ -43,9 +43,9 @@
   --font-body:    'Lato', sans-serif;
 
   /* ── Shadows (keyed to espresso) ─────────────────────────────── */
-  --shadow-sm:  0 2px 8px  rgba(46, 22, 24, 0.08);
-  --shadow-md:  0 4px 20px rgba(46, 22, 24, 0.12);
-  --shadow-lg:  0 8px 40px rgba(46, 22, 24, 0.18);
+  --shadow-sm:  0 2px 8px  rgba(61, 107, 77, 0.10);
+  --shadow-md:  0 4px 20px rgba(61, 107, 77, 0.14);
+  --shadow-lg:  0 8px 40px rgba(61, 107, 77, 0.20);
 
   --radius-sm: 4px;
   --radius-md: 10px;
@@ -283,7 +283,7 @@ h1, h2, h3, h4 {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(46,22,24,0.52) 0%, rgba(46,22,24,0.3) 50%, rgba(46,22,24,0.55) 100%);
+  background: linear-gradient(to bottom, rgba(30,58,16,0.52) 0%, rgba(30,58,16,0.30) 50%, rgba(30,58,16,0.55) 100%);
   pointer-events: none;
 }
 
@@ -393,7 +393,7 @@ h1, h2, h3, h4 {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(46,22,24,0.55) 0%, rgba(46,22,24,0.4) 100%);
+  background: linear-gradient(to bottom, rgba(30,58,16,0.55) 0%, rgba(30,58,16,0.40) 100%);
   pointer-events: none;
 }
 
@@ -452,33 +452,39 @@ h1, h2, h3, h4 {
 }
 
 .section-alt {
-  background: var(--dark-bg);
-  color: var(--cream);
+  background: repeating-linear-gradient(
+    90deg,
+    #B8C856 0px,
+    #B8C856 40px,
+    #F5E6D3 40px,
+    #F5E6D3 80px
+  );
+  color: #3D6B4D;
 }
 
 .section-alt h1, .section-alt h2, .section-alt h3, .section-alt h4 {
-  color: #fff;
+  color: #3D6B4D;
 }
 
 .section-alt .section-label {
-  color: var(--accent);
+  color: #D91B8F;
 }
 
 .section-alt .section-subtitle {
-  color: rgba(250,247,242,0.7);
+  color: rgba(61,107,77,0.75);
 }
 
 .section-alt .countdown-item {
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.60);
+  border-color: rgba(61,107,77,0.20);
 }
 
 .section-alt .countdown-number {
-  color: #fff;
+  color: #3D6B4D;
 }
 
 .section-alt .countdown-label {
-  color: var(--accent);
+  color: #D91B8F;
 }
 
 .section-cream {
@@ -527,7 +533,7 @@ h1, h2, h3, h4 {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(46, 22, 24, 0.35);
+  background: rgba(30, 58, 16, 0.42);
   pointer-events: none;
 }
 
@@ -1416,7 +1422,7 @@ h1, h2, h3, h4 {
    ============================================================ */
 .footer {
   background: var(--brown);
-  color: rgba(250, 247, 242, 0.8);
+  color: rgba(245, 230, 211, 0.90);
   text-align: center;
   padding: 3rem 2rem;
 }
@@ -1457,7 +1463,7 @@ h1, h2, h3, h4 {
   font-size: 0.8rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(250, 247, 242, 0.6);
+  color: rgba(245, 230, 211, 0.70);
   transition: color var(--transition);
 }
 
@@ -1793,33 +1799,33 @@ h1, h2, h3, h4 {
    Page Themes — per-page colour palette overrides
    ============================================================ */
 
-/* Details + RSVP: Olive labels · Magenta accent · Dark olive bg */
+/* Details + RSVP: Forest Green labels · Hot Pink accent · Dark forest bg */
 body.theme-chartreuse {
-  --grape-fizz: #7a8535;
-  --accent:     #c4307c;   /* magenta */
-  --dark-bg:    #1a2b08;   /* very dark olive */
+  --grape-fizz: #3D6B4D;
+  --accent:     #D91B8F;   /* hot pink */
+  --dark-bg:    #2A5038;   /* dark forest */
 }
 
-/* Schedule + Contact: Rose-magenta labels · Sage accent · Dark olive bg */
+/* Schedule + Contact: Hot Pink labels · Sage accent · Forest Green bg */
 body.theme-berry {
-  --grape-fizz: #d96599;
-  --accent:     #8a9e55;   /* sage */
-  --dark-bg:    #2e2010;   /* dark warm olive */
+  --grape-fizz: #D91B8F;
+  --accent:     #B8C856;   /* sage */
+  --dark-bg:    #3D6B4D;   /* forest green */
 }
 
-/* Wedding Party: Sage labels · Olive accent · Dark forest bg */
+/* Wedding Party: Sage labels · Forest Green accent · Dark forest bg */
 body.theme-bluebell {
-  --grape-fizz: #8a9e55;
-  --accent:     #7a8535;   /* grassland */
-  --dark-bg:    #1a2e08;   /* dark olive */
+  --grape-fizz: #B8C856;
+  --accent:     #3D6B4D;   /* forest green */
+  --dark-bg:    #2A5038;   /* dark forest */
 }
 
-/* Gallery: Sage labels · Olive-chartreuse accent · Dark forest bg */
+/* Gallery: Sage labels · Hot Pink accent · Dark forest bg */
 body.theme-bluebell-grassland {
-  --grape-fizz: #8a9e55;
-  --berry:      #7a8535;
-  --accent:     #b2c838;   /* olive chartreuse */
-  --dark-bg:    #141e04;   /* very dark forest */
+  --grape-fizz: #B8C856;
+  --berry:      #3D6B4D;
+  --accent:     #D91B8F;   /* hot pink */
+  --dark-bg:    #1E3028;   /* very dark forest */
 }
 
 /* ============================================================
@@ -1872,12 +1878,12 @@ body.theme-bluebell-grassland {
 .gallery-item-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(46,22,24,0);
+  background: rgba(61,107,77,0);
   transition: background 0.3s ease;
 }
 
 .gallery-item:hover .gallery-item-overlay {
-  background: rgba(46,22,24,0.15);
+  background: rgba(61,107,77,0.18);
 }
 
 /* Lightbox */

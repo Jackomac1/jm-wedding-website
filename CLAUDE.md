@@ -117,13 +117,11 @@ JM_Wedding_Website/
 
 | Name | Hex | CSS Var | Role |
 |------|-----|---------|------|
-| Espresso | `#2e3a10` | `--espresso` / `--brown` | Text, nav bg, footer bg, dark section bg |
-| Grape Fizz | `#c4307c` | `--grape-fizz` / `--gold` | Primary buttons, section labels, nav-card-1 |
-| Berry | `#d96599` | `--berry` / `--blush` | Form focus, decorative accents, nav-card-3 |
-| Bluebell | `#8a9e55` | `--bluebell` / `--sage` | Muted text, light section backgrounds |
-| Grassland | `#7a8535` | `--grassland` | Green accent, nav-card-2 |
-| Chartreuse | `#b2c838` | `--chartreuse` | Hero subtitle, ornament diamonds, section labels on dark bg, footer date |
-| Cream | `#ede8d8` | `--cream` | Main page background, text on dark sections |
+| Forest Green | `#3D6B4D` | `--espresso` / `--brown` / `--grassland` | Primary text, nav bg, footer bg, dark section bg |
+| Hot Pink | `#D91B8F` | `--grape-fizz` / `--gold` / `--berry` / `--blush` | Accent text, buttons, section labels, CTAs |
+| Sage Green | `#B8C856` | `--bluebell` / `--sage` / `--chartreuse` | Section stripe colour, accents, backgrounds |
+| Soft Pink | `#F5D5E0` | `--light-berry` | Light accent tint |
+| Cream | `#F5E6D3` | `--cream` | Page background, text on dark backgrounds |
 
 ## Design System
 
@@ -155,11 +153,11 @@ All three variables are defined in a single block in `CSS/style.css` — search 
 
 | Page(s) | Body class | `--grape-fizz` (labels/buttons) | `--accent` (diamonds/highlights) | `--dark-bg` (footer/dark sections) |
 |---------|-----------|----------------|-----------|---------|
-| Home, Registry | *(none)* | `#c4307c` magenta | `#b2c838` olive-chartreuse | `#2e3a10` dark olive |
-| Details, RSVP | `theme-chartreuse` | `#7a8535` olive | `#c4307c` magenta | `#1a2b08` dark olive |
-| Schedule, Contact | `theme-berry` | `#d96599` rose-magenta | `#8a9e55` sage | `#2e2010` dark warm olive |
-| Wedding Party | `theme-bluebell` | `#8a9e55` sage | `#7a8535` grassland | `#1a2e08` dark olive |
-| Gallery | `theme-bluebell-grassland` | `#8a9e55` sage | `#b2c838` olive-chartreuse | `#141e04` dark forest |
+| Home, Registry | *(none)* | `#D91B8F` hot pink | `#B8C856` sage | `#3D6B4D` forest green |
+| Details, RSVP | `theme-chartreuse` | `#3D6B4D` forest green | `#D91B8F` hot pink | `#2A5038` dark forest |
+| Schedule, Contact | `theme-berry` | `#D91B8F` hot pink | `#B8C856` sage | `#3D6B4D` forest green |
+| Wedding Party | `theme-bluebell` | `#B8C856` sage | `#3D6B4D` forest green | `#2A5038` dark forest |
+| Gallery | `theme-bluebell-grassland` | `#B8C856` sage | `#D91B8F` hot pink | `#1E3028` dark forest |
 
 ## Photo Filenames (all in `/Images/`)
 
