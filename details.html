@@ -142,25 +142,30 @@
       });
 
       const grid = document.getElementById('accommodationsGrid');
-      if (!accomList.length) { grid.innerHTML = '<p style="color:#888;">Details coming soon.</p>'; return; }
-      grid.innerHTML = accomList.map((a, i) => {
-        const delay = i < 4 ? ` delay-${i + 1}` : '';
-        const buttons = [
-          a.link          ? `<a href="${esc(a.link)}" class="btn btn-secondary btn-sm" target="_blank" rel="noopener" style="font-size:0.75rem;padding:0.4rem 1rem;">Book Now</a>` : '',
-          a.directionsUrl ? `<a href="${esc(a.directionsUrl)}" class="btn btn-secondary btn-sm" target="_blank" rel="noopener" style="font-size:0.75rem;padding:0.4rem 1rem;">Directions</a>` : ''
-        ].filter(Boolean).join('');
-        const discount = a.discountCode
-          ? `<div style="background:rgba(184,200,86,0.15);border:1px solid rgba(184,200,86,0.4);border-radius:6px;padding:0.6rem 0.85rem;margin:0.75rem 0;font-size:0.82rem;color:var(--espresso);"><strong>Discount / Booking info:</strong><br>${esc(a.discountCode).replace(/\n/g,'<br>')}</div>`
-          : '';
-        return `
-        <article class="detail-card fade-in${delay}">
-          ${a.badge ? `<div class="detail-card-meta">${esc(a.badge)}</div>` : ''}
-          <h3 class="detail-card-title">${esc(a.name)}</h3>
-          ${a.description ? `<p style="color:#888;margin-bottom:0.75rem;">${esc(a.description).replace(/\n/g,'<br>')}</p>` : ''}
-          ${discount}
-          ${buttons ? `<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">${buttons}</div>` : ''}
-        </article>`;
-      }).join('');
+      if (!accomList.length) { grid.innerHTML = '<p style="color:#888;">Details coming soon.</p>'; }
+      else {
+        grid.innerHTML = accomList.map((a, i) => {
+          const delay = i < 4 ? ` delay-${i + 1}` : '';
+          const buttons = [
+            a.link          ? `<a href="${esc(a.link)}" class="btn btn-secondary btn-sm" target="_blank" rel="noopener" style="font-size:0.75rem;padding:0.4rem 1rem;">Book Now</a>` : '',
+            a.directionsUrl ? `<a href="${esc(a.directionsUrl)}" class="btn btn-secondary btn-sm" target="_blank" rel="noopener" style="font-size:0.75rem;padding:0.4rem 1rem;">Directions</a>` : ''
+          ].filter(Boolean).join('');
+          const discount = a.discountCode
+            ? `<div style="background:rgba(184,200,86,0.15);border:1px solid rgba(184,200,86,0.4);border-radius:6px;padding:0.6rem 0.85rem;margin:0.75rem 0;font-size:0.82rem;color:var(--espresso);"><strong>Discount / Booking info:</strong><br>${esc(a.discountCode).replace(/\n/g,'<br>')}</div>`
+            : '';
+          return `
+          <article class="detail-card fade-in${delay}">
+            ${a.badge ? `<div class="detail-card-meta">${esc(a.badge)}</div>` : ''}
+            <h3 class="detail-card-title">${esc(a.name)}</h3>
+            ${a.description ? `<p style="color:#888;margin-bottom:0.75rem;">${esc(a.description).replace(/\n/g,'<br>')}</p>` : ''}
+            ${discount}
+            ${buttons ? `<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">${buttons}</div>` : ''}
+          </article>`;
+        }).join('');
+      }
+
+      // Elements were added after IntersectionObserver ran — mark them visible manually
+      document.querySelectorAll('#detailSection1 .fade-in, #detailSection2 .fade-in, #detailSection3 .fade-in, #accommodationsGrid .fade-in').forEach(el => el.classList.add('visible'));
     })();
   </script>
 
