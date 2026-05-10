@@ -1211,7 +1211,7 @@ app.delete('/api/admin/music', requireAdminAuth, (_req, res) => {
 // ---------------------------------------------------------------------------
 // API — detail sections & cards
 // ---------------------------------------------------------------------------
-app.get('/api/details', requireSiteAuth, (_req, res) => {
+app.get('/api/details', (_req, res) => {
   const db = getDb();
   res.json({
     sections: (db.detailSections || []).slice().sort((a, b) => a.sortOrder - b.sortOrder),
@@ -1292,7 +1292,7 @@ app.delete('/api/admin/details/cards/:id', requireAdminAuth, (req, res) => {
 // ---------------------------------------------------------------------------
 // API — accommodations
 // ---------------------------------------------------------------------------
-app.get('/api/accommodations', requireSiteAuth, (_req, res) => {
+app.get('/api/accommodations', (_req, res) => {
   const db = getDb();
   const list = (db.accommodations || []).slice().sort((a, b) => a.sortOrder - b.sortOrder);
   res.json(list);
