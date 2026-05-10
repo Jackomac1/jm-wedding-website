@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Details page content management — Admin">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Details Page — Admin</title>
+  <link rel="stylesheet" href="/CSS/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    /* Section groups */
+    .section-group {
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-md);
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+    .section-group-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--admin-border);
+      background: var(--admin-bg);
+    }
+    .section-group-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--admin-accent);
+    }
+    .section-group-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--admin-text);
+      flex: 1;
+    }
+    .section-group-body { padding: 1rem 1.25rem; }
+
+    /* Section edit inline form */
+    .section-edit-row {
+      display: none;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      padding: 0.75rem 0 0.5rem;
+      align-items: flex-end;
+    }
+    .section-edit-row.open { display: flex; }
+    .section-edit-row .form-field { flex: 1; min-width: 160px; }
+
+    /* Card rows */
+    .card-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.7rem 0.9rem;
+      background: var(--admin-bg);
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.5rem;
+    }
+    .card-row-info { flex: 1; min-width: 0; }
+    .card-row-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--admin-accent);
+      margin-bottom: 0.1rem;
+    }
+    .card-row-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--admin-text);
+    }
+    .card-row-body {
+      font-size: 0.78rem;
+      color: var(--admin-muted);
+      margin-top: 0.15rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 420px;
+    }
+    .card-row-actions { display: flex; gap: 0.4rem; flex-shrink: 0; padding-top: 0.1rem; }
+
+    /* Shared form fields */
+    .form-field { display: flex; flex-direction: column; gap: 0.3rem; }
+    .form-field label { font-size: 0.8rem; font-weight: 600; color: var(--admin-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .form-field input, .form-field textarea, .form-field select {
+      padding: 0.55rem 0.75rem;
+      font-size: 0.9rem;
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-sm);
+      background: var(--admin-bg);
+      color: var(--admin-text);
+      font-family: inherit;
+    }
+    .form-field textarea { resize: vertical; min-height: 80px; }
+    .form-field input:focus, .form-field textarea:focus, .form-field select:focus {
+      outline: none;
+      border-color: var(--admin-accent);
+    }
+    .hint-text { font-size: 0.72rem; color: var(--admin-muted); margin-top: 0.2rem; }
+
+    /* Modal overlay for card add/edit */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--admin-card);
+      border-radius: var(--radius-md);
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--admin-text);
+      margin: 0 0 1.25rem;
+    }
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .modal-grid .full-width { grid-column: 1 / -1; }
+    @media (max-width: 560px) {
+      .modal-grid { grid-template-columns: 1fr; }
+      .modal-grid .full-width { grid-column: 1; }
+    }
+    .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; }
+    .form-field-check {
+      display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0;
+    }
+    .form-field-check input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--admin-accent); }
+    .form-field-check label { font-size: 0.9rem; color: var(--admin-text); cursor: pointer; }
+
+    .add-card-btn-wrap { margin-top: 0.75rem; }
+  </style>
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar" role="navigation" aria-label="Admin navigation">
+      <div class="sidebar-brand">
+        <span class="sidebar-brand-script">J &amp; M</span>
+        <span class="sidebar-brand-label">Admin Panel</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-section">Main</div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/dashboard" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📊</span> Dashboard
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/qr-generator" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📷</span> QR Generator
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/photos" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">🖼</span> Photos
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/schedule" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📅</span> Schedule
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/music" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">&#9834;</span> Music
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/accommodations" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">&#127968;</span> Accommodations
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/details" class="sidebar-nav-link active" aria-current="page">
+            <span class="sidebar-nav-icon" aria-hidden="true">&#128203;</span> Details Page
+          </a>
+        </div>
+        <div class="sidebar-nav-section">Actions</div>
+        <div class="sidebar-nav-item">
+          <a href="#" class="sidebar-nav-link" id="adminLogoutBtn">
+            <span class="sidebar-nav-icon" aria-hidden="true">🚪</span> Logout
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/home" class="sidebar-back-link">← View Wedding Site</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+
+      <!-- Top Bar -->
+      <header class="admin-topbar">
+        <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+        <h1 class="admin-topbar-title">Details Page</h1>
+      </header>
+
+      <!-- Content -->
+      <main class="admin-content">
+
+        <div class="admin-alert admin-alert-error"   id="detailsError"   role="alert"  aria-live="polite"></div>
+        <div class="admin-alert admin-alert-success" id="detailsSuccess" role="status" aria-live="polite"></div>
+
+        <div id="sectionList">
+          <p style="color:var(--admin-muted);font-size:0.9rem;">Loading…</p>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Card Add / Edit Modal -->
+  <div class="modal-overlay" id="cardModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-box">
+      <h2 class="modal-title" id="modalTitle">Add Card</h2>
+      <form id="cardForm" novalidate>
+        <input type="hidden" id="cardEditId">
+        <input type="hidden" id="cardSectionId">
+
+        <div class="modal-grid">
+
+          <div class="form-field">
+            <label for="fBadge">Badge / Tag</label>
+            <input type="text" id="fBadge" placeholder="e.g. Ceremony, Drinks, By Car">
+            <span class="hint-text">Small label above the card title.</span>
+          </div>
+
+          <div class="form-field">
+            <label for="fSortOrder">Sort Order</label>
+            <input type="number" id="fSortOrder" min="1" placeholder="1">
+          </div>
+
+          <div class="form-field full-width">
+            <label for="fTitle">Card Title</label>
+            <input type="text" id="fTitle" placeholder="e.g. The Wedding Ceremony">
+          </div>
+
+          <div class="form-field full-width">
+            <label for="fBody">Main Content</label>
+            <textarea id="fBody" rows="5" placeholder="Card content. Use **text** for bold. Blank lines create new paragraphs."></textarea>
+            <span class="hint-text">Use **word** for bold. Press Enter for a new line; leave a blank line for a new paragraph.</span>
+          </div>
+
+          <div class="form-field full-width">
+            <label for="fNote">Note (smaller grey text)</label>
+            <textarea id="fNote" rows="2" placeholder="Optional additional note shown in grey below the main content."></textarea>
+          </div>
+
+          <div class="form-field-check full-width">
+            <input type="checkbox" id="fDressPhoto">
+            <label for="fDressPhoto">Show dress code photo below this card</label>
+          </div>
+
+        </div>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary" id="cardSaveBtn">Save Card</button>
+          <button type="button" class="btn btn-secondary" id="cardCancelBtn">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ---- sidebar ----
+    const sidebar   = document.getElementById('adminSidebar');
+    const overlay   = document.getElementById('sidebarOverlay');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('active');
+    });
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('active');
+    });
+    document.getElementById('adminLogoutBtn').addEventListener('click', async e => {
+      e.preventDefault();
+      await fetch('/api/admin/logout', { method: 'POST' });
+      window.location.href = '/admin/login';
+    });
+
+    // ---- helpers ----
+    function escHtml(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function showError(msg) {
+      const el = document.getElementById('detailsError');
+      el.textContent = msg; el.style.display = msg ? 'block' : 'none';
+      document.getElementById('detailsSuccess').style.display = 'none';
+    }
+    function showSuccess(msg) {
+      const el = document.getElementById('detailsSuccess');
+      el.textContent = msg; el.style.display = msg ? 'block' : 'none';
+      document.getElementById('detailsError').style.display = 'none';
+      if (msg) setTimeout(() => { el.style.display = 'none'; }, 3000);
+    }
+
+    // ---- state ----
+    let sections = [], cards = [];
+
+    async function load() {
+      const data = await fetch('/api/admin/details').then(r => r.json()).catch(() => ({ sections: [], cards: [] }));
+      sections = data.sections || [];
+      cards    = data.cards    || [];
+      render();
+    }
+
+    // ---- render ----
+    function render() {
+      const list = document.getElementById('sectionList');
+      list.innerHTML = sections.map(sec => {
+        const secCards = cards.filter(c => c.sectionId === sec.id).sort((a,b) => a.sortOrder - b.sortOrder);
+        return `
+        <div class="section-group" id="section-group-${sec.id}">
+          <div class="section-group-header">
+            <div style="flex:1;">
+              <div class="section-group-label">${escHtml(sec.label)}</div>
+              <div class="section-group-title">${escHtml(sec.title)}</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="toggleSectionEdit(${sec.id})">Edit Heading</button>
+          </div>
+
+          <!-- Inline section heading edit form -->
+          <div class="section-edit-row" id="sec-edit-${sec.id}">
+            <div class="form-field" style="flex:1;min-width:140px;">
+              <label>Label</label>
+              <input type="text" id="sec-label-${sec.id}" value="${escHtml(sec.label)}" placeholder="Mark Your Calendar">
+            </div>
+            <div class="form-field" style="flex:1;min-width:140px;">
+              <label>Title</label>
+              <input type="text" id="sec-title-${sec.id}" value="${escHtml(sec.title)}" placeholder="The Celebration">
+            </div>
+            <div class="form-field" style="flex:1;min-width:200px;">
+              <label>Subtitle (optional)</label>
+              <input type="text" id="sec-subtitle-${sec.id}" value="${escHtml(sec.subtitle || '')}" placeholder="">
+            </div>
+            <div style="display:flex;gap:0.5rem;padding-bottom:0.05rem;">
+              <button class="btn btn-primary btn-sm" onclick="saveSectionHeading(${sec.id})">Save</button>
+              <button class="btn btn-secondary btn-sm" onclick="toggleSectionEdit(${sec.id})">Cancel</button>
+            </div>
+          </div>
+
+          <div class="section-group-body">
+            ${secCards.length ? secCards.map(c => `
+            <div class="card-row" id="card-row-${c.id}">
+              <div class="card-row-info">
+                ${c.badge ? `<div class="card-row-badge">${escHtml(c.badge)}</div>` : ''}
+                <div class="card-row-title">${escHtml(c.title) || '<em style="color:var(--admin-muted);font-weight:400;">(no title)</em>'}</div>
+                ${c.body  ? `<div class="card-row-body">${escHtml(c.body)}</div>` : ''}
+              </div>
+              <div class="card-row-actions">
+                <button class="btn btn-secondary btn-sm" onclick="openCardModal(${c.id})">Edit</button>
+                <button class="btn btn-sm" style="background:transparent;border:1px solid #e53;color:#e53;" onclick="deleteCard(${c.id})">Delete</button>
+              </div>
+            </div>`).join('') : '<p style="color:var(--admin-muted);font-size:0.85rem;padding:0.25rem 0;">No cards yet.</p>'}
+            <div class="add-card-btn-wrap">
+              <button class="btn btn-secondary btn-sm" onclick="openCardModal(null, ${sec.id})">+ Add Card</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ---- section heading edit ----
+    function toggleSectionEdit(secId) {
+      const row = document.getElementById(`sec-edit-${secId}`);
+      row.classList.toggle('open');
+    }
+
+    async function saveSectionHeading(secId) {
+      const label    = document.getElementById(`sec-label-${secId}`).value;
+      const title    = document.getElementById(`sec-title-${secId}`).value;
+      const subtitle = document.getElementById(`sec-subtitle-${secId}`).value;
+      const r = await fetch(`/api/admin/details/sections/${secId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label, title, subtitle })
+      });
+      const data = await r.json();
+      if (!r.ok) { showError(data.error || 'Save failed.'); return; }
+      showSuccess('Section heading updated.');
+      await load();
+    }
+
+    // ---- card modal ----
+    const modal = document.getElementById('cardModal');
+
+    function openCardModal(cardId, sectionId) {
+      showError('');
+      const c = cardId ? cards.find(x => x.id === cardId) : null;
+      document.getElementById('modalTitle').textContent        = c ? 'Edit Card' : 'Add Card';
+      document.getElementById('cardEditId').value              = c ? c.id : '';
+      document.getElementById('cardSectionId').value           = c ? c.sectionId : (sectionId || '');
+      document.getElementById('fBadge').value                  = c ? (c.badge || '') : '';
+      document.getElementById('fTitle').value                  = c ? (c.title || '') : '';
+      document.getElementById('fBody').value                   = c ? (c.body  || '') : '';
+      document.getElementById('fNote').value                   = c ? (c.note  || '') : '';
+      document.getElementById('fSortOrder').value              = c ? (c.sortOrder || '') : '';
+      document.getElementById('fDressPhoto').checked           = c ? !!c.showDresscodePhoto : false;
+      modal.classList.add('open');
+      document.getElementById('fBadge').focus();
+    }
+
+    function closeModal() {
+      modal.classList.remove('open');
+      document.getElementById('cardForm').reset();
+      document.getElementById('cardEditId').value = '';
+    }
+
+    document.getElementById('cardCancelBtn').addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+    document.getElementById('cardForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      showError('');
+      const id        = document.getElementById('cardEditId').value;
+      const sectionId = document.getElementById('cardSectionId').value;
+      const body = {
+        badge:              document.getElementById('fBadge').value,
+        title:              document.getElementById('fTitle').value,
+        body:               document.getElementById('fBody').value,
+        note:               document.getElementById('fNote').value,
+        sortOrder:          document.getElementById('fSortOrder').value || null,
+        showDresscodePhoto: document.getElementById('fDressPhoto').checked,
+        sectionId:          Number(sectionId)
+      };
+      const url    = id ? `/api/admin/details/cards/${id}` : '/api/admin/details/cards';
+      const method = id ? 'PUT' : 'POST';
+      const r = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await r.json();
+      if (!r.ok) { showError(data.error || 'Save failed.'); return; }
+      showSuccess(id ? 'Card updated.' : 'Card added.');
+      closeModal();
+      await load();
+    });
+
+    // ---- delete card ----
+    async function deleteCard(id) {
+      const c = cards.find(x => x.id === id);
+      const label = c ? (c.title || c.badge || 'this card') : 'this card';
+      if (!confirm(`Delete "${label}"?`)) return;
+      const r = await fetch(`/api/admin/details/cards/${id}`, { method: 'DELETE' });
+      const data = await r.json();
+      if (!r.ok) { showError(data.error || 'Delete failed.'); return; }
+      showSuccess('Card deleted.');
+      await load();
+    }
+
+    load();
+  </script>
+
+</body>
+</html>

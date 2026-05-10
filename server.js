@@ -205,6 +205,48 @@ function getDb() {
     changed = true;
   }
 
+  // Migrate: add detail sections and cards if missing
+  if (!db.detailSections) {
+    db.detailSections = [
+      { id: 1, label: 'Mark Your Calendar', title: 'The Celebration',    subtitle: '', styleClass: 'section',             sortOrder: 1 },
+      { id: 2, label: 'Good to Know',       title: 'Additional Details', subtitle: '', styleClass: 'section',             sortOrder: 2 },
+      { id: 3, label: 'Logistics',          title: 'Getting There',      subtitle: '', styleClass: 'section section-alt', sortOrder: 3 }
+    ];
+    changed = true;
+  }
+
+  if (!db.detailCards) {
+    db.detailCards = [
+      { id: 1,  sectionId: 1, sortOrder: 1, badge: 'Ceremony',        title: 'The Wedding Ceremony',  body: '**Date:** Sunday, August 29, 2027\n**Time:** 4:00 PM\n**Venue:** Stewart Creek Golf & Country Club\n**Address:** 4100 Stewart Creek Dr, Canmore, AB T1W 2V3',                                                                                                                                                          note: 'Please arrive 15–20 minutes before the ceremony begins to be seated comfortably.',                                                                                                                                             showDresscodePhoto: false },
+      { id: 2,  sectionId: 1, sortOrder: 2, badge: 'Reception',       title: 'The Reception',         body: '**Date:** Sunday, August 29, 2027\n**Cocktail Hour:** 5:30 PM\n**Dinner & Dancing:** 6:30 PM\n**End Time:** 1:00 AM\n**Venue:** Bridgette Bar Canmore\n**Address:** 1030 Spring Creek Dr, Canmore, AB T1W 0C8',                                                                                                        note: 'Join us after the ceremony for cocktails, dinner, toasts, dancing, and celebrating — we plan to have the best night of our lives!',                                                                                             showDresscodePhoto: false },
+      { id: 3,  sectionId: 1, sortOrder: 3, badge: 'Attire',          title: 'Dress Code',            body: '**Colourful Garden Soirée**',                                                                                                                                                                                                                                                                                            note: 'Bright colours, joyful florals, and elevated garden-party looks; garden-inspired outfits with a dressy feel are encouraged.',                                                                                                   showDresscodePhoto: true  },
+      { id: 4,  sectionId: 2, sortOrder: 1, badge: 'Drinks',          title: '',                      body: "We're delighted to host you for welcome drinks at the ceremony, followed by wine service with dinner and three additional drinks to enjoy as the celebration continues. A cash bar will be available throughout the evening for any further refreshments.",                                                                note: "We can't wait to raise a glass with you.",                                                                                                                                                                                       showDresscodePhoto: false },
+      { id: 5,  sectionId: 2, sortOrder: 2, badge: 'Coming Soon',     title: 'More Details',          body: '',                                                                                                                                                                                                                                                                                                                       note: 'Information coming soon.',                                                                                                                                                                                                       showDresscodePhoto: false },
+      { id: 6,  sectionId: 2, sortOrder: 3, badge: 'Coming Soon',     title: 'More Details',          body: '',                                                                                                                                                                                                                                                                                                                       note: 'Information coming soon.',                                                                                                                                                                                                       showDresscodePhoto: false },
+      { id: 7,  sectionId: 2, sortOrder: 4, badge: 'Important Notes', title: 'Guests & Children',     body: 'Children are very welcome to join us for Friday night drinks, Saturday brunch, and daytime activities (including golf and the spa, noting that some activities may have age restrictions). Due to venue age restrictions, guests under the age of 16 are unable to attend the Sunday wedding celebrations.',              note: "We kindly ask that attendance be limited to those named on the invitation, as we are unfortunately unable to accommodate additional guests or plus ones. Thank you so much for your understanding, and we can't wait to celebrate with you.", showDresscodePhoto: false },
+      { id: 8,  sectionId: 3, sortOrder: 1, badge: 'By Car',          title: 'Parking',               body: 'Parking is available at Stewart Creek Golf & Country Club. Please park on the far end of the lot to avoid overcrowding near the ceremony tent.',                                                                                                                                                                         note: '',                                                                                                                                                                                                                               showDresscodePhoto: false },
+      { id: 9,  sectionId: 3, sortOrder: 2, badge: 'Getting Around',  title: 'Rideshare & Taxis',     body: 'Rideshares and taxis are available in Canmore. We encourage guests staying at nearby hotels to rideshare to the ceremony so everyone can enjoy the evening without worrying about driving.',                                                                                                                              note: '',                                                                                                                                                                                                                               showDresscodePhoto: false },
+      { id: 10, sectionId: 3, sortOrder: 3, badge: 'The Town',        title: 'Canmore, Alberta',      body: "Nestled in the Rocky Mountains, Canmore is a stunning mountain town just 20 minutes from Banff. Come early and explore — there's no shortage of hiking, scenery, and great restaurants to enjoy before the big day.",                                                                                                    note: '',                                                                                                                                                                                                                               showDresscodePhoto: false }
+    ];
+    changed = true;
+  }
+
+  // Migrate: add accommodations if missing
+  if (!db.accommodations) {
+    db.accommodations = [
+      {
+        id: 1, sortOrder: 1,
+        name: 'The Malcolm Hotel',
+        badge: 'Recommended · ~500m from ceremony',
+        description: 'Our top recommendation for guests. Located just a short walk from Stewart Creek Golf & Country Club, right in the heart of Canmore.',
+        discountCode: '',
+        link: '',
+        directionsUrl: ''
+      }
+    ];
+    changed = true;
+  }
+
   if (changed) writeDb(db);
   return db;
 }
@@ -319,7 +361,9 @@ app.get('/admin',              requireAdminAuth, (req, res) => res.redirect('/ad
 app.get('/admin/dashboard',    requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'dashboard.html')));
 app.get('/admin/qr-generator', requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'qr-generator.html')));
 app.get('/admin/photos',       requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'photos.html')));
-app.get('/admin/schedule',     requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'schedule.html')));
+app.get('/admin/schedule',         requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'schedule.html')));
+app.get('/admin/accommodations',   requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'accommodations.html')));
+app.get('/admin/details',          requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'details.html')));
 
 // ---------------------------------------------------------------------------
 // API — authentication
@@ -1160,6 +1204,153 @@ app.delete('/api/admin/music', requireAdminAuth, (_req, res) => {
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
   }
   db.music = { enabled: false, filename: null, displayName: '' };
+  writeDb(db);
+  res.json({ success: true });
+});
+
+// ---------------------------------------------------------------------------
+// API — detail sections & cards
+// ---------------------------------------------------------------------------
+app.get('/api/details', requireSiteAuth, (_req, res) => {
+  const db = getDb();
+  res.json({
+    sections: (db.detailSections || []).slice().sort((a, b) => a.sortOrder - b.sortOrder),
+    cards:    (db.detailCards    || []).slice().sort((a, b) => a.sortOrder - b.sortOrder)
+  });
+});
+
+app.get('/api/admin/details', requireAdminAuth, (_req, res) => {
+  const db = getDb();
+  res.json({
+    sections: (db.detailSections || []).slice().sort((a, b) => a.sortOrder - b.sortOrder),
+    cards:    (db.detailCards    || []).slice().sort((a, b) => a.sortOrder - b.sortOrder)
+  });
+});
+
+app.put('/api/admin/details/sections/:id', requireAdminAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const db = getDb();
+  const sec = (db.detailSections || []).find(s => s.id === id);
+  if (!sec) return res.status(404).json({ error: 'Section not found' });
+  const { label, title, subtitle } = req.body;
+  if (label    !== undefined) sec.label    = label.trim();
+  if (title    !== undefined) sec.title    = title.trim();
+  if (subtitle !== undefined) sec.subtitle = subtitle.trim();
+  writeDb(db);
+  res.json({ success: true, section: sec });
+});
+
+app.post('/api/admin/details/cards', requireAdminAuth, (req, res) => {
+  const { sectionId, badge, title, body, note, showDresscodePhoto, sortOrder } = req.body;
+  if (!sectionId) return res.status(400).json({ error: 'sectionId is required' });
+  const db = getDb();
+  if (!db.detailCards) db.detailCards = [];
+  const maxId    = db.detailCards.reduce((m, c) => Math.max(m, c.id    || 0), 0);
+  const maxOrder = db.detailCards.filter(c => c.sectionId === Number(sectionId)).reduce((m, c) => Math.max(m, c.sortOrder || 0), 0);
+  const card = {
+    id:                maxId + 1,
+    sectionId:         Number(sectionId),
+    sortOrder:         sortOrder != null ? Number(sortOrder) : maxOrder + 1,
+    badge:             (badge  || '').trim(),
+    title:             (title  || '').trim(),
+    body:              (body   || '').trim(),
+    note:              (note   || '').trim(),
+    showDresscodePhoto: showDresscodePhoto === true || showDresscodePhoto === 'true'
+  };
+  db.detailCards.push(card);
+  writeDb(db);
+  res.json({ success: true, card });
+});
+
+app.put('/api/admin/details/cards/:id', requireAdminAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const db = getDb();
+  const card = (db.detailCards || []).find(c => c.id === id);
+  if (!card) return res.status(404).json({ error: 'Card not found' });
+  const { badge, title, body, note, showDresscodePhoto, sortOrder, sectionId } = req.body;
+  if (badge              !== undefined) card.badge              = badge.trim();
+  if (title              !== undefined) card.title              = title.trim();
+  if (body               !== undefined) card.body               = body.trim();
+  if (note               !== undefined) card.note               = note.trim();
+  if (showDresscodePhoto !== undefined) card.showDresscodePhoto = showDresscodePhoto === true || showDresscodePhoto === 'true';
+  if (sortOrder          !== undefined) card.sortOrder          = Number(sortOrder);
+  if (sectionId          !== undefined) card.sectionId          = Number(sectionId);
+  writeDb(db);
+  res.json({ success: true, card });
+});
+
+app.delete('/api/admin/details/cards/:id', requireAdminAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const db = getDb();
+  const idx = (db.detailCards || []).findIndex(c => c.id === id);
+  if (idx === -1) return res.status(404).json({ error: 'Card not found' });
+  db.detailCards.splice(idx, 1);
+  writeDb(db);
+  res.json({ success: true });
+});
+
+// ---------------------------------------------------------------------------
+// API — accommodations
+// ---------------------------------------------------------------------------
+app.get('/api/accommodations', requireSiteAuth, (_req, res) => {
+  const db = getDb();
+  const list = (db.accommodations || []).slice().sort((a, b) => a.sortOrder - b.sortOrder);
+  res.json(list);
+});
+
+app.get('/api/admin/accommodations', requireAdminAuth, (_req, res) => {
+  const db = getDb();
+  const list = (db.accommodations || []).slice().sort((a, b) => a.sortOrder - b.sortOrder);
+  res.json(list);
+});
+
+app.post('/api/admin/accommodations', requireAdminAuth, (req, res) => {
+  const { name, badge, description, discountCode, link, directionsUrl, sortOrder } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' });
+  const db = getDb();
+  if (!db.accommodations) db.accommodations = [];
+  const maxId = db.accommodations.reduce((m, a) => Math.max(m, a.id || 0), 0);
+  const maxOrder = db.accommodations.reduce((m, a) => Math.max(m, a.sortOrder || 0), 0);
+  const item = {
+    id:           maxId + 1,
+    sortOrder:    sortOrder != null ? Number(sortOrder) : maxOrder + 1,
+    name:         name.trim(),
+    badge:        (badge         || '').trim(),
+    description:  (description   || '').trim(),
+    discountCode: (discountCode  || '').trim(),
+    link:         (link          || '').trim(),
+    directionsUrl:(directionsUrl || '').trim()
+  };
+  db.accommodations.push(item);
+  writeDb(db);
+  res.json({ success: true, accommodation: item });
+});
+
+app.put('/api/admin/accommodations/:id', requireAdminAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const db = getDb();
+  const idx = (db.accommodations || []).findIndex(a => a.id === id);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  const { name, badge, description, discountCode, link, directionsUrl, sortOrder } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' });
+  const item = db.accommodations[idx];
+  item.name          = name.trim();
+  item.badge         = (badge         || '').trim();
+  item.description   = (description   || '').trim();
+  item.discountCode  = (discountCode  || '').trim();
+  item.link          = (link          || '').trim();
+  item.directionsUrl = (directionsUrl || '').trim();
+  if (sortOrder != null) item.sortOrder = Number(sortOrder);
+  writeDb(db);
+  res.json({ success: true, accommodation: item });
+});
+
+app.delete('/api/admin/accommodations/:id', requireAdminAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const db = getDb();
+  const idx = (db.accommodations || []).findIndex(a => a.id === id);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  db.accommodations.splice(idx, 1);
   writeDb(db);
   res.json({ success: true });
 });

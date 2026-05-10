@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Accommodations management — Admin">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Accommodations — Admin</title>
+  <link rel="stylesheet" href="/CSS/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    .accom-form-card {
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .accom-form-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--admin-muted);
+      margin: 0 0 1.25rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .form-grid .full-width { grid-column: 1 / -1; }
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .full-width { grid-column: 1; }
+    }
+    .form-field { display: flex; flex-direction: column; gap: 0.3rem; }
+    .form-field label { font-size: 0.8rem; font-weight: 600; color: var(--admin-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .form-field input, .form-field textarea {
+      padding: 0.55rem 0.75rem;
+      font-size: 0.9rem;
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-sm);
+      background: var(--admin-bg);
+      color: var(--admin-text);
+      font-family: inherit;
+    }
+    .form-field textarea { resize: vertical; min-height: 80px; }
+    .form-field input:focus, .form-field textarea:focus {
+      outline: none;
+      border-color: var(--admin-accent);
+    }
+    .form-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; }
+    .hint-text { font-size: 0.75rem; color: var(--admin-muted); margin-top: 0.2rem; }
+
+    /* Accommodation cards */
+    .accom-card {
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.25rem 1rem;
+      margin-bottom: 1rem;
+    }
+    .accom-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .accom-card-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--admin-text);
+      flex: 1;
+    }
+    .accom-card-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--admin-accent);
+      margin-top: 0.15rem;
+    }
+    .accom-card-desc {
+      font-size: 0.85rem;
+      color: var(--admin-muted);
+      margin: 0.4rem 0 0.75rem;
+      line-height: 1.5;
+    }
+    .accom-card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      font-size: 0.75rem;
+      color: var(--admin-muted);
+      margin-bottom: 0.75rem;
+    }
+    .accom-card-meta span { display: flex; align-items: center; gap: 0.3rem; }
+    .accom-card-meta .present { color: var(--admin-text); font-weight: 500; }
+    .accom-card-actions { display: flex; gap: 0.5rem; }
+    .sort-order-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: var(--admin-bg);
+      border: 1px solid var(--admin-border);
+      border-radius: 99px;
+      padding: 0.1rem 0.5rem;
+      color: var(--admin-muted);
+      flex-shrink: 0;
+      align-self: flex-start;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--admin-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar" role="navigation" aria-label="Admin navigation">
+      <div class="sidebar-brand">
+        <span class="sidebar-brand-script">J &amp; M</span>
+        <span class="sidebar-brand-label">Admin Panel</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-section">Main</div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/dashboard" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📊</span> Dashboard
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/qr-generator" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📷</span> QR Generator
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/photos" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">🖼</span> Photos
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/schedule" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">📅</span> Schedule
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/music" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">&#9834;</span> Music
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/accommodations" class="sidebar-nav-link active" aria-current="page">
+            <span class="sidebar-nav-icon" aria-hidden="true">&#127968;</span> Accommodations
+          </a>
+        </div>
+        <div class="sidebar-nav-item">
+          <a href="/admin/details" class="sidebar-nav-link">
+            <span class="sidebar-nav-icon" aria-hidden="true">&#128203;</span> Details Page
+          </a>
+        </div>
+        <div class="sidebar-nav-section">Actions</div>
+        <div class="sidebar-nav-item">
+          <a href="#" class="sidebar-nav-link" id="adminLogoutBtn">
+            <span class="sidebar-nav-icon" aria-hidden="true">🚪</span> Logout
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/home" class="sidebar-back-link">← View Wedding Site</a>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+
+      <!-- Top Bar -->
+      <header class="admin-topbar">
+        <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+        <h1 class="admin-topbar-title">Accommodations</h1>
+        <div class="admin-topbar-actions">
+          <button class="btn btn-primary btn-sm" id="addAccomBtn">+ Add Accommodation</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="admin-content">
+
+        <!-- Alerts -->
+        <div class="admin-alert admin-alert-error"   id="accomError"   role="alert"  aria-live="polite"></div>
+        <div class="admin-alert admin-alert-success" id="accomSuccess" role="status" aria-live="polite"></div>
+
+        <!-- Add / Edit Form -->
+        <div id="accomFormCard" class="accom-form-card" style="display:none;">
+          <h3 class="accom-form-title" id="accomFormTitle">Add Accommodation</h3>
+          <form id="accomForm" novalidate>
+            <input type="hidden" id="editingId" value="">
+
+            <div class="form-grid">
+
+              <div class="form-field full-width">
+                <label for="fName">Name <span style="color:var(--berry);">*</span></label>
+                <input type="text" id="fName" placeholder="e.g. The Malcolm Hotel" required>
+              </div>
+
+              <div class="form-field full-width">
+                <label for="fBadge">Tag / Badge</label>
+                <input type="text" id="fBadge" placeholder="e.g. Recommended · ~500m from ceremony">
+                <span class="hint-text">Short label shown above the hotel name on the Details page.</span>
+              </div>
+
+              <div class="form-field full-width">
+                <label for="fDesc">Description</label>
+                <textarea id="fDesc" placeholder="Brief description of this accommodation…"></textarea>
+              </div>
+
+              <div class="form-field full-width">
+                <label for="fDiscount">Discount Code / Booking Info</label>
+                <textarea id="fDiscount" rows="2" placeholder="e.g. Use code JACKANDMAJA for 10% off. Book at least 6 months in advance."></textarea>
+                <span class="hint-text">Displayed in a highlighted box on the guest page when set.</span>
+              </div>
+
+              <div class="form-field">
+                <label for="fLink">Website / Booking Link</label>
+                <input type="url" id="fLink" placeholder="https://…">
+                <span class="hint-text">Shows a "Book Now" button when set.</span>
+              </div>
+
+              <div class="form-field">
+                <label for="fDirections">Directions URL</label>
+                <input type="url" id="fDirections" placeholder="https://maps.google.com/…">
+                <span class="hint-text">Shows a "Directions" button when set.</span>
+              </div>
+
+              <div class="form-field">
+                <label for="fSortOrder">Sort Order</label>
+                <input type="number" id="fSortOrder" placeholder="1" min="1">
+                <span class="hint-text">Lower numbers appear first.</span>
+              </div>
+
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="accomSaveBtn">Save</button>
+              <button type="button" class="btn btn-secondary" id="accomCancelBtn">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Accommodation List -->
+        <div id="accomList">
+          <p style="color:var(--admin-muted); font-size:0.9rem;">Loading…</p>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // ---- sidebar toggle ----
+    const sidebar  = document.getElementById('adminSidebar');
+    const overlay  = document.getElementById('sidebarOverlay');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('active');
+    });
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('active');
+    });
+
+    document.getElementById('adminLogoutBtn').addEventListener('click', async e => {
+      e.preventDefault();
+      await fetch('/api/admin/logout', { method: 'POST' });
+      window.location.href = '/admin/login';
+    });
+
+    // ---- helpers ----
+    function escHtml(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function showError(msg) {
+      const el = document.getElementById('accomError');
+      el.textContent = msg;
+      el.style.display = msg ? 'block' : 'none';
+      document.getElementById('accomSuccess').style.display = 'none';
+    }
+    function showSuccess(msg) {
+      const el = document.getElementById('accomSuccess');
+      el.textContent = msg;
+      el.style.display = msg ? 'block' : 'none';
+      document.getElementById('accomError').style.display = 'none';
+      if (msg) setTimeout(() => { el.style.display = 'none'; }, 3000);
+    }
+
+    // ---- load & render ----
+    let accoms = [];
+
+    async function loadAccoms() {
+      const data = await fetch('/api/admin/accommodations').then(r => r.json()).catch(() => []);
+      accoms = Array.isArray(data) ? data : [];
+      renderList();
+    }
+
+    function renderList() {
+      const wrap = document.getElementById('accomList');
+      if (!accoms.length) {
+        wrap.innerHTML = '<div class="empty-state">No accommodations yet. Click "+ Add Accommodation" to get started.</div>';
+        return;
+      }
+      wrap.innerHTML = accoms.map(a => {
+        const hasLink       = a.link && a.link.trim();
+        const hasDirections = a.directionsUrl && a.directionsUrl.trim();
+        const hasDiscount   = a.discountCode && a.discountCode.trim();
+        return `
+        <div class="accom-card" id="accom-card-${a.id}">
+          <div class="accom-card-header">
+            <div style="flex:1;">
+              ${a.badge ? `<div class="accom-card-badge">${escHtml(a.badge)}</div>` : ''}
+              <div class="accom-card-name">${escHtml(a.name)}</div>
+            </div>
+            <div class="sort-order-badge">#${a.sortOrder}</div>
+          </div>
+          ${a.description ? `<p class="accom-card-desc">${escHtml(a.description)}</p>` : ''}
+          <div class="accom-card-meta">
+            <span class="${hasDiscount   ? 'present' : ''}">Discount: ${hasDiscount   ? escHtml(a.discountCode) : 'none'}</span>
+            <span class="${hasLink       ? 'present' : ''}">Booking link: ${hasLink       ? 'set' : 'none'}</span>
+            <span class="${hasDirections ? 'present' : ''}">Directions: ${hasDirections ? 'set' : 'none'}</span>
+          </div>
+          <div class="accom-card-actions">
+            <button class="btn btn-secondary btn-sm" onclick="editAccom(${a.id})">Edit</button>
+            <button class="btn btn-sm" style="background:transparent;border:1px solid #e53;color:#e53;" onclick="deleteAccom(${a.id}, '${escHtml(a.name)}')">Delete</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ---- form open/close ----
+    function openForm(mode, a) {
+      const card = document.getElementById('accomFormCard');
+      card.style.display = 'block';
+      document.getElementById('accomFormTitle').textContent = mode === 'add' ? 'Add Accommodation' : 'Edit Accommodation';
+      document.getElementById('editingId').value   = a ? a.id : '';
+      document.getElementById('fName').value        = a ? (a.name         || '') : '';
+      document.getElementById('fBadge').value       = a ? (a.badge        || '') : '';
+      document.getElementById('fDesc').value        = a ? (a.description  || '') : '';
+      document.getElementById('fDiscount').value    = a ? (a.discountCode || '') : '';
+      document.getElementById('fLink').value        = a ? (a.link         || '') : '';
+      document.getElementById('fDirections').value  = a ? (a.directionsUrl|| '') : '';
+      document.getElementById('fSortOrder').value   = a ? (a.sortOrder    || '') : '';
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('fName').focus();
+    }
+
+    function closeForm() {
+      document.getElementById('accomFormCard').style.display = 'none';
+      document.getElementById('accomForm').reset();
+      document.getElementById('editingId').value = '';
+    }
+
+    document.getElementById('addAccomBtn').addEventListener('click', () => openForm('add', null));
+    document.getElementById('accomCancelBtn').addEventListener('click', closeForm);
+
+    function editAccom(id) {
+      const a = accoms.find(x => x.id === id);
+      if (a) openForm('edit', a);
+    }
+
+    // ---- save ----
+    document.getElementById('accomForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      showError('');
+      const id = document.getElementById('editingId').value;
+      const body = {
+        name:         document.getElementById('fName').value.trim(),
+        badge:        document.getElementById('fBadge').value.trim(),
+        description:  document.getElementById('fDesc').value.trim(),
+        discountCode: document.getElementById('fDiscount').value.trim(),
+        link:         document.getElementById('fLink').value.trim(),
+        directionsUrl:document.getElementById('fDirections').value.trim(),
+        sortOrder:    document.getElementById('fSortOrder').value || null
+      };
+      if (!body.name) { showError('Name is required.'); return; }
+
+      const url    = id ? `/api/admin/accommodations/${id}` : '/api/admin/accommodations';
+      const method = id ? 'PUT' : 'POST';
+      const r = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await r.json();
+      if (!r.ok) { showError(data.error || 'Save failed.'); return; }
+
+      showSuccess(id ? 'Accommodation updated.' : 'Accommodation added.');
+      closeForm();
+      await loadAccoms();
+    });
+
+    // ---- delete ----
+    async function deleteAccom(id, name) {
+      if (!confirm(`Delete "${name}"?`)) return;
+      const r = await fetch(`/api/admin/accommodations/${id}`, { method: 'DELETE' });
+      const data = await r.json();
+      if (!r.ok) { showError(data.error || 'Delete failed.'); return; }
+      showSuccess('Accommodation removed.');
+      await loadAccoms();
+    }
+
+    loadAccoms();
+  </script>
+
+</body>
+</html>
