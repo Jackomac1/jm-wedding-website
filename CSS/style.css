@@ -191,6 +191,24 @@ h1, h2, h3, h4 {
   letter-spacing: 0.04em;
   flex-shrink: 0;
   transition: color var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Swans in transparent nav (over dark hero): screen makes them glow white */
+.nav-brand-swans {
+  height: 1.7rem;
+  width: auto;
+  display: block;
+  mix-blend-mode: screen;
+  transition: opacity var(--transition);
+}
+
+/* Swans in white nav: multiply removes white bg, shows hot pink strokes */
+.nav.scrolled .nav-brand-swans,
+.nav.nav-solid .nav-brand-swans {
+  mix-blend-mode: multiply;
 }
 
 .nav-menu {
