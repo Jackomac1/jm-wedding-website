@@ -1487,7 +1487,7 @@ app.post('/api/rsvp/party/:partyId', (req, res) => {
     }
   }
 
-  const { responses, plusOnes, submittedBy } = req.body;
+  const { responses, plusOnes, submittedBy, events, dietary, message, songUri, songName } = req.body;
   if (!Array.isArray(responses) || !responses.length) {
     return res.status(400).json({ error: 'responses array is required' });
   }
@@ -1513,6 +1513,11 @@ app.post('/api/rsvp/party/:partyId', (req, res) => {
 
   party.submittedAt = new Date().toISOString();
   party.submittedBy = submittedBy || null;
+  party.events      = Array.isArray(events) ? events : [];
+  party.dietary     = (dietary  || '').trim();
+  party.message     = (message  || '').trim();
+  party.songUri     = (songUri  || '').trim();
+  party.songName    = (songName || '').trim();
   writeDb(db);
   res.json({ success: true });
 });

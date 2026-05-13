@@ -98,6 +98,53 @@
             <h3 id="partyRsvpTitle" style="font-family:var(--font-heading);font-size:1.4rem;text-align:center;color:var(--espresso);margin:0 0 0.25rem;"></h3>
             <p id="partyRsvpSubtitle" style="text-align:center;color:#888;font-size:0.88rem;margin:0 0 1.5rem;"></p>
             <div id="partyMembersWrap" style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.25rem;"></div>
+
+            <!-- Extra details — shown when at least one person is attending -->
+            <div id="partyExtraFields" style="display:none;">
+
+              <!-- Events -->
+              <div class="form-group" id="partyEventsGroup">
+                <fieldset>
+                  <legend class="form-label">Which events will you be joining us for?</legend>
+                  <div id="partyEventsCheckboxes">
+                    <span style="color:#aaa;font-size:0.9rem;">Loading events&hellip;</span>
+                  </div>
+                </fieldset>
+              </div>
+
+              <!-- Dietary -->
+              <div class="form-group">
+                <label class="form-label" for="partyDietary">Dietary Restrictions or Allergies</label>
+                <textarea id="partyDietary" class="form-textarea" placeholder="Please list any dietary restrictions or allergies for your party…" rows="3"></textarea>
+              </div>
+
+              <!-- Song request -->
+              <div class="form-group">
+                <label class="form-label" for="partySongSearch">Song Request for the Dancefloor</label>
+                <div class="song-search-wrap">
+                  <input type="text" id="partySongSearch" class="form-input" placeholder="Search for a song…" autocomplete="off">
+                  <ul class="song-results" id="partySongResults" role="listbox" aria-label="Song results"></ul>
+                  <div class="song-selected" id="partySongSelected" style="display:none;">
+                    <img id="partySongImg" src="" alt="" width="40" height="40">
+                    <div class="song-selected-info">
+                      <span class="song-selected-name" id="partySongNameDisplay"></span>
+                      <span class="song-selected-artist" id="partySongArtistDisplay"></span>
+                    </div>
+                    <button type="button" id="partySongClear" class="song-clear-btn" aria-label="Clear song">&#x2715;</button>
+                  </div>
+                  <input type="hidden" id="partySongUri">
+                  <input type="hidden" id="partySongNameVal">
+                </div>
+              </div>
+
+              <!-- Message -->
+              <div class="form-group">
+                <label class="form-label" for="partyMessage">Message to Jack &amp; Maja</label>
+                <textarea id="partyMessage" class="form-textarea" placeholder="Share a message or well-wishes…" rows="4"></textarea>
+              </div>
+
+            </div><!-- /partyExtraFields -->
+
             <div class="form-error" id="partyRsvpError" role="alert" aria-live="polite"></div>
             <button type="button" id="partyRsvpSubmitBtn" class="btn btn-primary" style="width:100%;">Confirm RSVP</button>
           </div>
@@ -107,13 +154,6 @@
             <div class="success-checkmark" aria-hidden="true">✓</div>
             <h2 class="section-title" style="font-size:2rem;margin-bottom:0.5rem;">Thank You!</h2>
             <p style="font-family:var(--font-heading);font-style:italic;color:#888;">We've received your RSVP and can't wait to celebrate with you!</p>
-          </div>
-
-          <div id="guestSearchFallback" style="text-align:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(61,107,77,0.12);">
-            <p style="color:#888;font-size:0.85rem;margin:0 0 0.75rem;">Not finding your name?</p>
-            <button type="button" id="showLegacyFormBtn" class="btn btn-secondary" style="font-size:0.85rem;">
-              Fill in RSVP manually
-            </button>
           </div>
         </div>
 

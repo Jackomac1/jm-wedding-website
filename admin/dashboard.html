@@ -136,6 +136,30 @@
           </div>
         </section>
 
+        <!-- Guest List RSVP Stats -->
+        <section aria-labelledby="glStatsTitle" style="margin-bottom:1.5rem;">
+          <div class="admin-card" style="padding:1.25rem 1.5rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+              <h3 id="glStatsTitle" style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--admin-muted);margin:0;">Guest List RSVP</h3>
+              <a href="/admin/guestlist" class="btn btn-secondary btn-sm" style="text-decoration:none;">Manage Guest List →</a>
+            </div>
+            <div class="admin-stats-grid" style="margin-bottom:0;">
+              <div class="admin-card admin-card-stat" style="padding:1rem;">
+                <div><div class="admin-card-number" id="glStatInvited">—</div><div class="admin-card-label">Total Invited</div></div>
+              </div>
+              <div class="admin-card admin-card-stat stat-accent-sage" style="padding:1rem;">
+                <div><div class="admin-card-number" id="glStatAttending">—</div><div class="admin-card-label">Attending</div></div>
+              </div>
+              <div class="admin-card admin-card-stat stat-accent-blush" style="padding:1rem;">
+                <div><div class="admin-card-number" id="glStatDeclined">—</div><div class="admin-card-label">Declined</div></div>
+              </div>
+              <div class="admin-card admin-card-stat" style="padding:1rem;">
+                <div><div class="admin-card-number" id="glStatPending">—</div><div class="admin-card-label">Not Responded</div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Event Breakdown -->
         <section aria-labelledby="eventStatsTitle" style="margin-bottom:1.5rem;">
           <div class="admin-card" style="padding:1.25rem 1.5rem;">
@@ -247,11 +271,22 @@
       window.location.href = '/admin/login';
     });
 
+    async function loadGuestListStats() {
+      try {
+        const d = await fetch('/api/admin/guestlist/stats').then(r => r.json());
+        document.getElementById('glStatInvited').textContent  = d.totalInvited ?? '—';
+        document.getElementById('glStatAttending').textContent = d.attending   ?? '—';
+        document.getElementById('glStatDeclined').textContent  = d.declined    ?? '—';
+        document.getElementById('glStatPending').textContent   = d.pending     ?? '—';
+      } catch { /* non-fatal */ }
+    }
+
     async function loadAll() {
       await loadStats();      // populates eventLabels before loadRsvps uses them
       loadRsvpStatus();
       loadRsvps();
       loadSongRequests();
+      loadGuestListStats();
     }
 
     loadAll();
