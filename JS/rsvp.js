@@ -27,39 +27,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statusData = await statusRes.json();
 
     if (statusData.isOpen) {
-      if (rsvpClosed)   rsvpClosed.classList.remove('visible');
+      if (rsvpClosed)   rsvpClosed.style.display = 'none';
       if (rsvpFormWrap) rsvpFormWrap.style.display = 'block';
     } else {
-      if (rsvpClosed)   rsvpClosed.classList.add('visible');
+      if (rsvpClosed)   rsvpClosed.style.display = 'block';
       if (rsvpFormWrap) rsvpFormWrap.style.display = 'none';
-      return; // Stop here — form not needed
+      return;
     }
   } catch (err) {
-    // On error, show the form anyway (fail open is safer for guests)
     console.warn('Could not fetch RSVP status:', err);
     if (rsvpFormWrap) rsvpFormWrap.style.display = 'block';
   }
 
   // ----------------------------------------------------------
-  // 2. Check for token in URL params
+  // 2. Check for token — choose search vs legacy form
   // ----------------------------------------------------------
   const urlParams = new URLSearchParams(window.location.search);
   const token     = urlParams.get('token');
 
+  const guestSearchSection = document.getElementById('guestSearchSection');
+  const legacyRsvpSection  = document.getElementById('legacyRsvpSection');
+
   if (token) {
+    // Token present → show legacy form
+    if (guestSearchSection) guestSearchSection.style.display = 'none';
+    if (legacyRsvpSection)  legacyRsvpSection.style.display  = 'block';
     try {
       const tokenRes = await fetch(`/api/rsvp/token/${encodeURIComponent(token)}`);
       if (tokenRes.ok) {
         tokenData = await tokenRes.json();
-        // Pre-fill guest name
         if (guestNameInput && tokenData.guestName) {
           guestNameInput.value = tokenData.guestName;
         }
-        // maxGuests from tokenData is used by renderGuestNames()
       }
     } catch (err) {
       console.warn('Could not validate token:', err);
     }
+  } else {
+    // No token → show name-search flow
+    if (guestSearchSection) guestSearchSection.style.display = 'block';
+    if (legacyRsvpSection)  legacyRsvpSection.style.display  = 'none';
+    initGuestSearch();
+  }
+
+  // "Fill in manually" fallback button
+  const showLegacyBtn = document.getElementById('showLegacyFormBtn');
+  if (showLegacyBtn) {
+    showLegacyBtn.addEventListener('click', () => {
+      if (guestSearchSection) guestSearchSection.style.display = 'none';
+      if (legacyRsvpSection)  legacyRsvpSection.style.display  = 'block';
+    });
   }
 
   // ----------------------------------------------------------
@@ -425,3 +442,236 @@ document.addEventListener('DOMContentLoaded', async () => {
     rsvpError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 });
+
+// ============================================================
+// Guest-list name-search RSVP flow
+// ============================================================
+function initGuestSearch() {
+  const searchInput   = document.getElementById('guestSearch');
+  const resultsList   = document.getElementById('guestSearchResults');
+  const partyCard     = document.getElementById('partyRsvpCard');
+  const partyTitle    = document.getElementById('partyRsvpTitle');
+  const partySubtitle = document.getElementById('partyRsvpSubtitle');
+  const membersWrap   = document.getElementById('partyMembersWrap');
+  const errorEl       = document.getElementById('partyRsvpError');
+  const submitBtn     = document.getElementById('partyRsvpSubmitBtn');
+  const successEl     = document.getElementById('partyRsvpSuccess');
+  const alreadyNotice = document.getElementById('partyAlreadyNotice');
+
+  if (!searchInput) return;
+
+  let searchTimer = null;
+  let currentPartyId = null;
+  let currentPartyData = null;
+
+  function escText(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Search input ────────────────────────────────────────────
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    const q = searchInput.value.trim();
+    if (q.length < 2) { resultsList.innerHTML = ''; resultsList.classList.remove('visible'); return; }
+    searchTimer = setTimeout(async () => {
+      try {
+        const res  = await fetch(`/api/rsvp/search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        resultsList.innerHTML = '';
+        if (!data.length) { resultsList.classList.remove('visible'); return; }
+        data.forEach(result => {
+          const li = document.createElement('li');
+          li.setAttribute('role', 'option');
+          li.className = 'guest-search-result-item';
+          li.innerHTML = `<span class="guest-result-name">${escText(result.name)}</span>
+            <span class="guest-result-party">${escText(result.partyName)}</span>`;
+          li.addEventListener('click', () => selectGuest(result));
+          resultsList.appendChild(li);
+        });
+        resultsList.classList.add('visible');
+      } catch (err) {
+        console.warn('Guest search failed:', err);
+      }
+    }, 300);
+  });
+
+  document.addEventListener('click', e => {
+    if (!searchInput.contains(e.target) && !resultsList.contains(e.target)) {
+      resultsList.classList.remove('visible');
+    }
+  });
+
+  // ── Select a guest → load their party ──────────────────────
+  async function selectGuest(result) {
+    resultsList.innerHTML = '';
+    resultsList.classList.remove('visible');
+    searchInput.value = result.name;
+    currentPartyId = result.partyId;
+
+    try {
+      const res  = await fetch(`/api/rsvp/party/${encodeURIComponent(result.partyId)}`);
+      if (!res.ok) throw new Error();
+      currentPartyData = await res.json();
+      renderPartyCard(currentPartyData);
+    } catch {
+      errorEl.textContent = 'Could not load party details. Please try again.';
+      errorEl.classList.add('visible');
+    }
+  }
+
+  // ── Render party card ───────────────────────────────────────
+  function renderPartyCard(data) {
+    const { party, members, alreadySubmitted, canUpdate } = data;
+
+    partyTitle.textContent    = party.name;
+    partySubtitle.textContent = members.length === 1
+      ? 'Please confirm your attendance below.'
+      : `Please confirm attendance for each person in your party.`;
+
+    if (alreadyNotice) alreadyNotice.style.display = alreadySubmitted ? 'block' : 'none';
+
+    membersWrap.innerHTML = '';
+    members.forEach(member => {
+      const isAttending = member.rsvpStatus === 'attending';
+      const row = document.createElement('div');
+      row.className = 'party-member-row';
+      row.dataset.guestId = member.id;
+
+      row.innerHTML = `
+        <div class="party-member-info">
+          <span class="party-member-name">${escText(member.name)}</span>
+        </div>
+        <div class="party-member-radios">
+          <label class="party-radio-label party-radio-yes">
+            <input type="radio" name="attendance-${escText(member.id)}" value="yes" ${isAttending ? 'checked' : ''}>
+            Attending
+          </label>
+          <label class="party-radio-label party-radio-no">
+            <input type="radio" name="attendance-${escText(member.id)}" value="no" ${member.rsvpStatus === 'declined' ? 'checked' : ''}>
+            Not Attending
+          </label>
+        </div>`;
+
+      // Plus one slot
+      if (member.plusOneAllowed) {
+        const plusRow = document.createElement('div');
+        plusRow.className = 'party-member-row party-plusone-row';
+        plusRow.dataset.plusForId = member.id;
+
+        const poIsAttending = member.plusOneStatus === 'attending';
+        plusRow.innerHTML = `
+          <div class="party-member-info">
+            <span class="party-member-name" style="font-style:italic;">
+              Plus One ${member.plusOneName ? '— ' + escText(member.plusOneName) : ''}
+            </span>
+          </div>
+          <div class="party-member-radios">
+            <label class="party-radio-label party-radio-yes">
+              <input type="radio" name="attendance-plus-${escText(member.id)}" value="yes" ${poIsAttending ? 'checked' : ''}>
+              Attending
+            </label>
+            <label class="party-radio-label party-radio-no">
+              <input type="radio" name="attendance-plus-${escText(member.id)}" value="no" ${member.plusOneStatus === 'declined' ? 'checked' : ''}>
+              Not Attending
+            </label>
+          </div>
+          <div class="party-plusone-name-wrap" style="display:none;">
+            <input type="text" class="form-input party-plusone-name" placeholder="Plus one's name (optional)"
+              value="${escText(member.plusOneName || '')}" style="margin-top:0.5rem;">
+          </div>`;
+
+        // Show name field when "attending" is selected
+        const nameWrap = plusRow.querySelector('.party-plusone-name-wrap');
+        plusRow.querySelectorAll('input[type="radio"]').forEach(radio => {
+          radio.addEventListener('change', () => {
+            nameWrap.style.display = plusRow.querySelector('input[value="yes"]').checked ? 'block' : 'none';
+          });
+        });
+        if (poIsAttending) nameWrap.style.display = 'block';
+
+        membersWrap.appendChild(row);
+        membersWrap.appendChild(plusRow);
+      } else {
+        membersWrap.appendChild(row);
+      }
+    });
+
+    if (!canUpdate) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'RSVP Deadline Passed';
+    } else {
+      submitBtn.disabled = false;
+      submitBtn.textContent = alreadySubmitted ? 'Update RSVP' : 'Confirm RSVP';
+    }
+
+    errorEl.textContent = '';
+    errorEl.classList.remove('visible');
+    partyCard.style.display = 'block';
+    partyCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── Submit party RSVP ───────────────────────────────────────
+  if (submitBtn) {
+    submitBtn.addEventListener('click', async () => {
+      errorEl.textContent = '';
+      errorEl.classList.remove('visible');
+
+      const memberRows = membersWrap.querySelectorAll('.party-member-row:not(.party-plusone-row)');
+      const responses  = [];
+      const plusOnes   = [];
+
+      let valid = true;
+      memberRows.forEach(row => {
+        const id      = row.dataset.guestId;
+        const checked = row.querySelector('input[type="radio"]:checked');
+        if (!checked) { valid = false; return; }
+        responses.push({ id, attending: checked.value === 'yes' });
+
+        // Plus one for this member?
+        const plusRow = membersWrap.querySelector(`.party-plusone-row[data-plus-for-id="${id}"]`);
+        if (plusRow) {
+          const poChecked = plusRow.querySelector('input[type="radio"]:checked');
+          const poName    = (plusRow.querySelector('.party-plusone-name')?.value || '').trim();
+          plusOnes.push({
+            guestId:   id,
+            attending: poChecked ? poChecked.value === 'yes' : false,
+            name:      poName
+          });
+        }
+      });
+
+      if (!valid) {
+        errorEl.textContent = 'Please select attending or not attending for each person.';
+        errorEl.classList.add('visible');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting…';
+
+      try {
+        const res = await fetch(`/api/rsvp/party/${encodeURIComponent(currentPartyId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ responses, plusOnes, submittedBy: responses[0]?.id })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          partyCard.style.display    = 'none';
+          successEl.style.display    = 'block';
+          successEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          errorEl.textContent = data.error || 'Something went wrong. Please try again.';
+          errorEl.classList.add('visible');
+          submitBtn.disabled    = false;
+          submitBtn.textContent = 'Confirm RSVP';
+        }
+      } catch {
+        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.classList.add('visible');
+        submitBtn.disabled    = false;
+        submitBtn.textContent = 'Confirm RSVP';
+      }
+    });
+  }
+}

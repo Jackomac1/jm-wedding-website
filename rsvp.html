@@ -57,7 +57,7 @@
       </p>
 
       <!-- RSVP Closed (shown when closed) -->
-      <div class="rsvp-closed fade-in" id="rsvpClosed" role="status" aria-live="polite">
+      <div class="rsvp-closed fade-in" id="rsvpClosed" role="status" aria-live="polite" style="display:none;">
         <h2 class="section-title" style="font-size:2rem; margin-bottom:0.75rem;">RSVP Is Closed</h2>
         <p style="color: #888; font-family: var(--font-heading); font-style: italic;">
           RSVPs are currently closed. If you have questions or need to make changes,
@@ -66,7 +66,59 @@
       </div>
 
       <!-- RSVP Form (shown when open) -->
-      <div id="rsvpFormWrap" class="fade-in">
+      <div id="rsvpFormWrap" class="fade-in" style="display:none;">
+
+        <!-- ── Guest-list name search (shown when no token) ── -->
+        <div id="guestSearchSection" style="display:none;">
+          <p style="text-align:center;color:#888;font-family:var(--font-heading);font-style:italic;margin-bottom:1.5rem;">
+            Find your name below to RSVP for your whole party.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="guestSearch">Find Your Name</label>
+            <div class="guest-search-wrap">
+              <input
+                type="text"
+                id="guestSearch"
+                class="form-input"
+                placeholder="Start typing your name…"
+                autocomplete="off"
+                aria-autocomplete="list"
+                aria-controls="guestSearchResults"
+              >
+              <ul class="guest-search-results" id="guestSearchResults" role="listbox" aria-label="Matching guests"></ul>
+            </div>
+          </div>
+
+          <!-- Party RSVP card -->
+          <div id="partyRsvpCard" style="display:none;">
+            <div id="partyAlreadyNotice" style="display:none;background:rgba(61,107,77,0.08);border:1px solid rgba(61,107,77,0.2);border-radius:8px;padding:0.85rem 1.1rem;margin-bottom:1.25rem;font-size:0.88rem;color:var(--espresso);">
+              Your party has already RSVP'd. You can update your responses below.
+            </div>
+            <h3 id="partyRsvpTitle" style="font-family:var(--font-heading);font-size:1.4rem;text-align:center;color:var(--espresso);margin:0 0 0.25rem;"></h3>
+            <p id="partyRsvpSubtitle" style="text-align:center;color:#888;font-size:0.88rem;margin:0 0 1.5rem;"></p>
+            <div id="partyMembersWrap" style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.25rem;"></div>
+            <div class="form-error" id="partyRsvpError" role="alert" aria-live="polite"></div>
+            <button type="button" id="partyRsvpSubmitBtn" class="btn btn-primary" style="width:100%;">Confirm RSVP</button>
+          </div>
+
+          <!-- Party success -->
+          <div class="rsvp-success" id="partyRsvpSuccess" style="display:none;" role="status" aria-live="polite">
+            <div class="success-checkmark" aria-hidden="true">✓</div>
+            <h2 class="section-title" style="font-size:2rem;margin-bottom:0.5rem;">Thank You!</h2>
+            <p style="font-family:var(--font-heading);font-style:italic;color:#888;">We've received your RSVP and can't wait to celebrate with you!</p>
+          </div>
+
+          <div id="guestSearchFallback" style="text-align:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(61,107,77,0.12);">
+            <p style="color:#888;font-size:0.85rem;margin:0 0 0.75rem;">Not finding your name?</p>
+            <button type="button" id="showLegacyFormBtn" class="btn btn-secondary" style="font-size:0.85rem;">
+              Fill in RSVP manually
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Legacy token-based form (always used when token present) ── -->
+        <div id="legacyRsvpSection" style="display:none;">
         <form id="rsvpForm" novalidate aria-labelledby="rsvpTitle">
 
           <!-- Guest Name -->
@@ -219,6 +271,7 @@
             We've received your RSVP and can't wait to celebrate with you!
           </p>
         </div>
+        </div><!-- /legacyRsvpSection -->
       </div>
 
     </div>

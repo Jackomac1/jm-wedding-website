@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Guest List — Admin</title>
+  <link rel="stylesheet" href="/CSS/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    /* ── Stats bar ── */
+    .gl-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem; }
+    @media(max-width:640px){ .gl-stats{ grid-template-columns:repeat(2,1fr); } }
+
+    /* ── Settings / import cards ── */
+    .gl-card {
+      background:var(--admin-card); border:1px solid var(--admin-border);
+      border-radius:var(--radius-md); padding:1.25rem 1.5rem; margin-bottom:1.5rem;
+    }
+    .gl-card-title {
+      font-size:0.82rem; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.06em; color:var(--admin-muted); margin:0 0 1rem;
+    }
+
+    /* ── Party groups ── */
+    .party-group { margin-bottom:1.5rem; }
+    .party-header {
+      display:flex; align-items:center; gap:0.75rem;
+      padding:0.7rem 1rem; background:var(--admin-bg);
+      border:1px solid var(--admin-border); border-radius:var(--radius-sm);
+      margin-bottom:0.4rem;
+    }
+    .party-name { font-size:0.95rem; font-weight:700; color:var(--admin-text); flex:1; }
+    .party-submitted { font-size:0.72rem; color:var(--admin-accent); font-weight:600; }
+    .party-actions { display:flex; gap:0.4rem; }
+
+    /* ── Member rows ── */
+    .member-row {
+      display:flex; align-items:center; gap:0.75rem;
+      padding:0.6rem 1rem 0.6rem 1.75rem;
+      background:var(--admin-card); border:1px solid var(--admin-border);
+      border-radius:var(--radius-sm); margin-bottom:0.35rem;
+    }
+    .member-name { flex:1; font-size:0.88rem; color:var(--admin-text); font-weight:500; }
+    .member-plus { font-size:0.78rem; color:var(--admin-muted); margin-left:0.25rem; }
+    .member-actions { display:flex; gap:0.4rem; flex-shrink:0; }
+    .plus-one-row {
+      padding-left:3rem; background:var(--admin-bg);
+      border-style:dashed; color:var(--admin-muted);
+    }
+    .plus-one-row .member-name { font-style:italic; font-size:0.82rem; }
+
+    /* ── Status badges ── */
+    .status-badge {
+      font-size:0.68rem; font-weight:700; text-transform:uppercase;
+      padding:0.2rem 0.55rem; border-radius:99px; flex-shrink:0;
+    }
+    .status-attending  { background:rgba(61,107,77,0.12); color:#3D6B4D; }
+    .status-declined   { background:rgba(220,50,50,0.1);  color:#c33; }
+    .status-pending    { background:var(--admin-bg); color:var(--admin-muted); border:1px solid var(--admin-border); }
+
+    /* ── Form fields ── */
+    .form-field { display:flex; flex-direction:column; gap:0.3rem; }
+    .form-field label { font-size:0.78rem; font-weight:600; color:var(--admin-muted); text-transform:uppercase; letter-spacing:0.04em; }
+    .form-field input, .form-field select, .form-field textarea {
+      padding:0.5rem 0.75rem; font-size:0.9rem; border:1px solid var(--admin-border);
+      border-radius:var(--radius-sm); background:var(--admin-bg); color:var(--admin-text); font-family:inherit;
+    }
+    .form-field input:focus, .form-field select:focus { outline:none; border-color:var(--admin-accent); }
+    .form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    @media(max-width:560px){ .form-grid-2{ grid-template-columns:1fr; } }
+    .form-check { display:flex; align-items:center; gap:0.5rem; padding:0.35rem 0; }
+    .form-check input[type="checkbox"] { width:16px; height:16px; accent-color:var(--admin-accent); }
+    .form-check label { font-size:0.9rem; color:var(--admin-text); cursor:pointer; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45);
+      z-index:200; align-items:center; justify-content:center; padding:1rem;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal-box {
+      background:var(--admin-card); border-radius:var(--radius-md); padding:1.75rem;
+      width:100%; max-width:520px; max-height:90vh; overflow-y:auto;
+      box-shadow:0 8px 32px rgba(0,0,0,0.2);
+    }
+    .modal-title { font-size:1rem; font-weight:700; color:var(--admin-text); margin:0 0 1.25rem; }
+    .modal-actions { display:flex; gap:0.75rem; margin-top:1.25rem; }
+
+    /* ── Override select inline ── */
+    .override-select {
+      font-size:0.78rem; padding:0.2rem 0.4rem; border:1px solid var(--admin-border);
+      border-radius:4px; background:var(--admin-bg); color:var(--admin-text);
+    }
+
+    .empty-party-list { text-align:center; padding:2.5rem 1rem; color:var(--admin-muted); font-size:0.9rem; }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="adminSidebar" role="navigation" aria-label="Admin navigation">
+    <div class="sidebar-brand">
+      <span class="sidebar-brand-script">J &amp; M</span>
+      <span class="sidebar-brand-label">Admin Panel</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-section">Main</div>
+      <div class="sidebar-nav-item">
+        <a href="/admin/dashboard" class="sidebar-nav-link"><span class="sidebar-nav-icon" aria-hidden="true">📊</span> Dashboard</a>
+      </div>
+      <div class="sidebar-nav-item">
+        <a href="/admin/guestlist" class="sidebar-nav-link active" aria-current="page"><span class="sidebar-nav-icon" aria-hidden="true">👥</span> Guest List</a>
+      </div>
+      <div class="sidebar-nav-item">
+        <a href="/admin/qr-generator" class="sidebar-nav-link"><span class="sidebar-nav-icon" aria-hidden="true">📷</span> QR Generator</a>
+      </div>
+      <div class="sidebar-nav-item">
+        <a href="/admin/photos" class="sidebar-nav-link"><span class="sidebar-nav-icon" aria-hidden="true">🖼</span> Photos</a>
+      </div>
+      <div class="sidebar-nav-item">
+        <a href="/admin/schedule" class="sidebar-nav-link"><span class="sidebar-nav-icon" aria-hidden="true">📅</span> Schedule</a>
+      </div>
+      <div class="sidebar-nav-item">
+        <a href="/admin/music" class="sidebar-nav-link"><span class="sidebar-nav-icon" aria-hidden="true">&#9834;</span> Music</a>
+      </div>
+      <div class="sidebar-nav-item">
+        <a href="/admin/accommodations" class="sidebar-nav-link"><span class="sidebar-nav-icon" aria-hidden="true">&#127968;</span> Accommodations</a>
+      </div>
+      <div class="sidebar-nav-item">
+        <a href="/admin/details" class="sidebar-nav-link"><span class="sidebar-nav-icon" aria-hidden="true">&#128203;</span> Details Page</a>
+      </div>
+      <div class="sidebar-nav-section">Actions</div>
+      <div class="sidebar-nav-item">
+        <a href="/api/admin/guestlist/export" class="sidebar-nav-link" id="exportGuestListBtn"><span class="sidebar-nav-icon" aria-hidden="true">📥</span> Export Guest CSV</a>
+      </div>
+      <div class="sidebar-nav-item">
+        <a href="#" class="sidebar-nav-link" id="adminLogoutBtn"><span class="sidebar-nav-icon" aria-hidden="true">🚪</span> Logout</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/home" class="sidebar-back-link">← View Wedding Site</a>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+      <h1 class="admin-topbar-title">Guest List</h1>
+      <div class="admin-topbar-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openAddModal()">+ Add Guest</button>
+      </div>
+    </header>
+
+    <main class="admin-content">
+
+      <div class="admin-alert admin-alert-error"   id="glError"   role="alert"  aria-live="polite"></div>
+      <div class="admin-alert admin-alert-success" id="glSuccess" role="status" aria-live="polite"></div>
+
+      <!-- Stats -->
+      <div class="gl-stats" id="glStats">
+        <div class="admin-card admin-card-stat">
+          <div><div class="admin-card-number" id="statInvited">—</div><div class="admin-card-label">Total Invited</div></div>
+          <div class="admin-card-icon" aria-hidden="true">👥</div>
+        </div>
+        <div class="admin-card admin-card-stat stat-accent-sage">
+          <div><div class="admin-card-number" id="statAttending">—</div><div class="admin-card-label">Attending</div></div>
+          <div class="admin-card-icon" aria-hidden="true">✅</div>
+        </div>
+        <div class="admin-card admin-card-stat stat-accent-blush">
+          <div><div class="admin-card-number" id="statDeclined">—</div><div class="admin-card-label">Declined</div></div>
+          <div class="admin-card-icon" aria-hidden="true">❌</div>
+        </div>
+        <div class="admin-card admin-card-stat">
+          <div><div class="admin-card-number" id="statPending">—</div><div class="admin-card-label">Not Yet Responded</div></div>
+          <div class="admin-card-icon" aria-hidden="true">⏳</div>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="gl-card">
+        <h3 class="gl-card-title">RSVP Deadline</h3>
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+          <div class="form-field" style="flex:1;min-width:180px;">
+            <label for="deadlineInput">Update deadline date</label>
+            <input type="date" id="deadlineInput">
+          </div>
+          <button class="btn btn-primary btn-sm" style="align-self:flex-end;" onclick="saveDeadline()">Save Deadline</button>
+          <button class="btn btn-secondary btn-sm" style="align-self:flex-end;" onclick="clearDeadline()">Clear</button>
+        </div>
+        <p style="font-size:0.78rem;color:var(--admin-muted);margin:0.5rem 0 0;">
+          After this date, guests cannot update an existing RSVP. Leave blank for no deadline.
+        </p>
+      </div>
+
+      <!-- CSV Import -->
+      <div class="gl-card">
+        <h3 class="gl-card-title">Import Guest List via CSV</h3>
+        <p style="font-size:0.85rem;color:var(--admin-muted);margin:0 0 1rem;">
+          CSV columns: <strong>name</strong> (required), <strong>party</strong> (group name — guests sharing a party name are on the same invite), <strong>plus_one</strong> (yes/no).
+          Guests without a party column get their own single-person party.
+        </p>
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+          <input type="file" id="csvFileInput" accept=".csv" style="flex:1;min-width:200px;">
+          <button class="btn btn-primary btn-sm" onclick="importCsv()">Upload &amp; Import</button>
+          <a href="/api/admin/guestlist/export" class="btn btn-secondary btn-sm" style="text-decoration:none;">Download Current List</a>
+        </div>
+        <div id="importResult" style="margin-top:0.75rem;font-size:0.85rem;"></div>
+        <p style="font-size:0.75rem;color:var(--admin-muted);margin:0.75rem 0 0;">
+          Import adds to existing guests — it does not replace. Parties with the same name are merged.
+        </p>
+      </div>
+
+      <!-- Guest list grouped by party -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+        <h3 style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--admin-muted);margin:0;">Guest List</h3>
+        <span id="partyCount" style="font-size:0.8rem;color:var(--admin-muted);"></span>
+      </div>
+      <div id="partyList">
+        <div class="empty-party-list">Loading…</div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Add / Edit Guest Modal -->
+<div class="modal-overlay" id="guestModal" role="dialog" aria-modal="true" aria-labelledby="guestModalTitle">
+  <div class="modal-box">
+    <h2 class="modal-title" id="guestModalTitle">Add Guest</h2>
+    <form id="guestForm" novalidate>
+      <input type="hidden" id="guestEditId">
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+
+        <div class="form-field">
+          <label for="gfName">Full Name <span style="color:var(--berry);">*</span></label>
+          <input type="text" id="gfName" placeholder="e.g. Jane Smith" required>
+        </div>
+
+        <div id="partyFieldWrap">
+          <div class="form-field" style="margin-bottom:0.75rem;">
+            <label for="gfPartySelect">Add to Existing Party</label>
+            <select id="gfPartySelect">
+              <option value="">— Create new party —</option>
+            </select>
+          </div>
+          <div class="form-field" id="newPartyNameWrap">
+            <label for="gfPartyName">New Party Name</label>
+            <input type="text" id="gfPartyName" placeholder="e.g. Smith Family (leave blank to use guest name)">
+          </div>
+        </div>
+
+        <div class="form-check">
+          <input type="checkbox" id="gfPlusOne">
+          <label for="gfPlusOne">Allow a plus one</label>
+        </div>
+
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" id="guestCancelBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Override RSVP Modal -->
+<div class="modal-overlay" id="overrideModal" role="dialog" aria-modal="true" aria-labelledby="overrideModalTitle">
+  <div class="modal-box">
+    <h2 class="modal-title" id="overrideModalTitle">Override RSVP</h2>
+    <input type="hidden" id="overrideGuestId">
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div class="form-field">
+        <label for="overrideStatus">RSVP Status</label>
+        <select id="overrideStatus">
+          <option value="pending">Pending</option>
+          <option value="attending">Attending</option>
+          <option value="declined">Declined</option>
+        </select>
+      </div>
+      <div id="plusOneOverrideWrap" style="display:none;">
+        <div class="form-field" style="margin-bottom:0.75rem;">
+          <label for="overridePlusOneName">Plus One Name (if attending)</label>
+          <input type="text" id="overridePlusOneName" placeholder="Plus one's name">
+        </div>
+        <div class="form-field">
+          <label for="overridePlusOneStatus">Plus One Status</label>
+          <select id="overridePlusOneStatus">
+            <option value="">— not set —</option>
+            <option value="pending">Pending</option>
+            <option value="attending">Attending</option>
+            <option value="declined">Declined</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="saveOverride()">Save</button>
+      <button class="btn btn-secondary" onclick="closeOverrideModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── sidebar ──
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.getElementById('adminSidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', () => {
+    document.getElementById('adminSidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+  });
+  document.getElementById('adminLogoutBtn').addEventListener('click', async e => {
+    e.preventDefault();
+    await fetch('/api/admin/logout', { method: 'POST' });
+    window.location.href = '/admin/login';
+  });
+
+  // ── helpers ──
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function showError(msg) {
+    const el = document.getElementById('glError');
+    el.textContent = msg; el.style.display = msg ? 'block' : 'none';
+    document.getElementById('glSuccess').style.display = 'none';
+  }
+  function showSuccess(msg) {
+    const el = document.getElementById('glSuccess');
+    el.textContent = msg; el.style.display = msg ? 'block' : 'none';
+    document.getElementById('glError').style.display = 'none';
+    if (msg) setTimeout(() => { el.style.display = 'none'; }, 3500);
+  }
+  function statusBadge(s) {
+    if (s === 'attending') return '<span class="status-badge status-attending">Attending</span>';
+    if (s === 'declined')  return '<span class="status-badge status-declined">Declined</span>';
+    return '<span class="status-badge status-pending">Pending</span>';
+  }
+  function fmtDate(iso) {
+    if (!iso) return '';
+    return new Date(iso).toLocaleDateString('en-CA', { month:'short', day:'numeric', year:'numeric' });
+  }
+
+  // ── state ──
+  let parties = [], deadlineVal = null;
+
+  // ── load ──
+  async function load() {
+    const [listData, statsData] = await Promise.all([
+      fetch('/api/admin/guestlist').then(r => r.json()).catch(() => ({ parties: [] })),
+      fetch('/api/admin/guestlist/stats').then(r => r.json()).catch(() => ({}))
+    ]);
+
+    parties = listData.parties || [];
+
+    document.getElementById('statInvited').textContent  = statsData.totalInvited ?? '—';
+    document.getElementById('statAttending').textContent = statsData.attending    ?? '—';
+    document.getElementById('statDeclined').textContent  = statsData.declined     ?? '—';
+    document.getElementById('statPending').textContent   = statsData.pending      ?? '—';
+
+    deadlineVal = statsData.deadline || null;
+    document.getElementById('deadlineInput').value = deadlineVal ? deadlineVal.split('T')[0] : '';
+
+    renderParties();
+    populatePartySelect();
+  }
+
+  function renderParties() {
+    const wrap = document.getElementById('partyList');
+    document.getElementById('partyCount').textContent = parties.length ? `${parties.length} ${parties.length === 1 ? 'party' : 'parties'}` : '';
+    if (!parties.length) {
+      wrap.innerHTML = '<div class="empty-party-list">No guests yet. Import a CSV or add guests manually.</div>';
+      return;
+    }
+    wrap.innerHTML = parties.map(party => {
+      const submitted = party.submittedAt
+        ? `<span class="party-submitted">RSVPd ${fmtDate(party.submittedAt)}</span>` : '';
+      const members = (party.members || []).map((m, i) => {
+        const plusRow = m.plusOneAllowed ? `
+          <div class="member-row plus-one-row">
+            <div class="member-name">+ Plus One ${m.plusOneName ? '— ' + esc(m.plusOneName) : '(unnamed)'}</div>
+            ${statusBadge(m.plusOneStatus || 'pending')}
+            <div class="member-actions">
+              <button class="btn btn-secondary btn-sm" onclick="openOverride('${esc(m.id)}', true)">Override</button>
+            </div>
+          </div>` : '';
+        return `
+        <div class="member-row" id="member-${esc(m.id)}">
+          <div class="member-name">
+            ${esc(m.name)}
+            ${m.plusOneAllowed ? '<span class="member-plus">(+1)</span>' : ''}
+          </div>
+          ${statusBadge(m.rsvpStatus)}
+          <div class="member-actions">
+            <button class="btn btn-secondary btn-sm" onclick="openEditGuest('${esc(m.id)}')">Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="openOverride('${esc(m.id)}', false)">Override</button>
+            <button class="btn btn-sm" style="background:transparent;border:1px solid #e53;color:#e53;" onclick="removeGuest('${esc(m.id)}', '${esc(m.name)}')">Remove</button>
+          </div>
+        </div>${plusRow}`;
+      }).join('');
+
+      return `
+      <div class="party-group" id="party-${esc(party.id)}">
+        <div class="party-header">
+          <div class="party-name">${esc(party.name)}</div>
+          ${submitted}
+          <div class="party-actions">
+            <button class="btn btn-secondary btn-sm" onclick="openAddToParty('${esc(party.id)}','${esc(party.name)}')">+ Add Member</button>
+            <button class="btn btn-sm" style="background:transparent;border:1px solid #e53;color:#e53;" onclick="removeParty('${esc(party.id)}','${esc(party.name)}')">Delete Party</button>
+          </div>
+        </div>
+        ${members}
+      </div>`;
+    }).join('');
+  }
+
+  function populatePartySelect() {
+    const sel = document.getElementById('gfPartySelect');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Create new party —</option>';
+    parties.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id; opt.textContent = p.name;
+      if (p.id === cur) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  // ── deadline ──
+  async function saveDeadline() {
+    const val = document.getElementById('deadlineInput').value;
+    const r = await fetch('/api/admin/guestlist/settings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rsvp_guest_deadline: val || null })
+    });
+    const d = await r.json();
+    if (!r.ok) { showError(d.error || 'Save failed'); return; }
+    showSuccess('Deadline saved.');
+    deadlineVal = d.deadline;
+  }
+  async function clearDeadline() {
+    document.getElementById('deadlineInput').value = '';
+    await saveDeadline();
+  }
+
+  // ── CSV import ──
+  async function importCsv() {
+    const file = document.getElementById('csvFileInput').files[0];
+    if (!file) { showError('Please select a CSV file first.'); return; }
+    const form = new FormData();
+    form.append('csv', file);
+    const r = await fetch('/api/admin/guestlist/import', { method: 'POST', body: form });
+    const d = await r.json();
+    const res = document.getElementById('importResult');
+    if (!r.ok) {
+      res.style.color = '#c33'; res.textContent = d.error || 'Import failed.';
+    } else {
+      res.style.color = 'var(--admin-accent)'; res.textContent = `Imported ${d.added} guest(s).`;
+      document.getElementById('csvFileInput').value = '';
+      await load();
+    }
+  }
+
+  // ── Add guest modal ──
+  let editingGuestId = null;
+  let addToPartyId = null;
+
+  function openAddModal() {
+    editingGuestId = null; addToPartyId = null;
+    document.getElementById('guestModalTitle').textContent = 'Add Guest';
+    document.getElementById('guestEditId').value = '';
+    document.getElementById('gfName').value = '';
+    document.getElementById('gfPartySelect').value = '';
+    document.getElementById('gfPartyName').value = '';
+    document.getElementById('gfPlusOne').checked = false;
+    document.getElementById('partyFieldWrap').style.display = 'block';
+    toggleNewPartyField();
+    document.getElementById('guestModal').classList.add('open');
+    document.getElementById('gfName').focus();
+  }
+
+  function openAddToParty(partyId, partyName) {
+    editingGuestId = null; addToPartyId = partyId;
+    document.getElementById('guestModalTitle').textContent = 'Add Member to ' + partyName;
+    document.getElementById('guestEditId').value = '';
+    document.getElementById('gfName').value = '';
+    document.getElementById('gfPartySelect').value = partyId;
+    document.getElementById('gfPartyName').value = '';
+    document.getElementById('gfPlusOne').checked = false;
+    document.getElementById('partyFieldWrap').style.display = 'none';
+    document.getElementById('guestModal').classList.add('open');
+    document.getElementById('gfName').focus();
+  }
+
+  function openEditGuest(id) {
+    const guest = parties.flatMap(p => p.members || []).find(m => m.id === id);
+    if (!guest) return;
+    editingGuestId = id; addToPartyId = null;
+    document.getElementById('guestModalTitle').textContent = 'Edit Guest';
+    document.getElementById('guestEditId').value = id;
+    document.getElementById('gfName').value = guest.name;
+    document.getElementById('gfPlusOne').checked = guest.plusOneAllowed;
+    document.getElementById('partyFieldWrap').style.display = 'none';
+    document.getElementById('guestModal').classList.add('open');
+    document.getElementById('gfName').focus();
+  }
+
+  function closeGuestModal() {
+    document.getElementById('guestModal').classList.remove('open');
+    document.getElementById('guestForm').reset();
+    editingGuestId = null; addToPartyId = null;
+  }
+
+  document.getElementById('guestCancelBtn').addEventListener('click', closeGuestModal);
+  document.getElementById('guestModal').addEventListener('click', e => { if (e.target === document.getElementById('guestModal')) closeGuestModal(); });
+  document.getElementById('gfPartySelect').addEventListener('change', toggleNewPartyField);
+
+  function toggleNewPartyField() {
+    const hasParty = document.getElementById('gfPartySelect').value !== '';
+    document.getElementById('newPartyNameWrap').style.display = hasParty ? 'none' : 'block';
+  }
+
+  document.getElementById('guestForm').addEventListener('submit', async e => {
+    e.preventDefault(); showError('');
+    const name = document.getElementById('gfName').value.trim();
+    if (!name) { showError('Name is required.'); return; }
+
+    let r, d;
+    if (editingGuestId) {
+      r = await fetch(`/api/admin/guestlist/guest/${editingGuestId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, plusOneAllowed: document.getElementById('gfPlusOne').checked })
+      });
+    } else {
+      const partyId   = addToPartyId || document.getElementById('gfPartySelect').value || null;
+      const partyName = partyId ? null : (document.getElementById('gfPartyName').value.trim() || name);
+      r = await fetch('/api/admin/guestlist/guest', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, partyId, partyName, plusOneAllowed: document.getElementById('gfPlusOne').checked })
+      });
+    }
+    d = await r.json();
+    if (!r.ok) { showError(d.error || 'Save failed.'); return; }
+    showSuccess(editingGuestId ? 'Guest updated.' : 'Guest added.');
+    closeGuestModal();
+    await load();
+  });
+
+  // ── Remove guest / party ──
+  async function removeGuest(id, name) {
+    if (!confirm(`Remove "${name}" from the guest list?`)) return;
+    const r = await fetch(`/api/admin/guestlist/guest/${id}`, { method: 'DELETE' });
+    const d = await r.json();
+    if (!r.ok) { showError(d.error || 'Delete failed.'); return; }
+    showSuccess('Guest removed.');
+    await load();
+  }
+
+  async function removeParty(partyId, name) {
+    if (!confirm(`Delete the entire "${name}" party and all their data? This cannot be undone.`)) return;
+    const r = await fetch(`/api/admin/guestlist/party/${partyId}`, { method: 'DELETE' });
+    const d = await r.json();
+    if (!r.ok) { showError(d.error || 'Delete failed.'); return; }
+    showSuccess('Party deleted.');
+    await load();
+  }
+
+  // ── Override modal ──
+  let overrideGuestPlusOne = false;
+
+  function openOverride(guestId, isPlusOne) {
+    const guest = parties.flatMap(p => p.members || []).find(m => m.id === guestId);
+    if (!guest) return;
+    overrideGuestPlusOne = isPlusOne;
+    document.getElementById('overrideGuestId').value   = guestId;
+    document.getElementById('overrideModalTitle').textContent = `Override RSVP — ${guest.name}${isPlusOne ? ' (Plus One)' : ''}`;
+    document.getElementById('overrideStatus').value    = isPlusOne ? (guest.plusOneStatus || '') : guest.rsvpStatus;
+    document.getElementById('overridePlusOneName').value   = guest.plusOneName || '';
+    document.getElementById('overridePlusOneStatus').value = guest.plusOneStatus || '';
+    document.getElementById('plusOneOverrideWrap').style.display = (!isPlusOne && guest.plusOneAllowed) ? 'block' : 'none';
+    document.getElementById('overrideModal').classList.add('open');
+  }
+
+  function closeOverrideModal() {
+    document.getElementById('overrideModal').classList.remove('open');
+  }
+
+  document.getElementById('overrideModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('overrideModal')) closeOverrideModal();
+  });
+
+  async function saveOverride() {
+    const id = document.getElementById('overrideGuestId').value;
+    const body = overrideGuestPlusOne
+      ? { plusOneStatus: document.getElementById('overrideStatus').value || null,
+          plusOneName:   document.getElementById('overridePlusOneName').value.trim() || null }
+      : { rsvpStatus:     document.getElementById('overrideStatus').value,
+          plusOneStatus:   document.getElementById('overridePlusOneStatus').value || null,
+          plusOneName:     document.getElementById('overridePlusOneName').value.trim() || null };
+
+    const r = await fetch(`/api/admin/guestlist/guest/${id}/rsvp`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (!r.ok) { showError(d.error || 'Override failed.'); closeOverrideModal(); return; }
+    showSuccess('RSVP status updated.');
+    closeOverrideModal();
+    await load();
+  }
+
+  load();
+</script>
+</body>
+</html>

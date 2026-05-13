@@ -247,8 +247,73 @@ function getDb() {
     changed = true;
   }
 
+  // Migrate: add guest list if missing
+  if (!db.guestList) { db.guestList = []; changed = true; }
+  if (!db.parties)   { db.parties   = []; changed = true; }
+  if (db.settings.rsvp_guest_deadline === undefined) {
+    db.settings.rsvp_guest_deadline = null;
+    changed = true;
+  }
+
   if (changed) writeDb(db);
   return db;
+}
+
+// ---------------------------------------------------------------------------
+// Guest-list helpers
+// ---------------------------------------------------------------------------
+function parseCsvLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else { inQuotes = !inQuotes; }
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function parseCsv(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = parseCsvLine(lines[0]).map(h => h.toLowerCase().replace(/['"]/g, '').trim());
+  return lines.slice(1)
+    .map(line => {
+      const vals = parseCsvLine(line);
+      const row  = {};
+      headers.forEach((h, i) => { row[h] = (vals[i] || '').replace(/^["']|["']$/g, '').trim(); });
+      return row;
+    })
+    .filter(row => Object.values(row).some(v => v));
+}
+
+function fuzzyScore(name, query) {
+  const n = name.toLowerCase().trim();
+  const q = query.toLowerCase().trim();
+  if (!q) return 0;
+  if (n === q)           return 100;
+  if (n.startsWith(q))   return 90;
+  if (n.includes(q))     return 70;
+  const qWords = q.split(/\s+/);
+  const nWords = n.split(/\s+/);
+  let score = 0;
+  for (const qw of qWords) {
+    if (qw.length < 2) continue;
+    for (const nw of nWords) {
+      if (nw === qw)           { score += 25; break; }
+      if (nw.startsWith(qw))   { score += 15; break; }
+    }
+  }
+  return score;
 }
 
 // Initialise on startup
@@ -285,6 +350,17 @@ const musicUpload = multer({
     cb(new Error('Only audio files are allowed'));
   },
   limits: { fileSize: 30 * 1024 * 1024 } // 30 MB
+});
+
+const csvUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === 'text/csv' ||
+        file.mimetype === 'application/vnd.ms-excel' ||
+        file.originalname.toLowerCase().endsWith('.csv')) return cb(null, true);
+    cb(new Error('CSV files only'));
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }
 });
 
 // Site photo slot → filename map
@@ -364,6 +440,7 @@ app.get('/admin/photos',       requireAdminAuth, (req, res) => res.sendFile(path
 app.get('/admin/schedule',         requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'schedule.html')));
 app.get('/admin/accommodations',   requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'accommodations.html')));
 app.get('/admin/details',          requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'details.html')));
+app.get('/admin/guestlist',        requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'guestlist.html')));
 
 // ---------------------------------------------------------------------------
 // API — authentication
@@ -1353,6 +1430,266 @@ app.delete('/api/admin/accommodations/:id', requireAdminAuth, (req, res) => {
   db.accommodations.splice(idx, 1);
   writeDb(db);
   res.json({ success: true });
+});
+
+// ---------------------------------------------------------------------------
+// API — Guest list RSVP (public)
+// ---------------------------------------------------------------------------
+app.get('/api/rsvp/search', (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (q.length < 2) return res.json([]);
+  const db      = getDb();
+  const guests  = db.guestList || [];
+  const parties = db.parties   || [];
+
+  const results = guests
+    .map(g => ({ g, score: fuzzyScore(g.name, q) }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8)
+    .map(({ g }) => {
+      const party = parties.find(p => p.id === g.partyId);
+      return { id: g.id, name: g.name, partyId: g.partyId, partyName: party ? party.name : g.name };
+    });
+
+  res.json(results);
+});
+
+app.get('/api/rsvp/party/:partyId', (req, res) => {
+  const db    = getDb();
+  const party = (db.parties || []).find(p => p.id === req.params.partyId);
+  if (!party) return res.status(404).json({ error: 'Party not found' });
+
+  const members    = (db.guestList || []).filter(g => g.partyId === party.id);
+  const deadline   = db.settings.rsvp_guest_deadline;
+  const pastDeadline = deadline && new Date(deadline) < new Date();
+
+  res.json({
+    party,
+    members,
+    alreadySubmitted: !!party.submittedAt,
+    canUpdate:        party.submittedAt ? !pastDeadline : true,
+    deadline
+  });
+});
+
+app.post('/api/rsvp/party/:partyId', (req, res) => {
+  const db = getDb();
+  if (!db.settings.rsvp_open) return res.status(403).json({ error: 'RSVP is currently closed.' });
+
+  const party = (db.parties || []).find(p => p.id === req.params.partyId);
+  if (!party) return res.status(404).json({ error: 'Party not found' });
+
+  if (party.submittedAt) {
+    const deadline = db.settings.rsvp_guest_deadline;
+    if (deadline && new Date(deadline) < new Date()) {
+      return res.status(403).json({ error: 'The RSVP deadline has passed.' });
+    }
+  }
+
+  const { responses, plusOnes, submittedBy } = req.body;
+  if (!Array.isArray(responses) || !responses.length) {
+    return res.status(400).json({ error: 'responses array is required' });
+  }
+
+  responses.forEach(r => {
+    const guest = (db.guestList || []).find(g => g.id === r.id && g.partyId === party.id);
+    if (guest) {
+      guest.rsvpStatus = r.attending ? 'attending' : 'declined';
+      guest.updatedAt  = new Date().toISOString();
+    }
+  });
+
+  if (Array.isArray(plusOnes)) {
+    plusOnes.forEach(po => {
+      const guest = (db.guestList || []).find(g => g.id === po.guestId && g.partyId === party.id);
+      if (guest && guest.plusOneAllowed) {
+        guest.plusOneName   = (po.name || '').trim() || null;
+        guest.plusOneStatus = po.attending ? 'attending' : 'declined';
+        guest.updatedAt     = new Date().toISOString();
+      }
+    });
+  }
+
+  party.submittedAt = new Date().toISOString();
+  party.submittedBy = submittedBy || null;
+  writeDb(db);
+  res.json({ success: true });
+});
+
+// ---------------------------------------------------------------------------
+// API — Guest list admin
+// ---------------------------------------------------------------------------
+app.get('/api/admin/guestlist', requireAdminAuth, (_req, res) => {
+  const db      = getDb();
+  const parties = (db.parties   || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+  const guests  = db.guestList  || [];
+  const result  = parties.map(p => ({
+    ...p,
+    members: guests.filter(g => g.partyId === p.id).sort((a, b) => a.name.localeCompare(b.name))
+  }));
+  res.json({ parties: result });
+});
+
+app.get('/api/admin/guestlist/stats', requireAdminAuth, (_req, res) => {
+  const db     = getDb();
+  const guests = db.guestList || [];
+  let totalInvited = 0, attending = 0, declined = 0, pending = 0;
+  guests.forEach(g => {
+    totalInvited++;
+    if      (g.rsvpStatus === 'attending') attending++;
+    else if (g.rsvpStatus === 'declined')  declined++;
+    else                                   pending++;
+    if (g.plusOneAllowed) {
+      totalInvited++;
+      if      (g.plusOneStatus === 'attending') attending++;
+      else if (g.plusOneStatus === 'declined')  declined++;
+      else                                      pending++;
+    }
+  });
+  res.json({ totalInvited, attending, declined, pending, deadline: db.settings.rsvp_guest_deadline });
+});
+
+app.post('/api/admin/guestlist/import', requireAdminAuth, csvUpload.single('csv'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'CSV file required' });
+  const text = req.file.buffer.toString('utf8');
+  const rows = parseCsv(text);
+  if (!rows.length) return res.status(400).json({ error: 'CSV is empty or has no data rows' });
+
+  const db = getDb();
+  if (!db.guestList) db.guestList = [];
+  if (!db.parties)   db.parties   = [];
+
+  const partyMap = {};
+  db.parties.forEach(p => { partyMap[p.name.toLowerCase()] = p.id; });
+
+  let added = 0;
+  rows.forEach(row => {
+    const name       = (row['name'] || row['guest name'] || row['full name'] || '').trim();
+    const partyName  = (row['party'] || row['group'] || row['party name'] || row['party/group'] || name).trim();
+    const plusRaw    = (row['plus one'] || row['plus_one'] || row['plusone'] || row['plus 1'] || '').toLowerCase();
+    const plusOne    = ['yes', 'true', '1', 'y'].includes(plusRaw);
+    if (!name) return;
+
+    const key = partyName.toLowerCase();
+    if (!partyMap[key]) {
+      const pid = uuidv4();
+      db.parties.push({ id: pid, name: partyName, submittedAt: null, submittedBy: null });
+      partyMap[key] = pid;
+    }
+
+    db.guestList.push({
+      id: uuidv4(), name, partyId: partyMap[key],
+      plusOneAllowed: plusOne, rsvpStatus: 'pending',
+      plusOneName: null, plusOneStatus: null, updatedAt: null, notes: ''
+    });
+    added++;
+  });
+
+  writeDb(db);
+  res.json({ success: true, added });
+});
+
+app.post('/api/admin/guestlist/guest', requireAdminAuth, (req, res) => {
+  const { name, partyId, partyName, plusOneAllowed } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' });
+  const db = getDb();
+  if (!db.guestList) db.guestList = [];
+  if (!db.parties)   db.parties   = [];
+
+  let pid = partyId;
+  if (!pid && partyName && partyName.trim()) {
+    pid = uuidv4();
+    db.parties.push({ id: pid, name: partyName.trim(), submittedAt: null, submittedBy: null });
+  }
+  if (!pid) return res.status(400).json({ error: 'Party name or ID is required' });
+  const party = db.parties.find(p => p.id === pid);
+  if (!party) return res.status(400).json({ error: 'Party not found' });
+
+  const guest = {
+    id: uuidv4(), name: name.trim(), partyId: pid,
+    plusOneAllowed: plusOneAllowed === true || plusOneAllowed === 'true',
+    rsvpStatus: 'pending', plusOneName: null, plusOneStatus: null, updatedAt: null, notes: ''
+  };
+  db.guestList.push(guest);
+  writeDb(db);
+  res.json({ success: true, guest, party });
+});
+
+app.put('/api/admin/guestlist/guest/:id', requireAdminAuth, (req, res) => {
+  const db    = getDb();
+  const guest = (db.guestList || []).find(g => g.id === req.params.id);
+  if (!guest) return res.status(404).json({ error: 'Guest not found' });
+  const { name, plusOneAllowed, notes } = req.body;
+  if (name            !== undefined) guest.name           = name.trim();
+  if (plusOneAllowed  !== undefined) guest.plusOneAllowed = plusOneAllowed === true || plusOneAllowed === 'true';
+  if (notes           !== undefined) guest.notes          = notes.trim();
+  writeDb(db);
+  res.json({ success: true, guest });
+});
+
+app.delete('/api/admin/guestlist/guest/:id', requireAdminAuth, (req, res) => {
+  const db  = getDb();
+  const idx = (db.guestList || []).findIndex(g => g.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Guest not found' });
+  const [removed] = db.guestList.splice(idx, 1);
+  if (!(db.guestList || []).some(g => g.partyId === removed.partyId)) {
+    db.parties = (db.parties || []).filter(p => p.id !== removed.partyId);
+  }
+  writeDb(db);
+  res.json({ success: true });
+});
+
+app.delete('/api/admin/guestlist/party/:partyId', requireAdminAuth, (req, res) => {
+  const { partyId } = req.params;
+  const db  = getDb();
+  const idx = (db.parties || []).findIndex(p => p.id === partyId);
+  if (idx === -1) return res.status(404).json({ error: 'Party not found' });
+  db.parties.splice(idx, 1);
+  db.guestList = (db.guestList || []).filter(g => g.partyId !== partyId);
+  writeDb(db);
+  res.json({ success: true });
+});
+
+app.put('/api/admin/guestlist/guest/:id/rsvp', requireAdminAuth, (req, res) => {
+  const db    = getDb();
+  const guest = (db.guestList || []).find(g => g.id === req.params.id);
+  if (!guest) return res.status(404).json({ error: 'Guest not found' });
+  const { rsvpStatus, plusOneStatus, plusOneName } = req.body;
+  const validStatuses = ['pending', 'attending', 'declined'];
+  if (rsvpStatus && validStatuses.includes(rsvpStatus)) {
+    guest.rsvpStatus = rsvpStatus;
+    guest.updatedAt  = new Date().toISOString();
+  }
+  if (plusOneStatus !== undefined) guest.plusOneStatus = validStatuses.includes(plusOneStatus) ? plusOneStatus : null;
+  if (plusOneName   !== undefined) guest.plusOneName   = plusOneName || null;
+  writeDb(db);
+  res.json({ success: true, guest });
+});
+
+app.get('/api/admin/guestlist/export', requireAdminAuth, (_req, res) => {
+  const db      = getDb();
+  const guests  = db.guestList || [];
+  const parties = db.parties   || [];
+  const headers = ['Name', 'Party', 'Plus One Allowed', 'RSVP Status', 'Plus One Name', 'Plus One Status', 'Updated At'];
+  const q = v => `"${String(v || '').replace(/"/g, '""')}"`;
+  const rows = guests.map(g => {
+    const party = parties.find(p => p.id === g.partyId);
+    return [q(g.name), q(party ? party.name : ''), q(g.plusOneAllowed ? 'Yes' : 'No'),
+            q(g.rsvpStatus), q(g.plusOneName || ''), q(g.plusOneStatus || ''), q(g.updatedAt || '')].join(',');
+  });
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="guest-list.csv"');
+  res.send([headers.map(h => q(h)).join(','), ...rows].join('\n'));
+});
+
+app.post('/api/admin/guestlist/settings', requireAdminAuth, (req, res) => {
+  const db = getDb();
+  if (req.body.rsvp_guest_deadline !== undefined) {
+    db.settings.rsvp_guest_deadline = req.body.rsvp_guest_deadline || null;
+  }
+  writeDb(db);
+  res.json({ success: true, deadline: db.settings.rsvp_guest_deadline });
 });
 
 // ---------------------------------------------------------------------------
