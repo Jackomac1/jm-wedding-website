@@ -906,27 +906,48 @@ app.get('/api/admin/rsvps/export', requireAdminAuth, (req, res) => {
 });
 
 app.get('/api/admin/stats', requireAdminAuth, (req, res) => {
-  const db           = getDb();
-  const total        = db.rsvps.length;
-  const attending    = db.rsvps.filter(r => r.attending === 'yes').length;
-  const notAttending = db.rsvps.filter(r => r.attending === 'no').length;
-  const totalGuests  = db.rsvps.filter(r => r.attending === 'yes').reduce((s, r) => s + (r.guest_count || 1), 0);
+  const db              = getDb();
+  const guests          = db.guestList || [];
+  const submittedParties = (db.parties || []).filter(p => p.submittedAt);
+
+  // Legacy token-based RSVP counts
+  const legacyTotal        = db.rsvps.length;
+  const legacyAttending    = db.rsvps.filter(r => r.attending === 'yes').length;
+  const legacyNotAttending = db.rsvps.filter(r => r.attending === 'no').length;
+  const legacyGuests       = db.rsvps.filter(r => r.attending === 'yes').reduce((s, r) => s + (r.guest_count || 1), 0);
+
+  // Guest-list party RSVP counts
+  const partyAttending    = submittedParties.filter(p =>
+    guests.filter(g => g.partyId === p.id).some(g => g.rsvpStatus === 'attending' || g.plusOneStatus === 'attending')
+  ).length;
+  const partyNotAttending = submittedParties.filter(p =>
+    guests.filter(g => g.partyId === p.id).every(g =>
+      g.rsvpStatus !== 'attending' && (!g.plusOneAllowed || g.plusOneStatus !== 'attending')
+    )
+  ).length;
+  const partyGuests = guests.reduce((sum, g) => {
+    if (g.rsvpStatus === 'attending') sum++;
+    if (g.plusOneAllowed && g.plusOneStatus === 'attending') sum++;
+    return sum;
+  }, 0);
+
+  const total        = legacyTotal        + submittedParties.length;
+  const attending    = legacyAttending    + partyAttending;
+  const notAttending = legacyNotAttending + partyNotAttending;
+  const totalGuests  = legacyGuests       + partyGuests;
 
   const rsvpEvents = (db.scheduleEvents || [])
     .filter(e => e.showOnRsvp)
     .sort((a, b) => a.dayOrder - b.dayOrder || a.sortOrder - b.sortOrder);
 
-  const guests      = db.guestList || [];
   const eventCounts = {};
   const eventLabels = {};
   rsvpEvents.forEach(evt => {
-    // Legacy token-based RSVPs — count by submission
     const legacyCount = db.rsvps.filter(r => Array.isArray(r.events) && r.events.includes(evt.slug)).length;
 
-    // Guest-list party RSVPs — count attending people (guests + plus ones) across parties that selected this event
     let partyPersonCount = 0;
-    (db.parties || [])
-      .filter(p => p.submittedAt && Array.isArray(p.events) && p.events.includes(evt.slug))
+    submittedParties
+      .filter(p => Array.isArray(p.events) && p.events.includes(evt.slug))
       .forEach(p => {
         guests.filter(g => g.partyId === p.id).forEach(g => {
           if (g.rsvpStatus === 'attending') partyPersonCount++;
