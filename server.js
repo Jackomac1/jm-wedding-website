@@ -1487,7 +1487,7 @@ app.post('/api/rsvp/party/:partyId', (req, res) => {
     }
   }
 
-  const { responses, plusOnes, submittedBy, events, dietary, message, songUri, songName } = req.body;
+  const { responses, plusOnes, submittedBy, events, dietary, message, songUri, songName, email, phone } = req.body;
   if (!Array.isArray(responses) || !responses.length) {
     return res.status(400).json({ error: 'responses array is required' });
   }
@@ -1518,6 +1518,8 @@ app.post('/api/rsvp/party/:partyId', (req, res) => {
   party.message     = (message  || '').trim();
   party.songUri     = (songUri  || '').trim();
   party.songName    = (songName || '').trim();
+  party.email       = (email    || '').trim();
+  party.phone       = (phone    || '').trim();
   writeDb(db);
   res.json({ success: true });
 });
@@ -1676,16 +1678,57 @@ app.get('/api/admin/guestlist/export', requireAdminAuth, (_req, res) => {
   const db      = getDb();
   const guests  = db.guestList || [];
   const parties = db.parties   || [];
-  const headers = ['Name', 'Party', 'Plus One Allowed', 'RSVP Status', 'Plus One Name', 'Plus One Status', 'Updated At'];
   const q = v => `"${String(v || '').replace(/"/g, '""')}"`;
-  const rows = guests.map(g => {
-    const party = parties.find(p => p.id === g.partyId);
-    return [q(g.name), q(party ? party.name : ''), q(g.plusOneAllowed ? 'Yes' : 'No'),
-            q(g.rsvpStatus), q(g.plusOneName || ''), q(g.plusOneStatus || ''), q(g.updatedAt || '')].join(',');
+  const headers = ['Name', 'Party', 'RSVP Status', 'Email', 'Phone', 'Dietary Restrictions', 'Song Choice', 'Submitted At'];
+  const rows = [];
+
+  guests.forEach(g => {
+    const party       = parties.find(p => p.id === g.partyId);
+    const partyName   = party ? party.name          : '';
+    const email       = party ? (party.email    || '') : '';
+    const phone       = party ? (party.phone    || '') : '';
+    const dietary     = party ? (party.dietary  || '') : '';
+    const songName    = party ? (party.songName || '') : '';
+    const submittedAt = party ? (party.submittedAt || '') : '';
+
+    rows.push([q(g.name), q(partyName), q(g.rsvpStatus), q(email), q(phone), q(dietary), q(songName), q(submittedAt)].join(','));
+
+    if (g.plusOneAllowed && g.plusOneName) {
+      rows.push([q(g.plusOneName), q(partyName), q(g.plusOneStatus || 'pending'), q(email), q(phone), q(dietary), q(''), q(submittedAt)].join(','));
+    }
   });
+
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="guest-list.csv"');
   res.send([headers.map(h => q(h)).join(','), ...rows].join('\n'));
+});
+
+app.get('/api/admin/guestlist/responses', requireAdminAuth, (_req, res) => {
+  const db      = getDb();
+  const guests  = db.guestList || [];
+  const submitted = (db.parties || []).filter(p => p.submittedAt);
+
+  const results = submitted.map(p => ({
+    partyId:     p.id,
+    partyName:   p.name,
+    submittedAt: p.submittedAt,
+    email:       p.email    || '',
+    phone:       p.phone    || '',
+    dietary:     p.dietary  || '',
+    songName:    p.songName || '',
+    songUri:     p.songUri  || '',
+    message:     p.message  || '',
+    events:      p.events   || [],
+    members:     guests.filter(g => g.partyId === p.id).map(g => ({
+      name:           g.name,
+      rsvpStatus:     g.rsvpStatus,
+      plusOneName:    g.plusOneName    || '',
+      plusOneStatus:  g.plusOneStatus  || '',
+      plusOneAllowed: g.plusOneAllowed
+    }))
+  }));
+
+  res.json(results);
 });
 
 app.post('/api/admin/guestlist/settings', requireAdminAuth, (req, res) => {

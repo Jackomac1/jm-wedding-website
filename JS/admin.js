@@ -203,11 +203,20 @@ async function loadSongRequests() {
   if (!el) return;
 
   try {
-    const res  = await fetch('/api/admin/rsvps');
-    if (!res.ok) throw new Error();
-    const rows = await res.json();
+    const [rsvpRes, partyRes] = await Promise.all([
+      fetch('/api/admin/rsvps'),
+      fetch('/api/admin/guestlist/responses')
+    ]);
 
-    const songs = rows.filter(r => r.attending === 'yes' && r.song_name);
+    const legacySongs = rsvpRes.ok
+      ? (await rsvpRes.json()).filter(r => r.attending === 'yes' && r.song_name).map(r => ({ name: r.guest_name, song: r.song_name, uri: r.song_uri || '' }))
+      : [];
+
+    const partySongs = partyRes.ok
+      ? (await partyRes.json()).filter(p => p.songName).map(p => ({ name: p.partyName, song: p.songName, uri: p.songUri || '' }))
+      : [];
+
+    const songs = [...legacySongs, ...partySongs];
 
     if (!songs.length) {
       el.innerHTML = '<span style="color:var(--admin-muted);font-size:0.875rem;">No song requests yet.</span>';
@@ -218,17 +227,17 @@ async function loadSongRequests() {
       <table class="admin-table" style="min-width:0;">
         <thead>
           <tr>
-            <th scope="col">Guest</th>
+            <th scope="col">Guest / Party</th>
             <th scope="col">Song</th>
             <th scope="col">Spotify URI</th>
           </tr>
         </thead>
         <tbody>
-          ${songs.map(r => `
+          ${songs.map(s => `
             <tr>
-              <td class="cell-name">${escHtml(r.guest_name)}</td>
-              <td>${escHtml(r.song_name)}</td>
-              <td class="cell-muted" style="font-size:0.8rem;word-break:break-all;">${escHtml(r.song_uri || '—')}</td>
+              <td class="cell-name">${escHtml(s.name)}</td>
+              <td>${escHtml(s.song)}</td>
+              <td class="cell-muted" style="font-size:0.8rem;word-break:break-all;">${escHtml(s.uri || '—')}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -239,26 +248,100 @@ async function loadSongRequests() {
 }
 
 // ----------------------------------------------------------
+// 6b. Party RSVP Responses (guest list system)
+// ----------------------------------------------------------
+async function loadPartyResponses() {
+  const el = document.getElementById('partyResponsesList');
+  if (!el) return;
+
+  try {
+    const res  = await fetch('/api/admin/guestlist/responses');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+
+    if (!data.length) {
+      el.innerHTML = '<span style="color:var(--admin-muted);font-size:0.875rem;">No party RSVPs submitted yet.</span>';
+      return;
+    }
+
+    el.innerHTML = `
+      <div class="admin-table-wrap" role="region" tabindex="0">
+        <table class="admin-table" style="min-width:0;">
+          <thead>
+            <tr>
+              <th scope="col">Party</th>
+              <th scope="col">Guests</th>
+              <th scope="col">Email</th>
+              <th scope="col">Phone</th>
+              <th scope="col">Dietary</th>
+              <th scope="col">Song</th>
+              <th scope="col">Submitted</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map(p => {
+              const memberList = p.members.map(m => {
+                const icon = m.rsvpStatus === 'attending' ? '✓' : m.rsvpStatus === 'declined' ? '✗' : '?';
+                let line = icon + ' ' + escHtml(m.name);
+                if (m.plusOneAllowed && m.plusOneName) {
+                  const poIcon = m.plusOneStatus === 'attending' ? '✓' : m.plusOneStatus === 'declined' ? '✗' : '?';
+                  line += '<br><span style="opacity:0.7;font-style:italic;">' + poIcon + ' ' + escHtml(m.plusOneName) + ' (Plus One)</span>';
+                } else if (m.plusOneAllowed) {
+                  const poIcon = m.plusOneStatus === 'attending' ? '✓' : m.plusOneStatus === 'declined' ? '✗' : '?';
+                  line += '<br><span style="opacity:0.7;font-style:italic;">' + poIcon + ' Plus One</span>';
+                }
+                return line;
+              }).join('<br>');
+              const date = p.submittedAt
+                ? new Date(p.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                : '—';
+              return '<tr>' +
+                '<td class="cell-name">' + escHtml(p.partyName) + '</td>' +
+                '<td class="cell-muted" style="font-size:0.8rem;">' + memberList + '</td>' +
+                '<td class="cell-muted">' + escHtml(p.email || '—') + '</td>' +
+                '<td class="cell-muted">' + escHtml(p.phone || '—') + '</td>' +
+                '<td class="cell-muted cell-wrap" title="' + escHtml(p.dietary) + '">' + (escHtml(truncate(p.dietary, 40)) || '—') + '</td>' +
+                '<td class="cell-muted cell-wrap" title="' + escHtml(p.songName) + '">' + (escHtml(truncate(p.songName, 40)) || '—') + '</td>' +
+                '<td class="cell-muted" style="white-space:nowrap;">' + date + '</td>' +
+                '</tr>';
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch {
+    el.innerHTML = '<span style="color:var(--admin-muted);font-size:0.875rem;">Failed to load party responses.</span>';
+  }
+}
+
+// ----------------------------------------------------------
 // 7. Export Song URIs
 // ----------------------------------------------------------
 async function exportSongUris() {
   try {
-    const res  = await fetch('/api/admin/rsvps');
-    if (!res.ok) throw new Error();
-    const rows = await res.json();
+    const [rsvpRes, partyRes] = await Promise.all([
+      fetch('/api/admin/rsvps'),
+      fetch('/api/admin/guestlist/responses')
+    ]);
 
-    const songs = rows.filter(r => r.attending === 'yes' && r.song_uri);
-    if (!songs.length) {
+    const legacyLines = rsvpRes.ok
+      ? (await rsvpRes.json()).filter(r => r.attending === 'yes' && r.song_uri).map(r => `${r.song_uri}  # ${r.song_name} (${r.guest_name})`)
+      : [];
+
+    const partyLines = partyRes.ok
+      ? (await partyRes.json()).filter(p => p.songUri).map(p => `${p.songUri}  # ${p.songName} (${p.partyName})`)
+      : [];
+
+    const allLines = [...legacyLines, ...partyLines];
+    if (!allLines.length) {
       showDashboardMessage('No song requests to export.', 'error');
       return;
     }
 
-    const lines = songs.map(r => `${r.song_uri}  # ${r.song_name} (${r.guest_name})`).join('\n');
-    const blob  = new Blob([lines], { type: 'text/plain' });
-    const url   = URL.createObjectURL(blob);
-    const a     = document.createElement('a');
-    a.href      = url;
-    a.download  = 'song-requests.txt';
+    const blob = new Blob([allLines.join('\n')], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'song-requests.txt';
     a.click();
     URL.revokeObjectURL(url);
   } catch {

@@ -624,6 +624,14 @@ function initGuestSearch() {
     if (alreadyNotice) alreadyNotice.style.display = alreadySubmitted ? 'block' : 'none';
 
     // Restore saved values if already submitted
+    if (alreadySubmitted && party.email) {
+      const emailEl = document.getElementById('partyEmail');
+      if (emailEl) emailEl.value = party.email;
+    }
+    if (alreadySubmitted && party.phone) {
+      const phoneEl = document.getElementById('partyPhone');
+      if (phoneEl) phoneEl.value = party.phone;
+    }
     if (alreadySubmitted && party.dietary) {
       const dietEl = document.getElementById('partyDietary');
       if (dietEl) dietEl.value = party.dietary;
@@ -745,13 +753,15 @@ function initGuestSearch() {
       const message  = document.getElementById('partyMessage')?.value.trim() || '';
       const songUri  = anyAttending ? (document.getElementById('partySongUri')?.value || '') : '';
       const songName = anyAttending ? (document.getElementById('partySongNameVal')?.value || '') : '';
+      const email    = document.getElementById('partyEmail')?.value.trim() || '';
+      const phone    = document.getElementById('partyPhone')?.value.trim() || '';
 
       submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
 
       try {
         const res = await fetch(`/api/rsvp/party/${encodeURIComponent(currentPartyId)}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ responses, plusOnes, submittedBy: responses[0]?.id, events, dietary, message, songUri, songName })
+          body: JSON.stringify({ responses, plusOnes, submittedBy: responses[0]?.id, events, dietary, message, songUri, songName, email, phone })
         });
         const data = await res.json();
         if (res.ok && data.success) {
