@@ -916,10 +916,25 @@ app.get('/api/admin/stats', requireAdminAuth, (req, res) => {
     .filter(e => e.showOnRsvp)
     .sort((a, b) => a.dayOrder - b.dayOrder || a.sortOrder - b.sortOrder);
 
+  const guests      = db.guestList || [];
   const eventCounts = {};
   const eventLabels = {};
   rsvpEvents.forEach(evt => {
-    eventCounts[evt.slug] = db.rsvps.filter(r => Array.isArray(r.events) && r.events.includes(evt.slug)).length;
+    // Legacy token-based RSVPs — count by submission
+    const legacyCount = db.rsvps.filter(r => Array.isArray(r.events) && r.events.includes(evt.slug)).length;
+
+    // Guest-list party RSVPs — count attending people (guests + plus ones) across parties that selected this event
+    let partyPersonCount = 0;
+    (db.parties || [])
+      .filter(p => p.submittedAt && Array.isArray(p.events) && p.events.includes(evt.slug))
+      .forEach(p => {
+        guests.filter(g => g.partyId === p.id).forEach(g => {
+          if (g.rsvpStatus === 'attending') partyPersonCount++;
+          if (g.plusOneAllowed && g.plusOneStatus === 'attending') partyPersonCount++;
+        });
+      });
+
+    eventCounts[evt.slug] = legacyCount + partyPersonCount;
     eventLabels[evt.slug] = evt.rsvpLabel || evt.title;
   });
 
