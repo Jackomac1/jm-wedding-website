@@ -118,11 +118,47 @@ async function loadRsvps() {
     </tr>`;
 
   try {
-    const res  = await fetch('/api/admin/rsvps');
-    if (!res.ok) throw new Error('Failed to fetch RSVPs');
-    const rows = await res.json();
+    const [legacyRes, partyRes] = await Promise.all([
+      fetch('/api/admin/rsvps'),
+      fetch('/api/admin/guestlist/responses')
+    ]);
 
-    if (!rows.length) {
+    const legacyRows = legacyRes.ok ? await legacyRes.json() : [];
+    const partyRows  = partyRes.ok  ? await partyRes.json()  : [];
+
+    // Map party responses into the same shape as legacy rows
+    const partyMapped = partyRows.map(p => {
+      const attendingMembers = p.members.filter(m => m.rsvpStatus === 'attending');
+      const declinedMembers  = p.members.filter(m => m.rsvpStatus === 'declined');
+      const hasAttending     = attendingMembers.length > 0 ||
+        p.members.some(m => m.plusOneAllowed && m.plusOneStatus === 'attending');
+
+      const guestNames = [];
+      p.members.forEach(m => {
+        guestNames.push(m.name + (m.rsvpStatus === 'attending' ? ' ✓' : m.rsvpStatus === 'declined' ? ' ✗' : ''));
+        if (m.plusOneAllowed && m.plusOneName) {
+          guestNames.push(m.plusOneName + (m.plusOneStatus === 'attending' ? ' ✓' : m.plusOneStatus === 'declined' ? ' ✗' : '') + ' (Plus One)');
+        }
+      });
+
+      return {
+        _isParty: true,
+        partyId: p.partyId,
+        guest_name: p.partyName,
+        email: p.email || null,
+        attending: hasAttending ? 'yes' : (declinedMembers.length === p.members.length ? 'no' : 'pending'),
+        guest_names: guestNames,
+        guest_count: guestNames.length,
+        events: p.events || [],
+        dietary_restrictions: p.dietary || null,
+        message: p.message || null,
+        submitted_at: p.submittedAt
+      };
+    });
+
+    const allRows = [...legacyRows, ...partyMapped];
+
+    if (!allRows.length) {
       tbody.innerHTML = `
         <tr>
           <td colspan="9">
@@ -135,11 +171,14 @@ async function loadRsvps() {
       return;
     }
 
-    tbody.innerHTML = rows.map(row => {
+    tbody.innerHTML = allRows.map(row => {
       const attending = row.attending === 'yes';
-      const badge     = attending
+      const isPending = row.attending === 'pending';
+      const badge = attending
         ? '<span class="status-badge badge-attending">✓ Attending</span>'
-        : '<span class="status-badge badge-not-attending">✗ Declined</span>';
+        : isPending
+          ? '<span class="status-badge badge-not-attending" style="background:var(--admin-bg);color:var(--admin-muted);border:1px solid var(--admin-border);">Pending</span>'
+          : '<span class="status-badge badge-not-attending">✗ Declined</span>';
 
       const date = new Date(row.submitted_at).toLocaleDateString('en-US', {
         year: 'numeric', month: 'short', day: 'numeric'
@@ -147,21 +186,21 @@ async function loadRsvps() {
 
       const eventNames = (row.events || []).map(id => eventLabels[id] || id).join(', ');
 
+      const actionBtn = row._isParty
+        ? ''
+        : `<button class="btn btn-danger" onclick="deleteRsvp(${row.id}, '${escHtml(row.guest_name)}')">Delete</button>`;
+
       return `
         <tr>
           <td class="cell-name">${escHtml(row.guest_name)}</td>
           <td class="cell-muted cell-wrap">${escHtml(row.email || '—')}</td>
           <td>${badge}</td>
-          <td class="cell-muted cell-wrap" title="${escHtml((row.guest_names || []).join(', '))}">${attending ? escHtml(truncate((row.guest_names || []).join(', '), 40)) || row.guest_count : '—'}</td>
-          <td class="cell-muted cell-wrap" title="${escHtml(eventNames)}">${attending ? escHtml(truncate(eventNames, 50)) || '—' : '—'}</td>
-          <td class="cell-muted cell-wrap" title="${escHtml(row.dietary_restrictions || '')}">${escHtml(truncate(row.dietary_restrictions, 40))}</td>
-          <td class="cell-muted cell-wrap" title="${escHtml(row.message || '')}">${escHtml(truncate(row.message, 50))}</td>
+          <td class="cell-muted cell-wrap" title="${escHtml((row.guest_names || []).join(', '))}">${escHtml(truncate((row.guest_names || []).join(', '), 40)) || row.guest_count || '—'}</td>
+          <td class="cell-muted cell-wrap" title="${escHtml(eventNames)}">${escHtml(truncate(eventNames, 50)) || '—'}</td>
+          <td class="cell-muted cell-wrap" title="${escHtml(row.dietary_restrictions || '')}">${escHtml(truncate(row.dietary_restrictions, 40)) || '—'}</td>
+          <td class="cell-muted cell-wrap" title="${escHtml(row.message || '')}">${escHtml(truncate(row.message, 50)) || '—'}</td>
           <td class="cell-muted" style="white-space:nowrap;">${date}</td>
-          <td>
-            <button class="btn btn-danger" onclick="deleteRsvp(${row.id}, '${escHtml(row.guest_name)}')">
-              Delete
-            </button>
-          </td>
+          <td>${actionBtn}</td>
         </tr>`;
     }).join('');
 
