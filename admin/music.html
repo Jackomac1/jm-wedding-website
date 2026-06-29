@@ -296,6 +296,23 @@
 
   <script src="/JS/admin.js"></script>
   <script>
+    // ── Sidebar toggle ───────────────────────────────────────────
+    const _sidebar  = document.getElementById('adminSidebar');
+    const _overlay  = document.getElementById('sidebarOverlay');
+    document.getElementById('sidebarToggle').addEventListener('click', () => {
+      _sidebar.classList.toggle('open');
+      _overlay.classList.toggle('active');
+    });
+    _overlay.addEventListener('click', () => {
+      _sidebar.classList.remove('open');
+      _overlay.classList.remove('active');
+    });
+    document.getElementById('adminLogoutBtn').addEventListener('click', async e => {
+      e.preventDefault();
+      await fetch('/api/admin/logout', { method: 'POST' });
+      window.location.href = '/admin/login';
+    });
+
     // ── Tab switching ────────────────────────────────────────────
     function switchTab(name) {
       document.querySelectorAll('.music-tab').forEach(t => {

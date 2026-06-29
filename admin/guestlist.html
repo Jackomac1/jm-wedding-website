@@ -94,6 +94,14 @@
     }
 
     .empty-party-list { text-align:center; padding:2.5rem 1rem; color:var(--admin-muted); font-size:0.9rem; }
+
+    @media(max-width:560px) {
+      .party-header { flex-wrap:wrap; gap:0.5rem; }
+      .party-actions { width:100%; justify-content:flex-start; }
+      .member-row { flex-wrap:wrap; gap:0.5rem; padding-left:1rem; }
+      .plus-one-row { padding-left:1.5rem; }
+      .member-actions { width:100%; justify-content:flex-start; }
+    }
   </style>
 </head>
 <body>

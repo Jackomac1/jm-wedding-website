@@ -840,3 +840,4 @@ ul { list-style: none; }
 }
 
 .sidebar-overlay.visible { display: block; }
+.sidebar-overlay.active  { display: block; }
