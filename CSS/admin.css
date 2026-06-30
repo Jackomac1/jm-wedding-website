@@ -775,6 +775,19 @@ ul { list-style: none; }
   font-size: 0.9rem;
 }
 
+/* Hamburger — hidden on desktop, shown on mobile */
+.sidebar-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 1.25rem;
+  color: var(--admin-text);
+}
+
 /* ============================================================
    Responsive — collapse sidebar on mobile
    ============================================================ */
@@ -816,18 +829,6 @@ ul { list-style: none; }
   .sidebar-toggle-btn {
     display: flex;
   }
-}
-
-.sidebar-toggle-btn {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  font-size: 1.25rem;
-  color: var(--admin-text);
 }
 
 /* ============================================================
