@@ -110,6 +110,14 @@
     .rsvp-no  { background: var(--admin-bg); color: var(--admin-muted); }
     .event-row-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
 
+    /* Mobile: wrap event rows so title gets full width */
+    @media (max-width: 560px) {
+      .event-row { flex-wrap: wrap; row-gap: 0.35rem; }
+      .event-row-title { order: -1; flex: 1 1 100%; }
+      .event-row-time { min-width: auto; }
+      .event-row-actions { margin-left: auto; }
+    }
+
     .hint-text { font-size: 0.75rem; color: var(--admin-muted); margin-top: 0.2rem; }
 
     /* Day headers section */
