@@ -435,12 +435,12 @@ app.get('/admin/login', (req, res) => {
 
 app.get('/admin',              requireAdminAuth, (req, res) => res.redirect('/admin/dashboard'));
 app.get('/admin/dashboard',    requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'dashboard.html')));
-app.get('/admin/qr-generator', requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'qr-generator.html')));
 app.get('/admin/photos',       requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'photos.html')));
 app.get('/admin/schedule',         requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'schedule.html')));
 app.get('/admin/accommodations',   requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'accommodations.html')));
 app.get('/admin/details',          requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'details.html')));
 app.get('/admin/guestlist',        requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'guestlist.html')));
+app.get('/admin/emails',           requireAdminAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin', 'emails.html')));
 
 // ---------------------------------------------------------------------------
 // API — authentication
@@ -485,6 +485,179 @@ app.post('/api/admin/logout', (req, res) => {
 // Mailer (Resend)
 // ---------------------------------------------------------------------------
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+function escEmail(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isReminder }) {
+  const attending = members.filter(m => m.status === 'attending');
+  const declined  = members.filter(m => m.status !== 'attending');
+
+  // Collect plus-one rows for attending
+  const attendingRows = [];
+  members.forEach(m => {
+    if (m.status === 'attending') {
+      attendingRows.push(`<li style="margin-bottom:4px;"><strong style="color:#3D6B4D;">${escEmail(m.name)}</strong></li>`);
+    }
+    if (m.plusOneAllowed && m.plusOneStatus === 'attending') {
+      const poName = m.plusOneName ? escEmail(m.plusOneName) : 'Plus One';
+      attendingRows.push(`<li style="margin-bottom:4px;"><strong style="color:#3D6B4D;">${poName}</strong></li>`);
+    }
+  });
+  const declinedRows = [];
+  members.forEach(m => {
+    if (m.status !== 'attending') {
+      declinedRows.push(`<li style="margin-bottom:4px;color:#6b7280;">${escEmail(m.name)}</li>`);
+    }
+    if (m.plusOneAllowed && m.plusOneStatus && m.plusOneStatus !== 'attending') {
+      const poName = m.plusOneName ? escEmail(m.plusOneName) : 'Plus One';
+      declinedRows.push(`<li style="margin-bottom:4px;color:#6b7280;">${poName}</li>`);
+    }
+  });
+
+  const someAttending = attending.length > 0 || members.some(m => m.plusOneAllowed && m.plusOneStatus === 'attending');
+
+  let headline;
+  if (isReminder) {
+    headline = "We can't wait to see you there!";
+  } else if (someAttending) {
+    headline = "Thank you for your RSVP — we can't wait to see you!";
+  } else {
+    headline = "Thank you for letting us know.";
+  }
+
+  const eventItems = events.length
+    ? events.map(e => `<li style="margin-bottom:4px;">${escEmail(e)}</li>`).join('')
+    : '';
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RSVP Confirmation — Jack &amp; Maja</title></head>
+<body style="margin:0;padding:0;background:#F5E6D3;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5E6D3;min-height:100vh;">
+  <tr><td align="center" style="padding:40px 16px;">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
+
+      <!-- Header -->
+      <tr>
+        <td style="background:#3D6B4D;text-align:center;padding:36px 40px 24px;">
+          <div style="font-family:Georgia,serif;font-style:italic;font-size:38px;color:#F5E6D3;line-height:1.1;">J &amp; M</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#B8C856;text-transform:uppercase;letter-spacing:0.15em;margin-top:8px;">Jack &amp; Maja's Wedding</div>
+        </td>
+      </tr>
+
+      <!-- Pink accent bar -->
+      <tr><td style="background:#D91B8F;height:4px;font-size:1px;line-height:1px;">&nbsp;</td></tr>
+
+      <!-- White body card -->
+      <tr>
+        <td style="background:#ffffff;padding:40px;">
+
+          <h1 style="font-family:Georgia,serif;font-size:24px;color:#3D6B4D;margin:0 0 16px;font-weight:normal;">${escEmail(headline)}</h1>
+          <p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#6b7280;margin:0 0 24px;">Dear ${escEmail(partyName)},</p>
+
+          <!-- Divider -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="border-top:2px solid #B8C856;font-size:1px;line-height:1px;">&nbsp;</td></tr></table>
+
+          <!-- RSVP Section -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;">
+            <tr><td><p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#D91B8F;text-transform:uppercase;letter-spacing:0.12em;font-weight:bold;margin:0 0 16px;">Your RSVP</p></td></tr>
+            ${attendingRows.length ? `
+            <tr><td style="padding-bottom:12px;">
+              <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#3D6B4D;font-weight:bold;margin:0 0 6px;">Attending</p>
+              <ul style="margin:0;padding:0 0 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;">${attendingRows.join('')}</ul>
+            </td></tr>` : ''}
+            ${declinedRows.length ? `
+            <tr><td style="padding-bottom:12px;">
+              <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#6b7280;font-weight:bold;margin:0 0 6px;">Unable to Attend</p>
+              <ul style="margin:0;padding:0 0 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;">${declinedRows.join('')}</ul>
+            </td></tr>` : ''}
+            ${eventItems ? `
+            <tr><td style="padding-bottom:12px;">
+              <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#3D6B4D;font-weight:bold;margin:0 0 6px;">Events You're Joining</p>
+              <ul style="margin:0;padding:0 0 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;">${eventItems}</ul>
+            </td></tr>` : ''}
+            ${dietary ? `
+            <tr><td style="padding-bottom:12px;">
+              <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#3D6B4D;font-weight:bold;margin:0 0 4px;">Dietary Restrictions Noted</p>
+              <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:0;">${escEmail(dietary)}</p>
+            </td></tr>` : ''}
+          </table>
+
+          <!-- Divider -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;"><tr><td style="border-top:2px solid #B8C856;font-size:1px;line-height:1px;">&nbsp;</td></tr></table>
+
+          <!-- Wedding Details Section -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;">
+            <tr><td><p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#D91B8F;text-transform:uppercase;letter-spacing:0.12em;font-weight:bold;margin:0 0 16px;">Wedding Details</p></td></tr>
+            <tr>
+              <td style="padding-bottom:14px;vertical-align:top;width:140px;">
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#3D6B4D;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;margin:0 0 3px;">Ceremony</p>
+              </td>
+              <td style="padding-bottom:14px;vertical-align:top;">
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:0;">Sunday, August 29, 2027 at 4:00 PM</p>
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:2px 0 0;">Stewart Creek Golf &amp; Country Club</p>
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b7280;margin:2px 0 0;">4100 Stewart Creek Dr, Canmore, AB T1W 2V3</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-bottom:14px;vertical-align:top;width:140px;">
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#3D6B4D;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;margin:0 0 3px;">Cocktail Hour</p>
+              </td>
+              <td style="padding-bottom:14px;vertical-align:top;">
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:0;">5:30 PM</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-bottom:14px;vertical-align:top;width:140px;">
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#3D6B4D;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;margin:0 0 3px;">Reception</p>
+              </td>
+              <td style="padding-bottom:14px;vertical-align:top;">
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:0;">Dinner at 6:30 PM &middot; End at 1:00 AM</p>
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:2px 0 0;">Bridgette Bar Canmore</p>
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b7280;margin:2px 0 0;">1030 Spring Creek Dr, Canmore, AB T1W 0C8</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-bottom:14px;vertical-align:top;width:140px;">
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#3D6B4D;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;margin:0 0 3px;">Dress Code</p>
+              </td>
+              <td style="padding-bottom:14px;vertical-align:top;">
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:0;">Garden Party Chic</p>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Divider -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;"><tr><td style="border-top:2px solid #B8C856;font-size:1px;line-height:1px;">&nbsp;</td></tr></table>
+
+          <!-- CTA Button -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:32px;"><tr><td align="center">
+            <a href="${escEmail(siteUrl)}" style="display:inline-block;background:#D91B8F;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:6px;letter-spacing:0.04em;">Visit the Wedding Website</a>
+          </td></tr></table>
+
+        </td>
+      </tr>
+
+      <!-- Footer -->
+      <tr>
+        <td style="padding:28px 40px 40px;text-align:center;">
+          <p style="font-family:Georgia,serif;font-style:italic;font-size:16px;color:#3D6B4D;margin:0 0 8px;">With love, Jack &amp; Maja</p>
+          <p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#9ca3af;margin:0;">August 29, 2027 &middot; Canmore, Alberta</p>
+        </td>
+      </tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+}
 
 // ---------------------------------------------------------------------------
 // API — Contact form
@@ -963,139 +1136,54 @@ app.get('/api/admin/stats', requireAdminAuth, (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// API — Admin: QR / Tokens
+// API — Admin: Email blast
 // ---------------------------------------------------------------------------
-app.post('/api/admin/qr/generate', requireAdminAuth, async (req, res) => {
-  try {
-    const { guestName, groupName, email, maxGuests, customUrl } = req.body;
-    if (!guestName) return res.status(400).json({ error: 'Guest name is required' });
-
-    const token   = uuidv4();
-    const siteUrl = process.env.SITE_URL || `http://localhost:${PORT}`;
-    const rsvpUrl = customUrl || `${siteUrl}/rsvp?token=${token}`;
-
-    const db = getDb();
-    const id = db.guestTokens.length ? Math.max(...db.guestTokens.map(t => t.id)) + 1 : 1;
-    db.guestTokens.push({
-      id,
-      token,
-      guestName,
-      groupName:  groupName || null,
-      email:      email || null,
-      maxGuests:  parseInt(maxGuests, 10) || 1,
-      createdAt:  new Date().toISOString()
-    });
-    writeDb(db);
-
-    const qrCode = await QRCode.toDataURL(rsvpUrl, {
-      width: 300, margin: 2,
-      color: { dark: '#4a3728', light: '#faf7f2' }
-    });
-
-    res.json({ token, url: rsvpUrl, qrCode, guestName });
-  } catch (err) {
-    console.error('QR generation error:', err);
-    res.status(500).json({ error: 'Failed to generate QR code' });
-  }
-});
-
-app.get('/api/admin/tokens', requireAdminAuth, (req, res) => {
+app.get('/api/admin/email/recipients', requireAdminAuth, (req, res) => {
   const db = getDb();
-  res.json([...db.guestTokens].reverse());
+  const guests = db.guestList || [];
+  const parties = (db.parties || []).filter(p => p.submittedAt && p.email);
+  const result = parties.map(party => {
+    const partyGuests = guests.filter(g => g.partyId === party.id);
+    const hasAttending = partyGuests.some(g => g.rsvpStatus === 'attending' || g.plusOneStatus === 'attending');
+    return { name: party.name, email: party.email, hasAttending, submittedAt: party.submittedAt };
+  });
+  res.json(result);
 });
 
-app.post('/api/admin/guests/import', requireAdminAuth, (req, res) => {
-  const { guests } = req.body;
-  if (!Array.isArray(guests) || !guests.length) {
-    return res.status(400).json({ error: 'guests array is required' });
-  }
-
+app.post('/api/admin/email/blast', requireAdminAuth, async (req, res) => {
   const db = getDb();
-  let imported = 0;
-  let skipped  = 0;
-  const results = [];
+  const parties = (db.parties || []).filter(p => p.submittedAt && p.email);
+  const guests  = db.guestList || [];
+  const schedEvents = db.scheduleEvents || [];
+  const siteUrl = process.env.SITE_URL || 'https://www.majaandjack.ca';
 
-  for (const g of guests) {
-    const name = (g.guestName || '').trim();
-    if (!name) { skipped++; continue; }
+  const results = await Promise.allSettled(parties.map(async party => {
+    const partyGuests = guests.filter(g => g.partyId === party.id);
+    const hasAttending = partyGuests.some(g => g.rsvpStatus === 'attending' || g.plusOneStatus === 'attending');
+    if (!hasAttending) return { skipped: true, party: party.name };
 
-    const token = uuidv4();
-    const id    = db.guestTokens.length ? Math.max(...db.guestTokens.map(t => t.id)) + 1 : 1;
-    db.guestTokens.push({
-      id,
-      token,
-      guestName:  name,
-      groupName:  (g.groupName || '').trim() || null,
-      email:      (g.email     || '').trim() || null,
-      maxGuests:  Math.max(1, parseInt(g.maxGuests, 10) || 1),
-      createdAt:  new Date().toISOString()
+    const eventLabels = (party.events || []).map(slug => {
+      const ev = schedEvents.find(e => e.slug === slug);
+      return ev ? (ev.rsvpLabel || ev.title) : slug;
     });
-    imported++;
-    results.push({ guestName: name, token });
-  }
+    const members = partyGuests.map(g => ({
+      name: g.name, status: g.rsvpStatus,
+      plusOneAllowed: g.plusOneAllowed, plusOneName: g.plusOneName, plusOneStatus: g.plusOneStatus
+    }));
 
-  writeDb(db);
-  res.json({ imported, skipped, results });
-});
-
-app.get('/api/admin/qr/print-sheet', requireAdminAuth, async (req, res) => {
-  const db      = getDb();
-  const tokens  = [...db.guestTokens];
-  const siteUrl = process.env.SITE_URL || `http://localhost:${PORT}`;
-
-  const cards = await Promise.all(tokens.map(async tok => {
-    const url    = `${siteUrl}/rsvp?token=${tok.token}`;
-    const qrData = await QRCode.toDataURL(url, { width: 240, margin: 2, color: { dark: '#2e1618', light: '#ffffff' } });
-    const guests = tok.maxGuests > 1 ? `Up to ${tok.maxGuests} guests` : '1 guest';
-    return `
-      <div class="card">
-        <img src="${qrData}" alt="QR code for ${tok.guestName}" width="180" height="180">
-        <div class="name">${tok.guestName.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
-        <div class="guests">${guests}</div>
-      </div>`;
+    await resend.emails.send({
+      from: 'Jack & Maja <noreply@majaandjack.ca>',
+      to: party.email,
+      subject: "We can't wait to see you there! — Jack & Maja's Wedding",
+      html: buildRsvpEmailHtml({ partyName: party.name, members, events: eventLabels, dietary: party.dietary, siteUrl, isReminder: true })
+    });
+    return { sent: true, party: party.name, email: party.email };
   }));
 
-  res.setHeader('Content-Type', 'text/html');
-  res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>QR Codes — Print Sheet</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Georgia, serif; background: #fff; color: #2e1618; }
-    .toolbar { padding: 1rem 1.5rem; background: #f5f0eb; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 1rem; }
-    .toolbar h1 { font-size: 1rem; font-weight: 600; }
-    .toolbar button { padding: 0.5rem 1.25rem; background: #6c1420; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding: 1.5rem; }
-    .card { border: 1px solid #d4c9be; border-radius: 8px; padding: 1rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; break-inside: avoid; }
-    .card img { display: block; }
-    .name { font-size: 0.95rem; font-weight: 600; }
-    .guests { font-size: 0.75rem; color: #888; }
-    @media print {
-      .toolbar { display: none; }
-      .grid { padding: 0; gap: 0.5rem; }
-      body { font-size: 12px; }
-    }
-  </style>
-</head>
-<body>
-  <div class="toolbar">
-    <h1>QR Print Sheet — ${tokens.length} invitation${tokens.length !== 1 ? 's' : ''}</h1>
-    <button onclick="window.print()">Print / Save as PDF</button>
-  </div>
-  <div class="grid">${cards.join('')}</div>
-</body>
-</html>`);
-});
-
-app.delete('/api/admin/tokens/:id', requireAdminAuth, (req, res) => {
-  const db  = getDb();
-  const idx = db.guestTokens.findIndex(t => t.id === parseInt(req.params.id, 10));
-  if (idx === -1) return res.status(404).json({ error: 'Token not found' });
-  db.guestTokens.splice(idx, 1);
-  writeDb(db);
-  res.json({ success: true });
+  const sent    = results.filter(r => r.status === 'fulfilled' && r.value?.sent).length;
+  const skipped = results.filter(r => r.status === 'fulfilled' && r.value?.skipped).length;
+  const failed  = results.filter(r => r.status === 'rejected').length;
+  res.json({ sent, skipped, failed });
 });
 
 // ---------------------------------------------------------------------------
@@ -1558,6 +1646,31 @@ app.post('/api/rsvp/party/:partyId', (req, res) => {
   party.phone       = (phone    || '').trim();
   writeDb(db);
   res.json({ success: true });
+
+  // Fire-and-forget confirmation email
+  if (party.email) {
+    try {
+      const guests = (db.guestList || []).filter(g => g.partyId === party.id);
+      const schedEvents = db.scheduleEvents || [];
+      const eventLabels = (party.events || []).map(slug => {
+        const ev = schedEvents.find(e => e.slug === slug);
+        return ev ? (ev.rsvpLabel || ev.title) : slug;
+      });
+      const members = guests.map(g => ({
+        name: g.name, status: g.rsvpStatus,
+        plusOneAllowed: g.plusOneAllowed, plusOneName: g.plusOneName, plusOneStatus: g.plusOneStatus
+      }));
+      const siteUrl = process.env.SITE_URL || 'https://www.majaandjack.ca';
+      resend.emails.send({
+        from: 'Jack & Maja <noreply@majaandjack.ca>',
+        to: party.email,
+        subject: "We can't wait to see you there! — Jack & Maja's Wedding",
+        html: buildRsvpEmailHtml({ partyName: party.name, members, events: eventLabels, dietary: party.dietary, siteUrl, isReminder: false })
+      }).catch(err => console.error('RSVP confirmation email failed:', err.message));
+    } catch (e) {
+      console.error('Email build error:', e.message);
+    }
+  }
 });
 
 // ---------------------------------------------------------------------------
