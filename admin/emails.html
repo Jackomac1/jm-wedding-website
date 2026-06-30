@@ -190,6 +190,41 @@
     .blast-result {
       font-size: 0.92rem;
     }
+
+    /* Template editor */
+    .tmpl-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--admin-border);
+      margin-bottom: 1.25rem;
+      overflow-x: auto;
+    }
+    .tmpl-tab {
+      padding: 0.55rem 1.1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      color: var(--admin-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tmpl-tab.active { color: var(--admin-accent); border-bottom-color: var(--admin-accent); }
+    .tmpl-panel { display: none; }
+    .tmpl-panel.active { display: block; }
+    .tmpl-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 1rem; }
+    .tmpl-field label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--admin-muted); }
+    .tmpl-field input, .tmpl-field textarea {
+      padding: 0.55rem 0.75rem; font-size: 0.9rem; border: 1px solid var(--admin-border);
+      border-radius: var(--radius-sm); background: var(--admin-bg); color: var(--admin-text);
+      font-family: inherit; width: 100%; box-sizing: border-box;
+    }
+    .tmpl-field input:focus, .tmpl-field textarea:focus { outline: none; border-color: var(--admin-accent); }
+    .tmpl-field textarea { resize: vertical; min-height: 80px; }
   </style>
 </head>
 <body>
@@ -287,6 +322,54 @@
           </p>
         </div>
 
+        <!-- Template Editor -->
+        <div class="admin-card" style="padding:1.5rem;margin-bottom:1.5rem;">
+          <h2 style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--admin-muted);margin:0 0 0.4rem;">Email Templates</h2>
+          <p style="font-size:0.82rem;color:var(--admin-muted);margin:0 0 1.25rem;">Customize the subject line and personal message for each email type. The RSVP recap, wedding details, and footer are always included automatically.</p>
+
+          <div class="tmpl-tabs">
+            <button class="tmpl-tab active" data-tab="attending">Attending Confirmation</button>
+            <button class="tmpl-tab" data-tab="declined">Declined Confirmation</button>
+            <button class="tmpl-tab" data-tab="reminder">Reminder Blast</button>
+          </div>
+
+          <div class="tmpl-panel active" id="tmpl-attending">
+            <div class="tmpl-field">
+              <label for="subj-attending">Subject Line</label>
+              <input type="text" id="subj-attending" placeholder="Email subject…">
+            </div>
+            <div class="tmpl-field">
+              <label for="msg-attending">Message</label>
+              <textarea id="msg-attending" rows="4" placeholder="Personal message shown after the greeting…"></textarea>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveTemplate('attending')">Save Attending Template</button>
+          </div>
+
+          <div class="tmpl-panel" id="tmpl-declined">
+            <div class="tmpl-field">
+              <label for="subj-declined">Subject Line</label>
+              <input type="text" id="subj-declined" placeholder="Email subject…">
+            </div>
+            <div class="tmpl-field">
+              <label for="msg-declined">Message</label>
+              <textarea id="msg-declined" rows="4" placeholder="Personal message shown after the greeting…"></textarea>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveTemplate('declined')">Save Declined Template</button>
+          </div>
+
+          <div class="tmpl-panel" id="tmpl-reminder">
+            <div class="tmpl-field">
+              <label for="subj-reminder">Subject Line</label>
+              <input type="text" id="subj-reminder" placeholder="Email subject…">
+            </div>
+            <div class="tmpl-field">
+              <label for="msg-reminder">Message</label>
+              <textarea id="msg-reminder" rows="4" placeholder="Personal message shown after the greeting…"></textarea>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveTemplate('reminder')">Save Reminder Template</button>
+          </div>
+        </div>
+
         <!-- Recipients section -->
         <div class="admin-card" style="padding:1.5rem;margin-bottom:1.5rem;">
           <h2 style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--admin-muted);margin:0 0 1rem;">Who Will Receive This Email</h2>
@@ -327,8 +410,9 @@
 
                 <!-- Body -->
                 <div class="ep-body">
-                  <h3 class="ep-headline">We can't wait to see you there!</h3>
+                  <h3 class="ep-headline" id="previewHeadline">We can't wait to see you there!</h3>
                   <p class="ep-greeting">Dear [Party Name],</p>
+                  <p class="ep-greeting" id="previewMessage" style="color:#374151;line-height:1.65;margin-bottom:20px;display:none;"></p>
 
                   <hr class="ep-divider">
 
@@ -440,6 +524,77 @@
       document.getElementById('emailSuccess').style.display = 'none';
     }
 
+    // ── Template tabs ──────────────────────────────────────────────────────────
+    document.querySelectorAll('.tmpl-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tmpl-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tmpl-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tmpl-' + tab.dataset.tab).classList.add('active');
+        updatePreview(tab.dataset.tab);
+      });
+    });
+
+    function updatePreview(tab) {
+      const msg = document.getElementById('msg-' + tab)?.value || '';
+      const previewMsg = document.getElementById('previewMessage');
+      const previewHeadline = document.getElementById('previewHeadline');
+      if (msg.trim()) {
+        previewMsg.textContent = msg;
+        previewMsg.style.display = 'block';
+      } else {
+        previewMsg.style.display = 'none';
+      }
+      if (tab === 'declined') {
+        previewHeadline.textContent = 'Thank you for letting us know.';
+      } else {
+        previewHeadline.textContent = "We can't wait to see you there!";
+      }
+    }
+
+    // Keep preview in sync while typing
+    ['attending', 'declined', 'reminder'].forEach(key => {
+      const el = document.getElementById('msg-' + key);
+      if (el) el.addEventListener('input', () => {
+        const activeTab = document.querySelector('.tmpl-tab.active')?.dataset.tab;
+        if (activeTab === key) updatePreview(key);
+      });
+    });
+
+    // ── Load & save templates ──────────────────────────────────────────────────
+    async function loadTemplates() {
+      try {
+        const data = await fetch('/api/admin/email/templates').then(r => r.json());
+        ['attending', 'declined', 'reminder'].forEach(key => {
+          const t = data[key] || {};
+          const subj = document.getElementById('subj-' + key);
+          const msg  = document.getElementById('msg-' + key);
+          if (subj) subj.value = t.subject || '';
+          if (msg)  msg.value  = t.message || '';
+        });
+        updatePreview('attending');
+      } catch (e) {
+        console.warn('Failed to load templates:', e);
+      }
+    }
+
+    async function saveTemplate(key) {
+      const subject = document.getElementById('subj-' + key)?.value.trim() || '';
+      const message = document.getElementById('msg-' + key)?.value.trim() || '';
+      try {
+        const res = await fetch('/api/admin/email/templates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ [key]: { subject, message } })
+        });
+        if (!res.ok) throw new Error();
+        showSuccess('Template saved.');
+        updatePreview(key);
+      } catch {
+        showError('Failed to save template.');
+      }
+    }
+
     // ── Load recipients ────────────────────────────────────────────────────────
     async function loadRecipients() {
       try {
@@ -513,6 +668,7 @@
     });
 
     // ── Init ───────────────────────────────────────────────────────────────────
+    loadTemplates();
     loadRecipients();
   </script>
 

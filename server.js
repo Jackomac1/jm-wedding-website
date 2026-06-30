@@ -255,6 +255,25 @@ function getDb() {
     changed = true;
   }
 
+  // Migrate: add editable email templates if missing
+  if (!db.emailTemplates) {
+    db.emailTemplates = {
+      attending: {
+        subject: "We can't wait to see you there! — Jack & Maja's Wedding",
+        message: "We are so thrilled that you can join us to celebrate! If you have any questions in the meantime, please don't hesitate to reach out through the website."
+      },
+      declined: {
+        subject: "Thank you for letting us know — Jack & Maja's Wedding",
+        message: "We completely understand and will miss you on the day. Thank you so much for taking the time to let us know."
+      },
+      reminder: {
+        subject: "We can't wait to see you there! — Jack & Maja's Wedding",
+        message: "Just a friendly reminder that our big day is getting closer! We can't wait to celebrate with you in Canmore."
+      }
+    };
+    changed = true;
+  }
+
   if (changed) writeDb(db);
   return db;
 }
@@ -494,7 +513,7 @@ function escEmail(str) {
     .replace(/"/g, '&quot;');
 }
 
-function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isReminder }) {
+function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isReminder, customMessage = '' }) {
   const attending = members.filter(m => m.status === 'attending');
   const declined  = members.filter(m => m.status !== 'attending');
 
@@ -559,7 +578,8 @@ function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isRe
         <td style="background:#ffffff;padding:40px;">
 
           <h1 style="font-family:Georgia,serif;font-size:24px;color:#3D6B4D;margin:0 0 16px;font-weight:normal;">${escEmail(headline)}</h1>
-          <p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#6b7280;margin:0 0 24px;">Dear ${escEmail(partyName)},</p>
+          <p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#6b7280;margin:0 0 ${customMessage ? '16px' : '24px'};">Dear ${escEmail(partyName)},</p>
+          ${customMessage ? `<p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#374151;line-height:1.65;margin:0 0 24px;">${escEmail(customMessage)}</p>` : ''}
 
           <!-- Divider -->
           <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="border-top:2px solid #B8C856;font-size:1px;line-height:1px;">&nbsp;</td></tr></table>
@@ -1156,6 +1176,7 @@ app.post('/api/admin/email/blast', requireAdminAuth, async (req, res) => {
   const guests  = db.guestList || [];
   const schedEvents = db.scheduleEvents || [];
   const siteUrl = process.env.SITE_URL || 'https://www.majaandjack.ca';
+  const reminderTmpl = (db.emailTemplates || {}).reminder || {};
 
   const results = await Promise.allSettled(parties.map(async party => {
     const partyGuests = guests.filter(g => g.partyId === party.id);
@@ -1174,8 +1195,8 @@ app.post('/api/admin/email/blast', requireAdminAuth, async (req, res) => {
     await resend.emails.send({
       from: 'Jack & Maja <noreply@majaandjack.ca>',
       to: party.email,
-      subject: "We can't wait to see you there! — Jack & Maja's Wedding",
-      html: buildRsvpEmailHtml({ partyName: party.name, members, events: eventLabels, dietary: party.dietary, siteUrl, isReminder: true })
+      subject: reminderTmpl.subject || "We can't wait to see you there! — Jack & Maja's Wedding",
+      html: buildRsvpEmailHtml({ partyName: party.name, members, events: eventLabels, dietary: party.dietary, siteUrl, isReminder: true, customMessage: reminderTmpl.message || '' })
     });
     return { sent: true, party: party.name, email: party.email };
   }));
@@ -1184,6 +1205,23 @@ app.post('/api/admin/email/blast', requireAdminAuth, async (req, res) => {
   const skipped = results.filter(r => r.status === 'fulfilled' && r.value?.skipped).length;
   const failed  = results.filter(r => r.status === 'rejected').length;
   res.json({ sent, skipped, failed });
+});
+
+app.get('/api/admin/email/templates', requireAdminAuth, (req, res) => {
+  const db = getDb();
+  res.json(db.emailTemplates || {});
+});
+
+app.post('/api/admin/email/templates', requireAdminAuth, (req, res) => {
+  const { attending, declined, reminder } = req.body;
+  const db = getDb();
+  if (!db.emailTemplates) db.emailTemplates = {};
+  const clean = t => t ? { subject: (t.subject || '').trim(), message: (t.message || '').trim() } : null;
+  if (attending) db.emailTemplates.attending = clean(attending);
+  if (declined)  db.emailTemplates.declined  = clean(declined);
+  if (reminder)  db.emailTemplates.reminder  = clean(reminder);
+  writeDb(db);
+  res.json({ success: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -1661,11 +1699,14 @@ app.post('/api/rsvp/party/:partyId', (req, res) => {
         plusOneAllowed: g.plusOneAllowed, plusOneName: g.plusOneName, plusOneStatus: g.plusOneStatus
       }));
       const siteUrl = process.env.SITE_URL || 'https://www.majaandjack.ca';
+      const someAttending = members.some(m => m.status === 'attending' || (m.plusOneAllowed && m.plusOneStatus === 'attending'));
+      const templates = db.emailTemplates || {};
+      const tmpl = someAttending ? (templates.attending || {}) : (templates.declined || {});
       resend.emails.send({
         from: 'Jack & Maja <noreply@majaandjack.ca>',
         to: party.email,
-        subject: "We can't wait to see you there! — Jack & Maja's Wedding",
-        html: buildRsvpEmailHtml({ partyName: party.name, members, events: eventLabels, dietary: party.dietary, siteUrl, isReminder: false })
+        subject: tmpl.subject || "RSVP Confirmation — Jack & Maja's Wedding",
+        html: buildRsvpEmailHtml({ partyName: party.name, members, events: eventLabels, dietary: party.dietary, siteUrl, isReminder: false, customMessage: tmpl.message || '' })
       }).catch(err => console.error('RSVP confirmation email failed:', err.message));
     } catch (e) {
       console.error('Email build error:', e.message);
