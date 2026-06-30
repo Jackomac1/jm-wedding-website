@@ -99,6 +99,17 @@
             <p id="partyRsvpSubtitle" style="text-align:center;color:#888;font-size:0.88rem;margin:0 0 1.5rem;"></p>
             <div id="partyMembersWrap" style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.25rem;"></div>
 
+            <!-- Contact info — always shown so we can email regardless of attending status -->
+            <div class="form-group">
+              <label class="form-label" for="partyEmail">Email Address</label>
+              <input type="email" id="partyEmail" class="form-input" placeholder="you@example.com" autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="partyPhone">Phone Number</label>
+              <input type="tel" id="partyPhone" class="form-input" placeholder="+1 (555) 000-0000" autocomplete="tel">
+            </div>
+
             <!-- Extra details — shown when at least one person is attending -->
             <div id="partyExtraFields" style="display:none;">
 
@@ -110,17 +121,6 @@
                     <span style="color:#aaa;font-size:0.9rem;">Loading events&hellip;</span>
                   </div>
                 </fieldset>
-              </div>
-
-              <!-- Contact info -->
-              <div class="form-group">
-                <label class="form-label" for="partyEmail">Email Address</label>
-                <input type="email" id="partyEmail" class="form-input" placeholder="you@example.com" autocomplete="email">
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="partyPhone">Phone Number</label>
-                <input type="tel" id="partyPhone" class="form-input" placeholder="+1 (555) 000-0000" autocomplete="tel">
               </div>
 
               <!-- Dietary -->
