@@ -40,11 +40,10 @@
   <!-- Hero -->
   <section class="hero-full" aria-label="Hero">
     <div class="hero-content">
-      <!-- TODO: Replace placeholder couple names -->
-      <h1 class="hero-script">Jack &amp; Maja</h1>
-      <p class="hero-title">Together Forever</p>
-      <p class="hero-subtitle">August 29, 2027</p>
-      <p class="hero-date">Stewart Creek Golf &amp; Country Club &middot; Canmore, AB</p>
+      <h1 class="hero-script" data-cb="shared.coupleNames">Jack &amp; Maja</h1>
+      <p class="hero-title" data-cb="index.hero.title">Together Forever</p>
+      <p class="hero-subtitle" data-cb="shared.weddingDate">August 29, 2027</p>
+      <p class="hero-date" data-cb="index.hero.location">Stewart Creek Golf &amp; Country Club &middot; Canmore, AB</p>
     </div>
     <div class="scroll-indicator" aria-hidden="true">
       <span>Scroll</span>
@@ -56,9 +55,8 @@
   <section class="section section-alt" aria-labelledby="countdownTitle" id="countdownTitle">
     <div class="container">
       <div class="section-header fade-in">
-        <span class="section-label">Counting Down</span>
-        <!-- TODO: Replace placeholder couple names -->
-        <h2 class="section-title">Until We Say &ldquo;I Do&rdquo;</h2>
+        <span class="section-label" data-cb="index.countdown.label">Counting Down</span>
+        <h2 class="section-title" data-cb="index.countdown.title">Until We Say &ldquo;I Do&rdquo;</h2>
       </div>
 
       <div class="countdown fade-in" id="countdown" role="timer" aria-live="polite">
@@ -90,28 +88,28 @@
   <section class="section" aria-labelledby="exploreTitle">
     <div class="container">
       <div class="section-header fade-in">
-        <span class="section-label">Explore</span>
-        <h2 class="section-title">Join Us</h2>
-        <p class="section-subtitle">Everything you need to know about our special day</p>
+        <span class="section-label" data-cb="index.explore.label">Explore</span>
+        <h2 class="section-title" data-cb="index.explore.title">Join Us</h2>
+        <p class="section-subtitle" data-cb="index.explore.subtitle">Everything you need to know about our special day</p>
       </div>
 
       <div class="nav-cards">
         <a href="/details" class="nav-card fade-in delay-1" aria-label="View Wedding Details">
 
-          <div class="nav-card-title">Details</div>
-          <p class="nav-card-desc">Ceremony and reception info, venue, dress code, and getting there.</p>
+          <div class="nav-card-title" data-cb="index.card.details.title">Details</div>
+          <p class="nav-card-desc" data-cb="index.card.details.desc">Ceremony and reception info, venue, dress code, and getting there.</p>
         </a>
 
         <a href="/registry" class="nav-card fade-in delay-2" aria-label="View Gift Info">
 
-          <div class="nav-card-title">Gifts</div>
-          <p class="nav-card-desc">We're doing a cash registry — your presence is truly the greatest gift.</p>
+          <div class="nav-card-title" data-cb="index.card.gifts.title">Gifts</div>
+          <p class="nav-card-desc" data-cb="index.card.gifts.desc">We're doing a cash registry — your presence is truly the greatest gift.</p>
         </a>
 
         <a href="/rsvp" class="nav-card fade-in delay-3" aria-label="RSVP">
 
-          <div class="nav-card-title">RSVP</div>
-          <p class="nav-card-desc">Please let us know by April 1, 2027 if you can celebrate with us.</p>
+          <div class="nav-card-title" data-cb="index.card.rsvp.title">RSVP</div>
+          <p class="nav-card-desc">Please let us know by <span data-cb="shared.rsvpDeadline">April 1, 2027</span> if you can celebrate with us.</p>
         </a>
       </div>
     </div>
@@ -122,7 +120,7 @@
     <div class="container text-center">
       <blockquote>
         <p style="font-family: var(--font-heading); font-style: italic; font-size: clamp(1.1rem, 2.5vw, 1.4rem); color: #F5E6D3; max-width: 600px; margin: 0 auto; line-height: 1.8;">
-          <em>How lucky are we?</em>
+          <em data-cb="index.quote">How lucky are we?</em>
         </p>
       </blockquote>
       <div class="ornament" style="margin-top:1rem;" aria-hidden="true"><div class="ornament-diamond"></div></div>
@@ -131,9 +129,9 @@
 
   <!-- Footer -->
   <footer class="footer" role="contentinfo">
-    <div class="footer-script">Jack &amp; Maja</div>
-    <div class="footer-date">August 29, 2027</div>
-    
+    <div class="footer-script" data-cb="shared.coupleNames">Jack &amp; Maja</div>
+    <div class="footer-date" data-cb="shared.weddingDate">August 29, 2027</div>
+
     <nav class="footer-links" aria-label="Footer navigation">
       <a href="/details">Details</a>
       <a href="/schedule">Schedule</a>
@@ -141,9 +139,10 @@
       <a href="/rsvp">RSVP</a>
       <a href="/contact">Contact</a>
     </nav>
-    <p class="footer-copy">&copy; 2027 Jack &amp; Maja</p>
+    <p class="footer-copy" data-cb="shared.footerCopyright">&copy; 2027 Jack &amp; Maja</p>
   </footer>
 
+  <script src="/JS/content.js"></script>
   <script src="/JS/main.js"></script>
 
 </body>

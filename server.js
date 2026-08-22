@@ -255,6 +255,9 @@ function getDb() {
     changed = true;
   }
 
+  // Migrate: add in-place content overrides if missing
+  if (!db.content) { db.content = {}; changed = true; }
+
   // Migrate: add editable email templates if missing
   if (!db.emailTemplates) {
     db.emailTemplates = {
@@ -419,7 +422,11 @@ app.use('/audio',  express.static(audioDir));
 // Auth middleware
 // ---------------------------------------------------------------------------
 function requireSiteAuth(req, res, next) {
-  if (req.session && req.session.siteAuthenticated) return next();
+  // Admin implies guest access (one-directional) so the admin can browse and edit
+  // real guest pages without a separate site-password login. requireAdminAuth is
+  // untouched, and /enter's own redirect check below intentionally still keys off
+  // siteAuthenticated only, so an admin-only session can still open /enter to view it.
+  if (req.session && (req.session.siteAuthenticated || req.session.adminAuthenticated)) return next();
   res.redirect('/enter');
 }
 
@@ -1445,6 +1452,31 @@ app.delete('/api/admin/music', requireAdminAuth, (_req, res) => {
   db.music = { enabled: false, filename: null, displayName: '' };
   writeDb(db);
   res.json({ success: true });
+});
+
+// ---------------------------------------------------------------------------
+// API — in-place content overrides (admin inline text editing)
+// ---------------------------------------------------------------------------
+app.get('/api/content', (req, res) => {
+  const db = getDb();
+  res.json({
+    content: db.content || {},
+    isAdmin: !!(req.session && req.session.adminAuthenticated)
+  });
+});
+
+app.put('/api/admin/content', requireAdminAuth, (req, res) => {
+  const { key, value } = req.body;
+  if (!key || typeof key !== 'string') return res.status(400).json({ error: 'key is required' });
+  const db = getDb();
+  if (!db.content) db.content = {};
+  if (value === null) {
+    delete db.content[key];
+  } else {
+    db.content[key] = String(value);
+  }
+  writeDb(db);
+  res.json({ success: true, content: db.content });
 });
 
 // ---------------------------------------------------------------------------

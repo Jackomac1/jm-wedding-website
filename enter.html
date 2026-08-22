@@ -29,18 +29,16 @@
   <main class="enter-page" id="enterPage">
     <div class="enter-card" role="main">
 
-      <!-- TODO: Replace placeholder couple names -->
-      <div class="enter-monogram" aria-label="J and M monogram">J &amp; M</div>
+      <div class="enter-monogram" aria-label="J and M monogram" data-cb="enter.monogram">J &amp; M</div>
 
-      <p class="enter-title">You're Invited</p>
-      <!-- TODO: Replace placeholder couple names -->
-      <p class="enter-names">Jack &amp; Maja</p>
+      <p class="enter-title" data-cb="enter.title">You're Invited</p>
+      <p class="enter-names" data-cb="shared.coupleNames">Jack &amp; Maja</p>
 
       <div class="ornament enter-divider" aria-hidden="true">
         <div class="ornament-diamond"></div>
       </div>
 
-      <p class="enter-hint">Please enter the password to access our wedding website.</p>
+      <p class="enter-hint" data-cb="enter.hint">Please enter the password to access our wedding website.</p>
 
       <form id="enterForm" novalidate>
         <div class="enter-input-wrap">
@@ -58,7 +56,7 @@
         </div>
 
         <div class="enter-error" id="enterError" role="alert" aria-live="polite">
-          Incorrect password. Please try again.
+          <span data-cb="enter.errorMessage">Incorrect password. Please try again.</span>
         </div>
 
         <button type="submit" class="btn btn-primary" style="width:100%; margin-top:1rem;">
@@ -66,13 +64,14 @@
         </button>
       </form>
 
-      <p style="margin-top:1.5rem; font-size:0.75rem; color:#aaa;">
+      <p style="margin-top:1.5rem; font-size:0.75rem; color:#aaa;" data-cb="shared.weddingDate">
         August 29, 2027
       </p>
 
     </div>
   </main>
 
+  <script src="/JS/content.js"></script>
   <script>
     const form  = document.getElementById('enterForm');
     const error = document.getElementById('enterError');

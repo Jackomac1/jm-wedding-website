@@ -36,8 +36,8 @@
   <!-- Page Hero -->
   <section class="hero-page" aria-label="Page header">
     <div class="hero-content">
-      <p class="hero-date">Our Story in Photos</p>
-      <h1 class="hero-script">Gallery</h1>
+      <p class="hero-date" data-cb="gallery.hero.date">Our Story in Photos</p>
+      <h1 class="hero-script" data-cb="gallery.hero.title">Gallery</h1>
     </div>
   </section>
 
@@ -45,7 +45,7 @@
   <section class="section" aria-label="Gallery introduction">
     <div class="container text-center">
       <div class="ornament fade-in" aria-hidden="true"><div class="ornament-diamond"></div></div>
-      <p class="intro-text fade-in">
+      <p class="intro-text fade-in" data-cb="gallery.intro">
         A few of our favourite moments together &mdash; captured in the mountains we love.
       </p>
       <div class="ornament fade-in" aria-hidden="true"><div class="ornament-diamond"></div></div>
@@ -59,16 +59,16 @@
   <section class="section section-alt" aria-labelledby="galleryGridTitle">
     <div class="container">
       <div class="section-header fade-in">
-        <span class="section-label">Engagement Photos</span>
-        <h2 class="section-title" id="galleryGridTitle">Jack &amp; Maja</h2>
-        <p class="section-subtitle">Hover to zoom &middot; click to view full screen.</p>
+        <span class="section-label" data-cb="gallery.section.label">Engagement Photos</span>
+        <h2 class="section-title" id="galleryGridTitle" data-cb="gallery.section.title">Jack &amp; Maja</h2>
+        <p class="section-subtitle" data-cb="gallery.section.subtitle">Hover to zoom &middot; click to view full screen.</p>
       </div>
 
       <div class="gallery-grid fade-in" id="galleryGrid">
         <!-- Populated by JS from /api/gallery -->
       </div>
 
-      <p class="section-subtitle fade-in" id="galleryEmpty" style="display:none;text-align:center;margin-top:2rem;">
+      <p class="section-subtitle fade-in" id="galleryEmpty" style="display:none;text-align:center;margin-top:2rem;" data-cb="gallery.emptyMessage">
         Photos coming soon.
       </p>
     </div>
@@ -86,9 +86,9 @@
 
   <!-- Footer -->
   <footer class="footer" role="contentinfo">
-    <div class="footer-script">Jack &amp; Maja</div>
-    <div class="footer-date">August 29, 2027</div>
-    
+    <div class="footer-script" data-cb="shared.coupleNames">Jack &amp; Maja</div>
+    <div class="footer-date" data-cb="shared.weddingDate">August 29, 2027</div>
+
     <nav class="footer-links" aria-label="Footer navigation">
       <a href="/details">Details</a>
       <a href="/schedule">Schedule</a>
@@ -96,9 +96,10 @@
       <a href="/rsvp">RSVP</a>
       <a href="/contact">Contact</a>
     </nav>
-    <p class="footer-copy">&copy; 2027 Jack &amp; Maja</p>
+    <p class="footer-copy" data-cb="shared.footerCopyright">&copy; 2027 Jack &amp; Maja</p>
   </footer>
 
+  <script src="/JS/content.js"></script>
   <script src="/JS/main.js"></script>
   <script>
     const grid      = document.getElementById('galleryGrid');

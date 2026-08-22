@@ -40,8 +40,8 @@
   <!-- Page Hero -->
   <section class="hero-page" aria-label="Page header">
     <div class="hero-content">
-      <p class="hero-date">We Hope to See You There</p>
-      <h1 class="hero-script">RSVP</h1>
+      <p class="hero-date" data-cb="rsvp.hero.date">We Hope to See You There</p>
+      <h1 class="hero-script" data-cb="rsvp.hero.title">RSVP</h1>
     </div>
   </section>
 
@@ -53,15 +53,15 @@
     <div class="container" style="max-width: 680px;">
 
       <p class="deadline-notice fade-in">
-        ✦ Please RSVP by <strong>April 1, 2027</strong> ✦
+        ✦ Please RSVP by <strong><span data-cb="shared.rsvpDeadline">April 1, 2027</span></strong> ✦
       </p>
 
       <!-- RSVP Closed (shown when closed) -->
       <div class="rsvp-closed fade-in" id="rsvpClosed" role="status" aria-live="polite" style="display:none;">
-        <h2 class="section-title" style="font-size:2rem; margin-bottom:0.75rem;">RSVP Is Closed</h2>
+        <h2 class="section-title" style="font-size:2rem; margin-bottom:0.75rem;" data-cb="rsvp.closed.title">RSVP Is Closed</h2>
         <p style="color: #888; font-family: var(--font-heading); font-style: italic;">
-          RSVPs are currently closed. If you have questions or need to make changes,
-          please <a href="/contact" style="color: var(--blush);">contact us directly</a>.
+          <span data-cb="rsvp.closed.body">RSVPs are currently closed. If you have questions or need to make changes,
+          please</span> <a href="/contact" style="color: var(--blush);">contact us directly</a>.
         </p>
       </div>
 
@@ -70,12 +70,12 @@
 
         <!-- ── Guest-list name search (shown when no token) ── -->
         <div id="guestSearchSection" style="display:none;">
-          <p style="text-align:center;color:#888;font-family:var(--font-heading);font-style:italic;margin-bottom:1.5rem;">
+          <p style="text-align:center;color:#888;font-family:var(--font-heading);font-style:italic;margin-bottom:1.5rem;" data-cb="rsvp.search.intro">
             Find your name below to RSVP for your whole party.
           </p>
 
           <div class="form-group">
-            <label class="form-label" for="guestSearch">Find Your Name</label>
+            <label class="form-label" for="guestSearch" data-cb="rsvp.search.label">Find Your Name</label>
             <div class="guest-search-wrap">
               <input
                 type="text"
@@ -92,7 +92,7 @@
 
           <!-- Party RSVP card -->
           <div id="partyRsvpCard" style="display:none;">
-            <div id="partyAlreadyNotice" style="display:none;background:rgba(61,107,77,0.08);border:1px solid rgba(61,107,77,0.2);border-radius:8px;padding:0.85rem 1.1rem;margin-bottom:1.25rem;font-size:0.88rem;color:var(--espresso);">
+            <div id="partyAlreadyNotice" style="display:none;background:rgba(61,107,77,0.08);border:1px solid rgba(61,107,77,0.2);border-radius:8px;padding:0.85rem 1.1rem;margin-bottom:1.25rem;font-size:0.88rem;color:var(--espresso);" data-cb="rsvp.partyAlreadyNotice">
               Your party has already RSVP'd. You can update your responses below.
             </div>
             <h3 id="partyRsvpTitle" style="font-family:var(--font-heading);font-size:1.4rem;text-align:center;color:var(--espresso);margin:0 0 0.25rem;"></h3>
@@ -101,12 +101,12 @@
 
             <!-- Contact info — always shown so we can email regardless of attending status -->
             <div class="form-group">
-              <label class="form-label" for="partyEmail">Email Address</label>
+              <label class="form-label" for="partyEmail" data-cb="rsvp.form.emailLabel">Email Address</label>
               <input type="email" id="partyEmail" class="form-input" placeholder="you@example.com" autocomplete="email">
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="partyPhone">Phone Number</label>
+              <label class="form-label" for="partyPhone" data-cb="rsvp.form.phoneLabel">Phone Number</label>
               <input type="tel" id="partyPhone" class="form-input" placeholder="+1 (555) 000-0000" autocomplete="tel">
             </div>
 
@@ -116,7 +116,7 @@
               <!-- Events -->
               <div class="form-group" id="partyEventsGroup">
                 <fieldset>
-                  <legend class="form-label">Which events will you be joining us for?</legend>
+                  <legend class="form-label" data-cb="rsvp.form.eventsLegend">Which events will you be joining us for?</legend>
                   <div id="partyEventsCheckboxes">
                     <span style="color:#aaa;font-size:0.9rem;">Loading events&hellip;</span>
                   </div>
@@ -125,13 +125,13 @@
 
               <!-- Dietary -->
               <div class="form-group">
-                <label class="form-label" for="partyDietary">Dietary Restrictions or Allergies</label>
+                <label class="form-label" for="partyDietary" data-cb="rsvp.form.dietaryLabel">Dietary Restrictions or Allergies</label>
                 <textarea id="partyDietary" class="form-textarea" placeholder="Please list any dietary restrictions or allergies for your party…" rows="3"></textarea>
               </div>
 
               <!-- Song request -->
               <div class="form-group">
-                <label class="form-label" for="partySongSearch">Song Request for the Dancefloor</label>
+                <label class="form-label" for="partySongSearch" data-cb="rsvp.form.songLabel">Song Request for the Dancefloor</label>
                 <div class="song-search-wrap">
                   <input type="text" id="partySongSearch" class="form-input" placeholder="Search for a song…" autocomplete="off">
                   <ul class="song-results" id="partySongResults" role="listbox" aria-label="Song results"></ul>
@@ -150,7 +150,7 @@
 
               <!-- Message -->
               <div class="form-group">
-                <label class="form-label" for="partyMessage">Message to Jack &amp; Maja</label>
+                <label class="form-label" for="partyMessage" data-cb="rsvp.form.messageLabel">Message to Jack &amp; Maja</label>
                 <textarea id="partyMessage" class="form-textarea" placeholder="Share a message or well-wishes…" rows="4"></textarea>
               </div>
 
@@ -163,8 +163,8 @@
           <!-- Party success -->
           <div class="rsvp-success" id="partyRsvpSuccess" style="display:none;" role="status" aria-live="polite">
             <div class="success-checkmark" aria-hidden="true">✓</div>
-            <h2 class="section-title" style="font-size:2rem;margin-bottom:0.5rem;">Thank You!</h2>
-            <p style="font-family:var(--font-heading);font-style:italic;color:#888;">We've received your RSVP and can't wait to celebrate with you!</p>
+            <h2 class="section-title" style="font-size:2rem;margin-bottom:0.5rem;" data-cb="rsvp.success.title">Thank You!</h2>
+            <p style="font-family:var(--font-heading);font-style:italic;color:#888;" data-cb="rsvp.success.body">We've received your RSVP and can't wait to celebrate with you!</p>
           </div>
         </div>
 
@@ -175,7 +175,7 @@
           <!-- Guest Name -->
           <div class="form-group">
             <label class="form-label" for="guestName">
-              Full Name <span class="required" aria-label="required">*</span>
+              <span data-cb="rsvp.form.nameLabel">Full Name</span> <span class="required" aria-label="required">*</span>
             </label>
             <input
               type="text"
@@ -190,7 +190,7 @@
 
           <!-- Email -->
           <div class="form-group">
-            <label class="form-label" for="email">Email Address</label>
+            <label class="form-label" for="email" data-cb="rsvp.form.emailLabel">Email Address</label>
             <input
               type="email"
               id="email"
@@ -203,7 +203,7 @@
 
           <!-- Phone -->
           <div class="form-group">
-            <label class="form-label" for="phone">Phone Number</label>
+            <label class="form-label" for="phone" data-cb="rsvp.form.phoneLabel">Phone Number</label>
             <input
               type="tel"
               id="phone"
@@ -218,16 +218,16 @@
           <div class="form-group">
             <fieldset>
               <legend class="form-label">
-                Will you be attending? <span class="required" aria-label="required">*</span>
+                <span data-cb="rsvp.form.attendingLegend">Will you be attending?</span> <span class="required" aria-label="required">*</span>
               </legend>
               <div class="radio-group" role="radiogroup">
                 <label class="radio-label">
                   <input type="radio" name="attending" value="yes" id="attendingYes" required>
-                  Joyfully accepts
+                  <span data-cb="rsvp.form.attendingYes">Joyfully accepts</span>
                 </label>
                 <label class="radio-label">
                   <input type="radio" name="attending" value="no" id="attendingNo">
-                  Regretfully declines
+                  <span data-cb="rsvp.form.attendingNo">Regretfully declines</span>
                 </label>
               </div>
             </fieldset>
@@ -235,7 +235,7 @@
 
           <!-- Guest Names (shown when attending yes) -->
           <div class="form-group" id="guestNamesWrap" style="display:none;">
-            <label class="form-label">Who will be attending?</label>
+            <label class="form-label" data-cb="rsvp.form.guestNamesLabel">Who will be attending?</label>
             <div id="guestNamesList" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.75rem;"></div>
             <button type="button" id="addGuestBtn" class="btn btn-secondary" style="font-size:0.85rem;padding:0.4rem 1rem;">+ Add Another Guest</button>
             <p id="guestNamesLimit" style="display:none;font-size:0.8rem;color:var(--bluebell);margin-top:0.5rem;"></p>
@@ -244,7 +244,7 @@
           <!-- Events (shown when attending yes — populated by rsvp.js) -->
           <div class="form-group" id="eventsWrap" style="display:none;">
             <fieldset>
-              <legend class="form-label">Which events will you be joining us for?</legend>
+              <legend class="form-label" data-cb="rsvp.form.eventsLegend">Which events will you be joining us for?</legend>
               <div id="eventsCheckboxes">
                 <span style="color:#aaa;font-size:0.9rem;">Loading events&hellip;</span>
               </div>
@@ -253,7 +253,7 @@
 
           <!-- Dietary Restrictions (shown when attending yes) -->
           <div class="form-group" id="dietaryWrap" style="display:none;">
-            <label class="form-label" for="dietary">
+            <label class="form-label" for="dietary" data-cb="rsvp.form.dietaryLabel">
               Dietary Restrictions or Allergies
             </label>
             <textarea
@@ -267,7 +267,7 @@
 
           <!-- Song Request (shown when attending yes) -->
           <div class="form-group" id="songRequestWrap" style="display:none;">
-            <label class="form-label" for="songSearch">Song Request for the Dancefloor</label>
+            <label class="form-label" for="songSearch" data-cb="rsvp.form.songLabel">Song Request for the Dancefloor</label>
             <div class="song-search-wrap">
               <input
                 type="text"
@@ -292,7 +292,7 @@
 
           <!-- Message -->
           <div class="form-group">
-            <label class="form-label" for="message">Message to Jack &amp; Maja</label>
+            <label class="form-label" for="message" data-cb="rsvp.form.messageLabel">Message to Jack &amp; Maja</label>
             <textarea
               id="message"
               name="message"
@@ -315,10 +315,10 @@
         <!-- Success Message -->
         <div class="rsvp-success" id="rsvpSuccess" role="status" aria-live="polite">
           <div class="success-checkmark" aria-hidden="true">✓</div>
-          <h2 class="section-title" style="font-size:2rem; margin-bottom:0.5rem;">
+          <h2 class="section-title" style="font-size:2rem; margin-bottom:0.5rem;" data-cb="rsvp.success.title">
             Thank You!
           </h2>
-          <p style="font-family: var(--font-heading); font-style: italic; color: #888; font-size:1rem;">
+          <p style="font-family: var(--font-heading); font-style: italic; color: #888; font-size:1rem;" data-cb="rsvp.success.body">
             We've received your RSVP and can't wait to celebrate with you!
           </p>
         </div>
@@ -330,9 +330,9 @@
 
   <!-- Footer -->
   <footer class="footer" role="contentinfo">
-    <div class="footer-script">Jack &amp; Maja</div>
-    <div class="footer-date">August 29, 2027</div>
-    
+    <div class="footer-script" data-cb="shared.coupleNames">Jack &amp; Maja</div>
+    <div class="footer-date" data-cb="shared.weddingDate">August 29, 2027</div>
+
     <nav class="footer-links" aria-label="Footer navigation">
       <a href="/details">Details</a>
       <a href="/schedule">Schedule</a>
@@ -340,9 +340,10 @@
       <a href="/rsvp">RSVP</a>
       <a href="/contact">Contact</a>
     </nav>
-    <p class="footer-copy">&copy; 2027 Jack &amp; Maja</p>
+    <p class="footer-copy" data-cb="shared.footerCopyright">&copy; 2027 Jack &amp; Maja</p>
   </footer>
 
+  <script src="/JS/content.js"></script>
   <script src="/JS/main.js"></script>
   <script src="/JS/rsvp.js"></script>
 

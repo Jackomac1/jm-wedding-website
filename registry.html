@@ -38,8 +38,8 @@
   <!-- Page Hero -->
   <section class="hero-page" aria-label="Page header">
     <div class="hero-content">
-      <p class="hero-date">With Gratitude</p>
-      <h1 class="hero-script">Gifts</h1>
+      <p class="hero-date" data-cb="registry.hero.date">With Gratitude</p>
+      <h1 class="hero-script" data-cb="registry.hero.title">Gifts</h1>
     </div>
   </section>
 
@@ -47,7 +47,7 @@
   <section class="section" aria-labelledby="giftsIntroTitle">
     <div class="container text-center">
       <div class="ornament fade-in" aria-hidden="true"><div class="ornament-diamond"></div></div>
-      <p class="intro-text fade-in">
+      <p class="intro-text fade-in" data-cb="registry.intro">
         Your presence at our wedding is truly the greatest gift we could ask for.
         If you would like to honour us with something, we are doing a cash registry —
         contributions toward our future together mean more than we can say.
@@ -63,29 +63,29 @@
   <section class="section section-alt" aria-labelledby="giftInfoTitle">
     <div class="container" style="max-width:700px;">
       <div class="section-header fade-in">
-        <span class="section-label">How to Give</span>
-        <h2 class="section-title" id="giftInfoTitle">Cash Gifts</h2>
-        <p class="section-subtitle">Simple, flexible, and deeply appreciated.</p>
+        <span class="section-label" data-cb="registry.section.label">How to Give</span>
+        <h2 class="section-title" id="giftInfoTitle" data-cb="registry.section.title">Cash Gifts</h2>
+        <p class="section-subtitle" data-cb="registry.section.subtitle">Simple, flexible, and deeply appreciated.</p>
       </div>
 
       <div class="contact-grid fade-in">
 
         <article class="contact-card" aria-labelledby="giftEnvelope">
-          <h3 class="contact-card-title" id="giftEnvelope">Card &amp; Envelope</h3>
-          <p>
+          <h3 class="contact-card-title" id="giftEnvelope" data-cb="registry.card.envelope.title">Card &amp; Envelope</h3>
+          <p data-cb="registry.card.envelope.body">
             A card with a heartfelt note and a gift inside at the wedding is always
             warmly welcomed. We will have a gift table at the reception.
           </p>
         </article>
 
         <article class="contact-card" aria-labelledby="giftTransfer">
-          <h3 class="contact-card-title" id="giftTransfer">E-Transfer</h3>
-          <p>
+          <h3 class="contact-card-title" id="giftTransfer" data-cb="registry.card.transfer.title">E-Transfer</h3>
+          <p data-cb="registry.card.transfer.body">
             If you prefer to send something ahead of the day, you are welcome to
             e-transfer to our shared email:
           </p>
           <p style="margin-top:0.75rem;">
-            <a href="mailto:majaandjack@gmail.com">majaandjack@gmail.com</a>
+            <a href="mailto:majaandjack@gmail.com" data-cb="shared.contactEmail">majaandjack@gmail.com</a>
           </p>
         </article>
 
@@ -97,7 +97,7 @@
   <section class="section text-center fade-in" aria-label="Gift closing note">
     <div class="container" style="max-width:560px;">
       <div class="ornament" aria-hidden="true"><div class="ornament-diamond"></div></div>
-      <p style="font-family: var(--font-heading); font-style: italic; color: var(--sage); font-size:1rem; line-height:1.8;">
+      <p style="font-family: var(--font-heading); font-style: italic; color: var(--sage); font-size:1rem; line-height:1.8;" data-cb="registry.closingNote">
         No gift is ever expected &mdash; having you there to celebrate with us is more
         than enough. We are so grateful for your love and support.
       </p>
@@ -106,9 +106,9 @@
 
   <!-- Footer -->
   <footer class="footer" role="contentinfo">
-    <div class="footer-script">Jack &amp; Maja</div>
-    <div class="footer-date">August 29, 2027</div>
-    
+    <div class="footer-script" data-cb="shared.coupleNames">Jack &amp; Maja</div>
+    <div class="footer-date" data-cb="shared.weddingDate">August 29, 2027</div>
+
     <nav class="footer-links" aria-label="Footer navigation">
       <a href="/details">Details</a>
       <a href="/schedule">Schedule</a>
@@ -116,9 +116,10 @@
       <a href="/rsvp">RSVP</a>
       <a href="/contact">Contact</a>
     </nav>
-    <p class="footer-copy">&copy; 2027 Jack &amp; Maja</p>
+    <p class="footer-copy" data-cb="shared.footerCopyright">&copy; 2027 Jack &amp; Maja</p>
   </footer>
 
+  <script src="/JS/content.js"></script>
   <script src="/JS/main.js"></script>
 
 </body>

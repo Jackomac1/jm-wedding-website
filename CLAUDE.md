@@ -29,7 +29,7 @@
 - **Fonts:** Playfair Display (headings/section titles), Cormorant Garamond italic (hero script + footer + nav brand + enter monogram — `--font-script`), Lato (body) — Google Fonts
 - **No build tools** — plain HTML/CSS/JS served as static files from Express
 - **File uploads:** `multer` handles multipart uploads — saved to `/Images/` with auto-generated filenames. Site photos overwrite fixed filenames. Party photos: `party-{slot}.jpg`. Gallery photos: `gallery-{id}.jpg`.
-- **Deployment:** Railway — connected to GitHub repo `Jackomac1/jm-wedding-website`, auto-deploys on push to `main`. Live at `https://majaandjack.ca`. Custom domain configured on Railway; `www.majaandjack.ca` is the primary domain. **Note:** Railway filesystem is ephemeral — `db.json` is wiped on each redeploy. A Railway Volume should be set up at `/data` to persist data.
+- **Deployment:** Railway — connected to GitHub repo `Jackomac1/jm-wedding-website`, auto-deploys on push to `main`. Live at `https://majaandjack.ca`. Custom domain configured on Railway; `www.majaandjack.ca` is the primary domain. **Note:** Railway filesystem is ephemeral — `db.json` is wiped on each redeploy. A Railway Volume should be set up at `/data` to persist data. This includes in-place content edits (`db.content`, see below) — same exposure as everything else in `db.json`.
 
 ## File Structure
 
@@ -112,6 +112,8 @@ JM_Wedding_Website/
 | POST | `/api/admin/music/spotify` | admin | Save a Spotify preview selection (previewUrl, trackName, artist, albumArt) |
 | POST | `/api/admin/music/settings` | admin | Update enabled toggle and/or displayName |
 | DELETE | `/api/admin/music` | admin | Remove current song and reset music settings |
+| GET | `/api/content` | — | Public: `{ content, isAdmin }` — in-place text overrides + whether the session is an admin session |
+| PUT | `/api/admin/content` | admin | Upsert `{key, value}` into `db.content`; `value: null` removes the override (reset to default) |
 
 ## Colour Palette
 
@@ -221,6 +223,21 @@ Music settings stored in `db.music`:
 - Guest pages: floating `♪` button (bottom-right, `.music-toggle-btn` in style.css). Click to play/pause. Cross-page continuity via `sessionStorage` (`musicEnabled`, `musicStartedAt` timestamp — elapsed time used to seek on next page load).
 - Admin → Music (`/admin/music`): two tabs — **Spotify Preview** (search → pick → save preview URL) and **Upload File** (MP3/M4A up to 30 MB). Enable/disable toggle. Remove button. Optional tooltip text.
 - Spotify preview note: Spotify has been removing preview URLs for many tracks since ~2023. Tracks without a preview show as grayed out in search results.
+
+## In-Place Content Editing
+
+Lets the admin browse the real guest-facing pages while logged in and edit hardcoded text directly on the page (click text, edit, it saves) — for the copy that doesn't already have a dedicated structured editor. **Does not** touch `details.html`/`schedule.html` or the gallery/wedding-party grids — those stay on their existing admin editors (`admin/details.html`, `admin/schedule.html`, `admin/photos.html`, `admin/accommodations.html`); this system would create a second source of truth for those fields.
+
+- **Data**: sparse `db.content` map, `{ "key": "text" }`. Empty by default — every tagged HTML element keeps its real current text as the hardcoded fallback, so only fields an admin actually edits get an entry. `GET /api/content` (public) returns `{ content, isAdmin }`; `PUT /api/admin/content` (admin) upserts `{key, value}`, or deletes the override when `value` is `null` (reset to default).
+- **Markup convention**: any element with `data-cb="key"` is overlaid/editable. Covered pages: `index.html`, `contact.html`, `registry.html`, `rsvp.html` (static labels only — not the dynamically-rendered event checkboxes), `gallery.html` and `wedding-party.html` (hero/intro text only — not the photo/bio grids), `enter.html`.
+- **`shared.*` keys** (`shared.coupleNames`, `shared.weddingDate`, `shared.rsvpDeadline`, `shared.contactEmail`, `shared.footerCopyright`) are reused verbatim across every page that shows that value (footer, hero sections, the RSVP deadline embedded in prose on `index.html`/`rsvp.html`) — editing one instance updates all of them. Always wrap just the short atomic token in a nested `<span data-cb="shared.x">`, never the surrounding sentence — a shared key must never be a whole paragraph, or admin edits on one page would silently rewrite unrelated prose on another. Everything else gets its own page-scoped key (e.g. `index.hero.title`) so pages can diverge freely.
+- **Never nest two `data-cb` elements** (parent and child both tagged) — nested `contenteditable` regions are unreliable across browsers. If a shared token sits inside a longer sentence, tag only the inner span and leave the surrounding sentence non-editable via this tool.
+- **Front end**: `JS/content.js`, included on the 7 pages above (after the other page scripts). Fetches `/api/content` once, overlays matching elements. If `isAdmin`, shows a floating pencil toggle (`.cb-edit-toggle`, bottom-left — mirrors the music button's bottom-right treatment). In edit mode: `contenteditable` + dashed outline, Enter commits (blurs) instead of inserting a newline, paste is forced to plain text. On blur: unchanged or empty text is **not saved** — it silently reverts to the last value (empty never gets persisted, avoids dangling `aria-labelledby` targets and broken layout). Double-click a field in edit mode to reset it to its original hardcoded default.
+- **`requireSiteAuth`** (server.js) also accepts `req.session.adminAuthenticated`, so a logged-in admin can browse real guest pages without a separate site-password login. One-directional — `requireAdminAuth` is untouched. `/enter`'s own redirect-if-already-authenticated check intentionally still keys off `siteAuthenticated` only, so an admin-only session can still open `/enter` to view/edit it. `POST /api/auth/logout` still only clears `siteAuthenticated` — an admin who is also site-authenticated will appear to stay logged in after hitting guest logout on a guest page (harmless UX quirk, not a security issue).
+- **Known trade-off**: the overlay is pure client-side, so guests may briefly see the pre-edit default text flash before `content.js` applies the override on each page load. Not fixed — would require switching these routes from `res.sendFile()` to server-side templated serving, a real shift from this repo's static-file model.
+- **Known desync**: `registry.html`'s e-transfer `mailto:majaandjack@gmail.com` link target does not update if the visible `shared.contactEmail` text is edited — same category as the already-accepted attribute-text-out-of-scope decision (`alt`, `placeholder`, `aria-label` are not covered by this system either).
+- JS-driven strings (contact/RSVP/enter success-or-error messages set via `textContent =` inside `<script>` blocks, and submit-button labels that get reset by their own form-handling JS after use) are intentionally **not** tagged — a DOM-text overlay can't safely coexist with JS that overwrites the same element at runtime.
+- The homepage countdown's target date is a separate constant in `JS/main.js` (`2027-08-29T16:00:00`) — editing `shared.weddingDate` text does not change it.
 
 ## Claude Instructions
 

@@ -40,8 +40,8 @@
   <!-- Page Hero -->
   <section class="hero-page" aria-label="Page header">
     <div class="hero-content">
-      <p class="hero-date">We'd Love to Hear From You</p>
-      <h1 class="hero-script">Contact Us</h1>
+      <p class="hero-date" data-cb="contact.hero.date">We'd Love to Hear From You</p>
+      <h1 class="hero-script" data-cb="contact.hero.title">Contact Us</h1>
     </div>
   </section>
 
@@ -53,9 +53,9 @@
     <div class="container" style="max-width:680px;">
 
       <div class="section-header fade-in">
-        <span class="section-label">Get in Touch</span>
-        <h2 class="section-title" id="contactTitle">Have Questions?</h2>
-        <p class="section-subtitle">Send us a message and we'll get back to you as soon as we can.</p>
+        <span class="section-label" data-cb="contact.section.label">Get in Touch</span>
+        <h2 class="section-title" id="contactTitle" data-cb="contact.section.title">Have Questions?</h2>
+        <p class="section-subtitle" data-cb="contact.section.subtitle">Send us a message and we'll get back to you as soon as we can.</p>
       </div>
 
       <!-- Contact Form -->
@@ -66,7 +66,7 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="contactName">
-                Your Name <span class="required" aria-label="required">*</span>
+                <span data-cb="contact.form.nameLabel">Your Name</span> <span class="required" aria-label="required">*</span>
               </label>
               <input
                 type="text"
@@ -81,7 +81,7 @@
 
             <div class="form-group">
               <label class="form-label" for="contactEmail">
-                Email Address <span class="required" aria-label="required">*</span>
+                <span data-cb="contact.form.emailLabel">Email Address</span> <span class="required" aria-label="required">*</span>
               </label>
               <input
                 type="email"
@@ -97,7 +97,7 @@
 
           <div class="form-group">
             <label class="form-label" for="contactMessage">
-              Message <span class="required" aria-label="required">*</span>
+              <span data-cb="contact.form.messageLabel">Message</span> <span class="required" aria-label="required">*</span>
             </label>
             <textarea
               id="contactMessage"
@@ -111,7 +111,7 @@
 
           <div class="form-error" id="contactError" role="alert" aria-live="polite"></div>
           <div class="form-success" id="contactSuccess" role="status" aria-live="polite">
-            ✓ Thank you for reaching out! We'll get back to you soon.
+            <span data-cb="contact.form.successMessage">✓ Thank you for reaching out! We'll get back to you soon.</span>
           </div>
 
           <button type="submit" class="btn btn-primary" id="contactSubmitBtn">
@@ -126,9 +126,9 @@
 
   <!-- Footer -->
   <footer class="footer" role="contentinfo">
-    <div class="footer-script">Jack &amp; Maja</div>
-    <div class="footer-date">August 29, 2027</div>
-    
+    <div class="footer-script" data-cb="shared.coupleNames">Jack &amp; Maja</div>
+    <div class="footer-date" data-cb="shared.weddingDate">August 29, 2027</div>
+
     <nav class="footer-links" aria-label="Footer navigation">
       <a href="/details">Details</a>
       <a href="/schedule">Schedule</a>
@@ -136,9 +136,10 @@
       <a href="/rsvp">RSVP</a>
       <a href="/contact">Contact</a>
     </nav>
-    <p class="footer-copy">&copy; 2027 Jack &amp; Maja</p>
+    <p class="footer-copy" data-cb="shared.footerCopyright">&copy; 2027 Jack &amp; Maja</p>
   </footer>
 
+  <script src="/JS/content.js"></script>
   <script src="/JS/main.js"></script>
   <script>
     // Contact form — frontend only, no backend required
