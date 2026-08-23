@@ -573,12 +573,12 @@ function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isRe
       <tr>
         <td style="background:#3D6B4D;text-align:center;padding:36px 40px 24px;">
           <div style="font-family:Georgia,serif;font-style:italic;font-size:38px;color:#F5E6D3;line-height:1.1;">J &amp; M</div>
-          <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#B8C856;text-transform:uppercase;letter-spacing:0.15em;margin-top:8px;">Jack &amp; Maja's Wedding</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#A9BEDD;text-transform:uppercase;letter-spacing:0.15em;margin-top:8px;">Jack &amp; Maja's Wedding</div>
         </td>
       </tr>
 
       <!-- Pink accent bar -->
-      <tr><td style="background:#D91B8F;height:4px;font-size:1px;line-height:1px;">&nbsp;</td></tr>
+      <tr><td style="background:#5C1B3B;height:4px;font-size:1px;line-height:1px;">&nbsp;</td></tr>
 
       <!-- White body card -->
       <tr>
@@ -589,11 +589,11 @@ function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isRe
           ${customMessage ? `<p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#374151;line-height:1.65;margin:0 0 24px;">${escEmail(customMessage)}</p>` : ''}
 
           <!-- Divider -->
-          <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="border-top:2px solid #B8C856;font-size:1px;line-height:1px;">&nbsp;</td></tr></table>
+          <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="border-top:2px solid #A9BEDD;font-size:1px;line-height:1px;">&nbsp;</td></tr></table>
 
           <!-- RSVP Section -->
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;">
-            <tr><td><p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#D91B8F;text-transform:uppercase;letter-spacing:0.12em;font-weight:bold;margin:0 0 16px;">Your RSVP</p></td></tr>
+            <tr><td><p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#5C1B3B;text-transform:uppercase;letter-spacing:0.12em;font-weight:bold;margin:0 0 16px;">Your RSVP</p></td></tr>
             ${attendingRows.length ? `
             <tr><td style="padding-bottom:12px;">
               <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#3D6B4D;font-weight:bold;margin:0 0 6px;">Attending</p>
@@ -617,11 +617,11 @@ function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isRe
           </table>
 
           <!-- Divider -->
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;"><tr><td style="border-top:2px solid #B8C856;font-size:1px;line-height:1px;">&nbsp;</td></tr></table>
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;"><tr><td style="border-top:2px solid #A9BEDD;font-size:1px;line-height:1px;">&nbsp;</td></tr></table>
 
           <!-- Wedding Details Section -->
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;">
-            <tr><td><p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#D91B8F;text-transform:uppercase;letter-spacing:0.12em;font-weight:bold;margin:0 0 16px;">Wedding Details</p></td></tr>
+            <tr><td><p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#5C1B3B;text-transform:uppercase;letter-spacing:0.12em;font-weight:bold;margin:0 0 16px;">Wedding Details</p></td></tr>
             <tr>
               <td style="padding-bottom:14px;vertical-align:top;width:140px;">
                 <p style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#3D6B4D;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;margin:0 0 3px;">Ceremony</p>
@@ -661,11 +661,11 @@ function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isRe
           </table>
 
           <!-- Divider -->
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;"><tr><td style="border-top:2px solid #B8C856;font-size:1px;line-height:1px;">&nbsp;</td></tr></table>
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;"><tr><td style="border-top:2px solid #A9BEDD;font-size:1px;line-height:1px;">&nbsp;</td></tr></table>
 
           <!-- CTA Button -->
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:32px;"><tr><td align="center">
-            <a href="${escEmail(siteUrl)}" style="display:inline-block;background:#D91B8F;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:6px;letter-spacing:0.04em;">Visit the Wedding Website</a>
+            <a href="${escEmail(siteUrl)}" style="display:inline-block;background:#5C1B3B;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:6px;letter-spacing:0.04em;">Visit the Wedding Website</a>
           </td></tr></table>
 
         </td>

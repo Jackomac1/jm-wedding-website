@@ -11,17 +11,17 @@
 :root {
   /* ── Wedding Palette ─────────────────────────────────────────── */
   --grassland:      #3D6B4D;   /* forest green       */
-  --bluebell:       #B8C856;   /* sage green         */
+  --bluebell:       #A9BEDD;   /* bluebell           */
   --espresso:       #3D6B4D;   /* forest green       */
-  --berry:          #D91B8F;   /* hot pink           */
+  --berry:          #5C1B3B;   /* grape fizz         */
   --chartreuse:     #B8C856;   /* sage green         */
-  --accent:         #B8C856;   /* per-page rotating accent — defaults to sage */
+  --accent:         #A9BEDD;   /* per-page rotating accent — defaults to bluebell */
   --dark-bg:        #3D6B4D;   /* per-page dark section/footer bg — forest green */
-  --grape-fizz:     #D91B8F;   /* hot pink           */
+  --grape-fizz:     #5C1B3B;   /* grape fizz         */
 
   /* ── Tints (light section backgrounds) ──────────────────────── */
-  --light-berry:      #F5D5E0;
-  --light-bluebell:   #E8F0C0;
+  --light-berry:      #E9D8E0;
+  --light-bluebell:   #E3E9F6;
   --light-grassland:  #E8F0C0;
 
   /* ── Neutral backgrounds ─────────────────────────────────────── */
@@ -485,7 +485,7 @@ h1, h2, h3, h4 {
 }
 
 .section-alt .section-label {
-  color: #D91B8F; /* intentionally fixed — not theme-dependent */
+  color: #5C1B3B; /* intentionally fixed — not theme-dependent */
 }
 
 .section-alt .section-subtitle {
@@ -502,7 +502,7 @@ h1, h2, h3, h4 {
 }
 
 .section-alt .countdown-label {
-  color: #D91B8F; /* intentionally fixed — not theme-dependent */
+  color: #5C1B3B; /* intentionally fixed — not theme-dependent */
 }
 
 .section-cream {
@@ -1849,32 +1849,32 @@ h1, h2, h3, h4 {
    Page Themes — per-page colour palette overrides
    ============================================================ */
 
-/* Details + RSVP: Forest Green labels · Hot Pink accent · Dark forest bg */
+/* Details + RSVP: Forest Green labels · Grape Fizz accent · Dark forest bg */
 body.theme-chartreuse {
   --grape-fizz: #3D6B4D;
-  --accent:     #D91B8F;   /* hot pink */
+  --accent:     #5C1B3B;   /* grape fizz */
   --dark-bg:    #2A5038;   /* dark forest */
 }
 
-/* Schedule + Contact: Hot Pink labels · Sage accent · Forest Green bg */
+/* Schedule + Contact: Grape Fizz labels · Bluebell accent · Forest Green bg */
 body.theme-berry {
-  --grape-fizz: #D91B8F;
-  --accent:     #B8C856;   /* sage */
+  --grape-fizz: #5C1B3B;
+  --accent:     #A9BEDD;   /* bluebell */
   --dark-bg:    #3D6B4D;   /* forest green */
 }
 
-/* Wedding Party: Sage labels · Forest Green accent · Dark forest bg */
+/* Wedding Party: Bluebell labels · Forest Green accent · Dark forest bg */
 body.theme-bluebell {
-  --grape-fizz: #B8C856;
+  --grape-fizz: #A9BEDD;
   --accent:     #3D6B4D;   /* forest green */
   --dark-bg:    #2A5038;   /* dark forest */
 }
 
-/* Gallery: Sage labels · Hot Pink accent · Dark forest bg */
+/* Gallery: Bluebell labels · Grape Fizz accent · Dark forest bg */
 body.theme-bluebell-grassland {
-  --grape-fizz: #B8C856;
+  --grape-fizz: #A9BEDD;
   --berry:      #3D6B4D;
-  --accent:     #D91B8F;   /* hot pink */
+  --accent:     #5C1B3B;   /* grape fizz */
   --dark-bg:    #1E3028;   /* very dark forest */
 }
 

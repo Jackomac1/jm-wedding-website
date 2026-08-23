@@ -120,9 +120,11 @@ JM_Wedding_Website/
 | Name | Hex | CSS Var | Role |
 |------|-----|---------|------|
 | Forest Green | `#3D6B4D` | `--espresso` / `--brown` / `--grassland` | Primary text, nav bg, footer bg, dark section bg |
-| Hot Pink | `#D91B8F` | `--grape-fizz` / `--gold` / `--berry` / `--blush` | Accent text, buttons, section labels, CTAs |
-| Sage Green | `#B8C856` | `--bluebell` / `--sage` / `--chartreuse` | Section stripe colour, accents, backgrounds |
-| Soft Pink | `#F5D5E0` | `--light-berry` | Light accent tint |
+| Grape Fizz | `#5C1B3B` | `--grape-fizz` / `--gold` / `--berry` / `--blush` | Accent text, buttons, section labels, CTAs (was Hot Pink `#D91B8F` — changed 2026-08-22) |
+| Bluebell | `#A9BEDD` | `--bluebell` / `--sage` / `--accent` | Section stripe colour, accents, backgrounds (was Sage Green `#B8C856` — changed 2026-08-22) |
+| Sage Green | `#B8C856` | `--chartreuse` | `.section-alt` focus/outline accent only — kept distinct from `--bluebell`, not part of the 2026-08-22 palette shift |
+| Dusty Mauve | `#E9D8E0` | `--light-berry` / `--light-blush` | Light accent tint (was Soft Pink `#F5D5E0`) |
+| Pale Blue | `#E3E9F6` | `--light-bluebell` / `--light-sage` | Light accent tint (was pale sage `#E8F0C0`) |
 | Cream | `#F5E6D3` | `--cream` | Page background, text on dark backgrounds |
 
 ## Design System
@@ -155,11 +157,11 @@ All three variables are defined in a single block in `CSS/style.css` — search 
 
 | Page(s) | Body class | `--grape-fizz` (labels/buttons) | `--accent` (diamonds/highlights) | `--dark-bg` (footer/dark sections) |
 |---------|-----------|----------------|-----------|---------|
-| Home, Registry | *(none)* | `#D91B8F` hot pink | `#B8C856` sage | `#3D6B4D` forest green |
-| Details, RSVP | `theme-chartreuse` | `#3D6B4D` forest green | `#D91B8F` hot pink | `#2A5038` dark forest |
-| Schedule, Contact | `theme-berry` | `#D91B8F` hot pink | `#B8C856` sage | `#3D6B4D` forest green |
-| Wedding Party | `theme-bluebell` | `#B8C856` sage | `#3D6B4D` forest green | `#2A5038` dark forest |
-| Gallery | `theme-bluebell-grassland` | `#B8C856` sage | `#D91B8F` hot pink | `#1E3028` dark forest |
+| Home, Registry | *(none)* | `#5C1B3B` grape fizz | `#A9BEDD` bluebell | `#3D6B4D` forest green |
+| Details, RSVP | `theme-chartreuse` | `#3D6B4D` forest green | `#5C1B3B` grape fizz | `#2A5038` dark forest |
+| Schedule, Contact | `theme-berry` | `#5C1B3B` grape fizz | `#A9BEDD` bluebell | `#3D6B4D` forest green |
+| Wedding Party | `theme-bluebell` | `#A9BEDD` bluebell | `#3D6B4D` forest green | `#2A5038` dark forest |
+| Gallery | `theme-bluebell-grassland` | `#A9BEDD` bluebell | `#5C1B3B` grape fizz | `#1E3028` dark forest |
 
 ## Photo Filenames (all in `/Images/`)
 
