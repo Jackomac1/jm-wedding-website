@@ -767,7 +767,9 @@ h1, h2, h3, h4 {
 }
 
 .nav-card:nth-child(1) { background: var(--grape-fizz); }
-.nav-card:nth-child(2) { background: var(--grassland); }
+.nav-card:nth-child(2) { background: #A9BEDD; } /* bluebell — fixed (was forest green) */
+.nav-card:nth-child(2) .nav-card-title { color: var(--espresso); }
+.nav-card:nth-child(2) .nav-card-desc  { color: rgba(61,107,77,0.82); }
 .nav-card:nth-child(3) { background: var(--berry); }
 
 .nav-card:hover {
@@ -1471,7 +1473,7 @@ h1, h2, h3, h4 {
    Footer
    ============================================================ */
 .footer {
-  background: var(--brown);
+  background: #5C1B3B; /* grape fizz — fixed, not page-themed (was forest green) */
   color: rgba(245, 230, 211, 0.90);
   text-align: center;
   padding: 3rem 2rem;
@@ -1482,7 +1484,7 @@ h1, h2, h3, h4 {
   font-size: 2.2rem;
   font-style: italic;
   font-weight: 500;
-  color: var(--blush);
+  color: var(--bluebell); /* was --blush (now grape fizz) — would match the new footer bg and vanish */
   margin-bottom: 0.5rem;
 }
 
@@ -1491,7 +1493,7 @@ h1, h2, h3, h4 {
   font-size: 0.85rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--bluebell); /* was --accent (page-themed; grape fizz on some pages) — fixed to stay visible on the new grape fizz footer bg everywhere */
   margin-bottom: 1rem;
 }
 
@@ -1518,7 +1520,7 @@ h1, h2, h3, h4 {
 }
 
 .footer-links a:hover {
-  color: var(--blush);
+  color: var(--bluebell); /* was --blush (now grape fizz) — would match the new footer bg and vanish */
 }
 
 .footer-copy {
@@ -1902,7 +1904,7 @@ body.theme-bluebell-grassland {
   border-radius: var(--radius-md);
   cursor: pointer;
   aspect-ratio: 4/3;
-  background: var(--espresso);
+  background: #5C1B3B; /* grape fizz — fixed (was forest green) */
   transition: transform 0.35s ease, box-shadow 0.35s ease;
   z-index: 1;
 }
@@ -2056,7 +2058,7 @@ body.theme-bluebell-grassland {
   font-weight: 700;
   color: var(--cream);
   display: inline-block;
-  background: var(--dark-bg);
+  background: #5C1B3B; /* grape fizz — fixed (was forest green via --dark-bg) */
   padding: 0 1.5rem;
   position: relative;
   z-index: 1;
@@ -2111,7 +2113,7 @@ body.theme-bluebell-grassland {
 
 .party-card-back {
   transform: rotateY(180deg);
-  background: var(--espresso);
+  background: #5C1B3B; /* grape fizz — fixed (was forest green) */
   border: 1px solid rgba(200,213,64,0.2);
   display: flex;
   flex-direction: column;
@@ -2268,7 +2270,7 @@ body.theme-bluebell-grassland {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: var(--espresso);
+  background: #5C1B3B; /* grape fizz — fixed (was forest green) */
   border: 1px solid rgba(255,255,255,0.18);
   color: rgba(255,255,255,0.65);
   font-size: 1.2rem;
@@ -2282,12 +2284,12 @@ body.theme-bluebell-grassland {
   box-shadow: 0 3px 14px rgba(0,0,0,0.4);
 }
 .music-toggle-btn:hover {
-  background: var(--grape-fizz);
+  background: #A9BEDD; /* bluebell — fixed; kept distinct from the idle grape fizz bg so hover/playing still reads as a state change */
   color: #fff;
   transform: scale(1.07);
 }
 .music-toggle-btn.playing {
-  background: var(--grape-fizz);
+  background: #A9BEDD; /* bluebell — fixed, see hover comment above */
   color: #fff;
 }
 .music-toggle-btn[data-waiting="true"] {

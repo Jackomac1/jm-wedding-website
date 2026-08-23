@@ -137,16 +137,17 @@ JM_Wedding_Website/
 - **Photo strips:** `.photo-strip` — `min-height: 340px`, dark espresso overlay at 35% via `::before`. On desktop (>768px, non-iOS): keeps own `background-attachment: fixed` parallax image (inline style on the div). On mobile (≤768px) AND iOS (`@supports`): `background-image: none !important` — shows `.site-bg-fixed` through the overlay instead.
 - **Section colors:**
   - Default `.section`: cream bg (`background-color: var(--cream)` — explicitly set, does NOT inherit from body)
-  - `.section-alt`: espresso bg, white text, chartreuse labels
+  - `.section-alt`: bluebell/cream repeating-stripe bg (not solid — corrected 2026-08-22, was documented as solid espresso), espresso text, grape-fizz section labels (fixed, not page-themed)
   - `.section-blush`: grape-fizz bg, white text
 - **Section titles:** Playfair Display bold (NOT Cormorant Garamond — Cormorant is hero script + footer + nav brand only)
 - **Section labels:** 0.72rem, uppercase, grape-fizz on cream sections (chartreuse hardcoded on `.section-alt` — NOT affected by page themes)
-- **Nav cards** (homepage): 3 colored cards — 1=grape-fizz, 2=grassland, 3=berry — white text, no emojis
+- **Nav cards** (homepage): 3 colored cards — 1=grape-fizz, 2=bluebell (fixed `#A9BEDD`, dark espresso text — light bg needs dark text, unlike cards 1/3), 3=berry — no emojis
 - **No emojis** anywhere on the site
 - **Buttons:** `.btn-primary` (grape-fizz fill), `.btn-secondary` (outlined berry border), `.btn-blush` (berry fill)
 - **Ornament dividers:** `.ornament` with `.ornament-diamond` (chartreuse)
 - **Fade-in:** `.fade-in` + IntersectionObserver → `.visible` class (stagger via `delay-1` through `delay-4`)
 - **Countdown:** targets `2027-08-29T16:00:00` in `JS/main.js`
+- **Solid forest-green fills → grape fizz (2026-08-22):** footer bg, homepage "Gifts" nav-card is bluebell instead (Details/RSVP cards stayed grape-fizz), gallery photo placeholder, schedule day-pill label bg, wedding-party flip-card back, floating music button — all switched from forest green to a **fixed** `#5C1B3B` (or `#A9BEDD` for the bluebell card), not `var(--grape-fizz)`, since that variable is page-themed and would've made these inconsistent across pages. Text sitting on top was re-checked for contrast: footer script/date/link-hover moved from grape-fizz-aliased colors (would've matched the new bg) to bluebell; music button's "playing" state moved to bluebell for the same reason. Forest green stays as-is for primary text, nav, and the admin-only inline content-editor toggle/banner (intentionally not touched — changing it would remove its idle-vs-active color distinction, and it's admin tooling, not guest-facing).
 - **Timeline cards** (`schedule.html`): **fully dynamic** — rendered from `GET /api/schedule` (requires site auth). Events stored in `db.json` as `scheduleEvents` array, managed via Admin → Schedule. Each event has: `id`, `slug`, `title`, `time`, `dayLabel`, `dayDate`, `dayOrder`, `sortOrder`, `description`, `venue`, `address`, `mapsUrl`, `showOnRsvp`, `rsvpLabel`. Click-to-flip cards; back shows venue + Maps link if `mapsUrl` is set. Schedule is 4 days: Fri Aug 27 / Sat Aug 28 / Sun Aug 29 (Big Day) / Mon Aug 30.
 
 ## Per-Page Colour Themes
