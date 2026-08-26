@@ -277,6 +277,23 @@ function getDb() {
     changed = true;
   }
 
+  // Migrate: add editable wedding details shown in the attending/reminder emails
+  if (!db.emailDetails) {
+    db.emailDetails = {
+      ceremonyDate:        'Sunday, August 29, 2027',
+      ceremonyTime:        '4:00 PM',
+      ceremonyVenue:       'Stewart Creek Golf & Country Club',
+      ceremonyAddress:     '4100 Stewart Creek Dr, Canmore, AB T1W 2V3',
+      cocktailTime:        '5:30 PM',
+      receptionDinnerTime: '6:30 PM',
+      receptionEndTime:    '1:00 AM',
+      receptionVenue:      'Bridgette Bar Canmore',
+      receptionAddress:    '1030 Spring Creek Dr, Canmore, AB T1W 0C8',
+      dressCode:           'Garden Party Chic'
+    };
+    changed = true;
+  }
+
   if (changed) writeDb(db);
   return db;
 }
@@ -522,7 +539,7 @@ function escEmail(str) {
     .replace(/"/g, '&quot;');
 }
 
-function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isReminder, customMessage = '' }) {
+function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isReminder, customMessage = '', emailDetails = {} }) {
   const attending = members.filter(m => m.status === 'attending');
   const declined  = members.filter(m => m.status !== 'attending');
 
@@ -618,6 +635,7 @@ function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isRe
             </td></tr>` : ''}
           </table>
 
+          ${someAttending ? `
           <!-- Divider -->
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;"><tr><td style="border-top:2px solid #A9BEDD;font-size:1px;line-height:1px;">&nbsp;</td></tr></table>
 
@@ -629,9 +647,9 @@ function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isRe
                 <p style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#3D6B4D;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;margin:0 0 3px;">Ceremony</p>
               </td>
               <td style="padding-bottom:14px;vertical-align:top;">
-                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:0;">Sunday, August 29, 2027 at 4:00 PM</p>
-                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:2px 0 0;">Stewart Creek Golf &amp; Country Club</p>
-                <p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b7280;margin:2px 0 0;">4100 Stewart Creek Dr, Canmore, AB T1W 2V3</p>
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:0;">${escEmail(emailDetails.ceremonyDate)} at ${escEmail(emailDetails.ceremonyTime)}</p>
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:2px 0 0;">${escEmail(emailDetails.ceremonyVenue)}</p>
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b7280;margin:2px 0 0;">${escEmail(emailDetails.ceremonyAddress)}</p>
               </td>
             </tr>
             <tr>
@@ -639,7 +657,7 @@ function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isRe
                 <p style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#3D6B4D;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;margin:0 0 3px;">Cocktail Hour</p>
               </td>
               <td style="padding-bottom:14px;vertical-align:top;">
-                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:0;">5:30 PM</p>
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:0;">${escEmail(emailDetails.cocktailTime)}</p>
               </td>
             </tr>
             <tr>
@@ -647,9 +665,9 @@ function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isRe
                 <p style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#3D6B4D;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;margin:0 0 3px;">Reception</p>
               </td>
               <td style="padding-bottom:14px;vertical-align:top;">
-                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:0;">Dinner at 6:30 PM &middot; End at 1:00 AM</p>
-                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:2px 0 0;">Bridgette Bar Canmore</p>
-                <p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b7280;margin:2px 0 0;">1030 Spring Creek Dr, Canmore, AB T1W 0C8</p>
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:0;">Dinner at ${escEmail(emailDetails.receptionDinnerTime)} &middot; End at ${escEmail(emailDetails.receptionEndTime)}</p>
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:2px 0 0;">${escEmail(emailDetails.receptionVenue)}</p>
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b7280;margin:2px 0 0;">${escEmail(emailDetails.receptionAddress)}</p>
               </td>
             </tr>
             <tr>
@@ -657,10 +675,11 @@ function buildRsvpEmailHtml({ partyName, members, events, dietary, siteUrl, isRe
                 <p style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#3D6B4D;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;margin:0 0 3px;">Dress Code</p>
               </td>
               <td style="padding-bottom:14px;vertical-align:top;">
-                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:0;">Garden Party Chic</p>
+                <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1f2937;margin:0;">${escEmail(emailDetails.dressCode)}</p>
               </td>
             </tr>
           </table>
+          ` : ''}
 
           <!-- Divider -->
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;"><tr><td style="border-top:2px solid #A9BEDD;font-size:1px;line-height:1px;">&nbsp;</td></tr></table>
@@ -1205,7 +1224,7 @@ app.post('/api/admin/email/blast', requireAdminAuth, async (req, res) => {
       from: 'Jack & Maja <noreply@majaandjack.ca>',
       to: party.email,
       subject: reminderTmpl.subject || "We can't wait to see you there! — Jack & Maja's Wedding",
-      html: buildRsvpEmailHtml({ partyName: party.name, members, events: eventLabels, dietary: party.dietary, siteUrl, isReminder: true, customMessage: reminderTmpl.message || '' })
+      html: buildRsvpEmailHtml({ partyName: party.name, members, events: eventLabels, dietary: party.dietary, siteUrl, isReminder: true, customMessage: reminderTmpl.message || '', emailDetails: db.emailDetails || {} })
     });
     return { sent: true, party: party.name, email: party.email };
   }));
@@ -1231,6 +1250,24 @@ app.post('/api/admin/email/templates', requireAdminAuth, (req, res) => {
   if (reminder)  db.emailTemplates.reminder  = clean(reminder);
   writeDb(db);
   res.json({ success: true });
+});
+
+app.get('/api/admin/email/details', requireAdminAuth, (req, res) => {
+  const db = getDb();
+  res.json(db.emailDetails || {});
+});
+
+app.post('/api/admin/email/details', requireAdminAuth, (req, res) => {
+  const db = getDb();
+  if (!db.emailDetails) db.emailDetails = {};
+  const fields = [
+    'ceremonyDate', 'ceremonyTime', 'ceremonyVenue', 'ceremonyAddress',
+    'cocktailTime', 'receptionDinnerTime', 'receptionEndTime', 'receptionVenue', 'receptionAddress',
+    'dressCode'
+  ];
+  fields.forEach(f => { if (req.body[f] !== undefined) db.emailDetails[f] = String(req.body[f]).trim(); });
+  writeDb(db);
+  res.json({ success: true, emailDetails: db.emailDetails });
 });
 
 // ---------------------------------------------------------------------------
@@ -1740,7 +1777,7 @@ app.post('/api/rsvp/party/:partyId', (req, res) => {
         from: 'Jack & Maja <noreply@majaandjack.ca>',
         to: party.email,
         subject: tmpl.subject || "RSVP Confirmation — Jack & Maja's Wedding",
-        html: buildRsvpEmailHtml({ partyName: party.name, members, events: eventLabels, dietary: party.dietary, siteUrl, isReminder: false, customMessage: tmpl.message || '' })
+        html: buildRsvpEmailHtml({ partyName: party.name, members, events: eventLabels, dietary: party.dietary, siteUrl, isReminder: false, customMessage: tmpl.message || '', emailDetails: db.emailDetails || {} })
       }).catch(err => console.error('RSVP confirmation email failed:', err.message));
     } catch (e) {
       console.error('Email build error:', e.message);

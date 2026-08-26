@@ -114,6 +114,10 @@ JM_Wedding_Website/
 | DELETE | `/api/admin/music` | admin | Remove current song and reset music settings |
 | GET | `/api/content` | — | Public: `{ content, isAdmin }` — in-place text overrides + whether the session is an admin session |
 | PUT | `/api/admin/content` | admin | Upsert `{key, value}` into `db.content`; `value: null` removes the override (reset to default) |
+| GET | `/api/admin/email/recipients` | admin | Parties who've RSVPed with an email, for the reminder blast list |
+| POST | `/api/admin/email/blast` | admin | Send the reminder template to every party with at least one attending member |
+| GET/POST | `/api/admin/email/templates` | admin | `db.emailTemplates` — subject/message for attending, declined, reminder |
+| GET/POST | `/api/admin/email/details` | admin | `db.emailDetails` — ceremony/cocktail/reception times+venues+addresses and dress code shown in the attending/reminder email's "Wedding Details" block |
 
 ## Colour Palette
 
@@ -213,6 +217,17 @@ When attending = yes, guests see "Which events will you be joining us for?" with
 Events stored as an array of slugs on each RSVP in `db.json`. Admin dashboard has an "Event Attendance" section with per-event counts (dynamic from db). RSVP table has an Events column. CSV export includes Events column.
 
 Event list is managed via Admin → Schedule — no hardcoded constants remain.
+
+## RSVP Confirmation & Reminder Emails
+
+`buildRsvpEmailHtml()` in `server.js` builds the HTML for 3 sends: the attending confirmation, the declined confirmation, and the admin-triggered reminder blast (all 3 share one function, `isReminder` just changes the headline). Two separate pieces are editable via Admin → Emails, both stored in `db.json` (not hardcoded, not tied to a deploy):
+
+- **`db.emailTemplates`** (`{ attending, declined, reminder }`, each `{ subject, message }`) — the subject line and the personal note shown after the greeting.
+- **`db.emailDetails`** (flat object: `ceremonyDate`, `ceremonyTime`, `ceremonyVenue`, `ceremonyAddress`, `cocktailTime`, `receptionDinnerTime`, `receptionEndTime`, `receptionVenue`, `receptionAddress`, `dressCode`) — the "Wedding Details" block (ceremony/cocktail/reception times & venues, dress code). Added 2026-08-25; previously these 10 values were hardcoded literal strings inside `buildRsvpEmailHtml()`.
+
+**The Wedding Details block only renders when `someAttending` is true** (computed from the party's members' RSVP status) — a party where everyone declined gets the confirmation without ceremony/reception logistics, since they're not coming. The reminder blast already only sends to parties with `hasAttending`, so it always shows the block. Admin → Emails' live preview mirrors this: switching to the "Declined Confirmation" tab hides the Wedding Details block in the preview too (`previewDetailsBlock` in `admin/emails.html`).
+
+Editing either `db.emailTemplates` or `db.emailDetails` does not require a code change or deploy — it's a live database write via the admin UI, same as schedule events or detail cards.
 
 ## Background Music
 

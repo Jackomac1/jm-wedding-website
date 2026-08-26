@@ -225,6 +225,19 @@
     }
     .tmpl-field input:focus, .tmpl-field textarea:focus { outline: none; border-color: var(--admin-accent); }
     .tmpl-field textarea { resize: vertical; min-height: 80px; }
+
+    /* Wedding details editor */
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .details-grid .tmpl-field { margin-bottom: 0; }
+    .details-grid .tmpl-field.span-2 { grid-column: 1 / -1; }
+    @media (max-width: 640px) {
+      .details-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -320,6 +333,56 @@
             Only parties with at least one attending member will receive the email.
             Parties with no attending guests are shown in the list but will be skipped.
           </p>
+        </div>
+
+        <!-- Wedding Details Editor -->
+        <div class="admin-card" style="padding:1.5rem;margin-bottom:1.5rem;">
+          <h2 style="font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--admin-muted);margin:0 0 0.4rem;">Wedding Details Shown In Emails</h2>
+          <p style="font-size:0.82rem;color:var(--admin-muted);margin:0 0 1.25rem;">This is the "Wedding Details" block in the Attending Confirmation and Reminder emails — it's only included when at least one person in the party is attending, so a fully-declined party's email skips it entirely. Changes here update the preview below immediately.</p>
+
+          <div class="details-grid">
+            <div class="tmpl-field">
+              <label for="ed-ceremonyDate">Ceremony Date</label>
+              <input type="text" id="ed-ceremonyDate" placeholder="Sunday, August 29, 2027">
+            </div>
+            <div class="tmpl-field">
+              <label for="ed-ceremonyTime">Ceremony Time</label>
+              <input type="text" id="ed-ceremonyTime" placeholder="4:00 PM">
+            </div>
+            <div class="tmpl-field">
+              <label for="ed-ceremonyVenue">Ceremony Venue</label>
+              <input type="text" id="ed-ceremonyVenue" placeholder="Stewart Creek Golf &amp; Country Club">
+            </div>
+            <div class="tmpl-field">
+              <label for="ed-ceremonyAddress">Ceremony Address</label>
+              <input type="text" id="ed-ceremonyAddress" placeholder="4100 Stewart Creek Dr, Canmore, AB">
+            </div>
+            <div class="tmpl-field">
+              <label for="ed-cocktailTime">Cocktail Hour Time</label>
+              <input type="text" id="ed-cocktailTime" placeholder="5:30 PM">
+            </div>
+            <div class="tmpl-field">
+              <label for="ed-dressCode">Dress Code</label>
+              <input type="text" id="ed-dressCode" placeholder="Garden Party Chic">
+            </div>
+            <div class="tmpl-field">
+              <label for="ed-receptionDinnerTime">Reception Dinner Time</label>
+              <input type="text" id="ed-receptionDinnerTime" placeholder="6:30 PM">
+            </div>
+            <div class="tmpl-field">
+              <label for="ed-receptionEndTime">Reception End Time</label>
+              <input type="text" id="ed-receptionEndTime" placeholder="1:00 AM">
+            </div>
+            <div class="tmpl-field">
+              <label for="ed-receptionVenue">Reception Venue</label>
+              <input type="text" id="ed-receptionVenue" placeholder="Bridgette Bar Canmore">
+            </div>
+            <div class="tmpl-field">
+              <label for="ed-receptionAddress">Reception Address</label>
+              <input type="text" id="ed-receptionAddress" placeholder="1030 Spring Creek Dr, Canmore, AB">
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="saveEmailDetails()">Save Wedding Details</button>
         </div>
 
         <!-- Template Editor -->
@@ -422,35 +485,37 @@
                   <p class="ep-field-label">Events You're Joining</p>
                   <p class="ep-field-value">[Event names will appear here]</p>
 
-                  <hr class="ep-divider">
+                  <div id="previewDetailsBlock">
+                    <hr class="ep-divider">
 
-                  <p class="ep-section-label">Wedding Details</p>
-                  <table class="ep-details-table">
-                    <tr>
-                      <td>Ceremony</td>
-                      <td>
-                        Sunday, August 29, 2027 at 4:00 PM<br>
-                        Stewart Creek Golf &amp; Country Club<br>
-                        <span class="ep-field-sub">4100 Stewart Creek Dr, Canmore, AB T1W 2V3</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Cocktail Hour</td>
-                      <td>5:30 PM</td>
-                    </tr>
-                    <tr>
-                      <td>Reception</td>
-                      <td>
-                        Dinner at 6:30 PM &middot; End at 1:00 AM<br>
-                        Bridgette Bar Canmore<br>
-                        <span class="ep-field-sub">1030 Spring Creek Dr, Canmore, AB T1W 0C8</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Dress Code</td>
-                      <td>Garden Party Chic</td>
-                    </tr>
-                  </table>
+                    <p class="ep-section-label">Wedding Details</p>
+                    <table class="ep-details-table">
+                      <tr>
+                        <td>Ceremony</td>
+                        <td>
+                          <span id="prev-ceremonyDateTime">Sunday, August 29, 2027 at 4:00 PM</span><br>
+                          <span id="prev-ceremonyVenue">Stewart Creek Golf &amp; Country Club</span><br>
+                          <span class="ep-field-sub" id="prev-ceremonyAddress">4100 Stewart Creek Dr, Canmore, AB T1W 2V3</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Cocktail Hour</td>
+                        <td id="prev-cocktailTime">5:30 PM</td>
+                      </tr>
+                      <tr>
+                        <td>Reception</td>
+                        <td>
+                          <span id="prev-receptionDinnerEnd">Dinner at 6:30 PM &middot; End at 1:00 AM</span><br>
+                          <span id="prev-receptionVenue">Bridgette Bar Canmore</span><br>
+                          <span class="ep-field-sub" id="prev-receptionAddress">1030 Spring Creek Dr, Canmore, AB T1W 0C8</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Dress Code</td>
+                        <td id="prev-dressCode">Garden Party Chic</td>
+                      </tr>
+                    </table>
+                  </div>
 
                   <hr class="ep-divider">
 
@@ -550,7 +615,63 @@
       } else {
         previewHeadline.textContent = "We can't wait to see you there!";
       }
+      // Declined-only parties never see the Wedding Details block — matches server behavior
+      document.getElementById('previewDetailsBlock').style.display = (tab === 'declined') ? 'none' : 'block';
     }
+
+    // ── Wedding details editor + preview ────────────────────────────────────────
+    const DETAIL_FIELDS = [
+      'ceremonyDate', 'ceremonyTime', 'ceremonyVenue', 'ceremonyAddress',
+      'cocktailTime', 'receptionDinnerTime', 'receptionEndTime', 'receptionVenue', 'receptionAddress',
+      'dressCode'
+    ];
+
+    function updateDetailsPreview() {
+      const v = key => document.getElementById('ed-' + key)?.value || '';
+      document.getElementById('prev-ceremonyDateTime').textContent  = `${v('ceremonyDate')} at ${v('ceremonyTime')}`;
+      document.getElementById('prev-ceremonyVenue').textContent     = v('ceremonyVenue');
+      document.getElementById('prev-ceremonyAddress').textContent   = v('ceremonyAddress');
+      document.getElementById('prev-cocktailTime').textContent      = v('cocktailTime');
+      document.getElementById('prev-receptionDinnerEnd').textContent = `Dinner at ${v('receptionDinnerTime')} · End at ${v('receptionEndTime')}`;
+      document.getElementById('prev-receptionVenue').textContent    = v('receptionVenue');
+      document.getElementById('prev-receptionAddress').textContent  = v('receptionAddress');
+      document.getElementById('prev-dressCode').textContent         = v('dressCode');
+    }
+
+    async function loadEmailDetails() {
+      try {
+        const data = await fetch('/api/admin/email/details').then(r => r.json());
+        DETAIL_FIELDS.forEach(key => {
+          const input = document.getElementById('ed-' + key);
+          if (input) input.value = data[key] || '';
+        });
+        updateDetailsPreview();
+      } catch (e) {
+        console.warn('Failed to load wedding details:', e);
+      }
+    }
+
+    async function saveEmailDetails() {
+      const body = {};
+      DETAIL_FIELDS.forEach(key => { body[key] = document.getElementById('ed-' + key)?.value.trim() || ''; });
+      try {
+        const res = await fetch('/api/admin/email/details', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error();
+        showSuccess('Wedding details saved.');
+        updateDetailsPreview();
+      } catch {
+        showError('Failed to save wedding details.');
+      }
+    }
+
+    DETAIL_FIELDS.forEach(key => {
+      const el = document.getElementById('ed-' + key);
+      if (el) el.addEventListener('input', updateDetailsPreview);
+    });
 
     // Keep preview in sync while typing
     ['attending', 'declined', 'reminder'].forEach(key => {
@@ -668,6 +789,7 @@
     });
 
     // ── Init ───────────────────────────────────────────────────────────────────
+    loadEmailDetails();
     loadTemplates();
     loadRecipients();
   </script>
