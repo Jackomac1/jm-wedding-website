@@ -52,7 +52,7 @@ JM_Wedding_Website/
 │   ├── login.html
 │   ├── dashboard.html     RSVP toggle, stats, song requests, table, CSV export
 │   ├── qr-generator.html  Single QR + bulk CSV import + printable QR sheet
-│   ├── photos.html        Photo manager: site backgrounds, gallery, wedding party
+│   ├── photos.html        Photo manager: site backgrounds + gallery (Wedding Party tab removed 2026-08-25 along with the page; /api/party + /api/admin/party* still work if needed later, just no admin UI for them)
 │   ├── schedule.html      Schedule event CRUD (add/edit/delete events + RSVP flags)
 │   └── music.html         Background music: Spotify preview search or file upload, enable/disable
 ├── CSS/style.css          Main stylesheet (~1640 lines)
@@ -129,11 +129,11 @@ JM_Wedding_Website/
 
 ## Design System
 
-- **Nav:** Fixed, transparent over full hero → white `.scrolled` on scroll → `.nav-solid` (white, immediate) on inner pages. iOS safe area handled via `--safe-top` CSS variable (set by JS probe in `main.js` section 0) — nav height and hero margin-top both use `calc(var(--nav-height) + var(--safe-top, ...))`.
+- **Nav:** Fixed, transparent over the hero on every live page → white `.scrolled` on scroll (as of 2026-08-25, all live pages behave this way — `.nav-solid`, the old "white immediately, no scroll watcher" variant, is now only used by the already-removed contact/registry/our-story/faq/wedding-party HTML files; `JS/main.js`'s `initNavScroll` already skips the scroll watcher when it sees `.nav-solid`, so nothing needed to change there). iOS safe area handled via `--safe-top` CSS variable (set by JS probe in `main.js` section 0) — nav height uses `calc(var(--nav-height) + var(--safe-top, ...))`.
 - **Mobile menu:** On ≤768px, hamburger menu uses `visibility: hidden; opacity: 0` when closed (NOT translateY trick — that was unreliable on smaller windows). Opens with `visibility: visible; opacity: 1; transform: translateY(0)`.
 - **Fixed background system:** Every page has a `<div class="site-bg-fixed">` as first child of `<body>`, styled `position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background-size: cover; background-position: center center`. This is the single source of the page's background photo. The photo for each page is set via inline `style="background-image: url('/Images/photo-XX.jpg');"` on that div.
 - **Hero full** (`index.html`): `min-height: 100vh`, `background-color: transparent` — shows `.site-bg-fixed` through the `::before` espresso gradient overlay. No inline `style` background-image on the `<section>`.
-- **Hero page** (inner pages): `height: 50vh`, `background-color: transparent` — shows `.site-bg-fixed` through `::before` espresso overlay. No inline `style` background-image on the `<section>`.
+- **Hero page** (Details, RSVP, Gallery, Schedule): also `min-height: 100vh` as of 2026-08-25 (was `height: 50vh` with a `margin-top` pushing it below a solid nav) — now centers its title in the full viewport and includes the same `.scroll-indicator` markup as the homepage, matching `.hero-full`'s layout exactly. Still keeps its own smaller `.hero-page .hero-script` font-size and its own (slightly different) `::before` gradient — only the sizing/centering/scroll-indicator/nav-transparency behavior was unified, not the typography scale.
 - **Photo strips:** `.photo-strip` — `min-height: 340px`, dark espresso overlay at 35% via `::before`. On desktop (>768px, non-iOS): keeps own `background-attachment: fixed` parallax image (inline style on the div). On mobile (≤768px) AND iOS (`@supports`): `background-image: none !important` — shows `.site-bg-fixed` through the overlay instead.
 - **Section colors:**
   - Default `.section`: cream bg (`background-color: var(--cream)` — explicitly set, does NOT inherit from body)

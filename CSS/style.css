@@ -394,8 +394,7 @@ h1, h2, h3, h4 {
    Hero — Page hero (inner pages, shorter)
    ============================================================ */
 .hero-page {
-  height: 50vh;
-  min-height: 300px;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -403,7 +402,6 @@ h1, h2, h3, h4 {
   position: relative;
   overflow: hidden;
   background-color: transparent;
-  margin-top: calc(var(--nav-height) + var(--safe-top, env(safe-area-inset-top, 0px)));
 }
 
 

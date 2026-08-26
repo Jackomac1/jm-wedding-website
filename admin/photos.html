@@ -138,117 +138,6 @@
     .drop-zone p { font-size: 0.875rem; color: var(--admin-muted); margin: 0; }
     .drop-zone input[type="file"] { display: none; }
 
-    /* ── Party grid ───────────────────────────────────── */
-    .party-section-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--admin-muted);
-      font-weight: 700;
-      margin: 0 0 1rem;
-    }
-    .party-admin-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 1.25rem;
-      margin-bottom: 2.5rem;
-    }
-    .party-admin-card {
-      background: #fff;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-    }
-    .party-admin-photo-wrap {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 3/4;
-      background: var(--admin-border);
-      cursor: pointer;
-      overflow: hidden;
-    }
-    .party-admin-photo-wrap img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .party-admin-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #fff;
-      background: var(--bluebell);
-    }
-    .party-admin-photo-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.2s;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #fff;
-    }
-    .party-admin-photo-wrap:hover .party-admin-photo-overlay { opacity: 1; }
-    .party-admin-photo-wrap input[type="file"] { display: none; }
-    .party-admin-fields {
-      padding: 0.875rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .party-admin-role {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--admin-muted);
-      margin-bottom: 0.1rem;
-    }
-    .party-admin-fields input,
-    .party-admin-fields textarea {
-      width: 100%;
-      padding: 0.45rem 0.6rem;
-      border: 1px solid var(--admin-border);
-      border-radius: var(--radius-sm);
-      font-family: var(--font-body);
-      font-size: 0.82rem;
-      color: var(--admin-text);
-      background: var(--admin-bg);
-      resize: vertical;
-      transition: border-color 0.2s;
-    }
-    .party-admin-fields input:focus,
-    .party-admin-fields textarea:focus {
-      outline: none;
-      border-color: var(--admin-accent);
-    }
-    .party-admin-fields textarea { min-height: 70px; }
-    .party-save-btn {
-      width: 100%;
-      padding: 0.5rem;
-      background: var(--admin-accent);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .party-save-btn:hover { opacity: 0.85; }
-    .party-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
     /* ── Feedback toast ───────────────────────────────── */
     .photo-toast {
       position: fixed;
@@ -359,7 +248,6 @@
         <div class="photo-tabs" role="tablist">
           <button class="photo-tab active" role="tab" data-panel="site"  aria-selected="true">Site Photos</button>
           <button class="photo-tab"        role="tab" data-panel="gallery" aria-selected="false">Gallery</button>
-          <button class="photo-tab"        role="tab" data-panel="party"   aria-selected="false">Wedding Party</button>
         </div>
 
         <!-- ── Panel: Site Photos ─────────────────────── -->
@@ -389,35 +277,6 @@
             <p>JPG, PNG, WEBP &mdash; up to 15 MB each</p>
             <input type="file" id="galleryFileInput" accept="image/*" multiple>
           </div>
-        </div>
-
-        <!-- ── Panel: Wedding Party ───────────────────── -->
-        <div class="photo-panel" id="panel-party" role="tabpanel">
-          <p style="color:var(--admin-muted);font-size:0.875rem;margin-bottom:1.5rem;">
-            Click a photo to replace it. Fill in the name and description then hit Save.
-          </p>
-
-          <p class="party-section-label">Maja's Side — Bridal Party</p>
-          <div class="party-admin-grid" id="bridalGrid">
-            <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--admin-muted);">Loading&hellip;</div>
-          </div>
-          <div id="add-form-bridal" style="display:none;margin-bottom:1.5rem;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-            <input type="text" id="add-role-bridal" placeholder="Role (e.g. Bridesmaid)" style="padding:0.45rem 0.75rem;font-size:0.88rem;border:1px solid var(--admin-border);border-radius:var(--radius-sm);background:var(--admin-bg);color:var(--admin-text);font-family:inherit;min-width:200px;">
-            <button class="btn btn-primary btn-sm" onclick="addPartyMember('bridal')">Add</button>
-            <button class="btn btn-secondary btn-sm" onclick="cancelAddForm('bridal')">Cancel</button>
-          </div>
-          <button class="btn btn-secondary btn-sm" id="show-add-bridal" onclick="showAddForm('bridal')" style="margin-bottom:2rem;">+ Add Member</button>
-
-          <p class="party-section-label">Jack's Side — Groomsmen</p>
-          <div class="party-admin-grid" id="groomsmenGrid">
-            <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--admin-muted);">Loading&hellip;</div>
-          </div>
-          <div id="add-form-groomsmen" style="display:none;margin-bottom:1.5rem;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-            <input type="text" id="add-role-groomsmen" placeholder="Role (e.g. Groomsman)" style="padding:0.45rem 0.75rem;font-size:0.88rem;border:1px solid var(--admin-border);border-radius:var(--radius-sm);background:var(--admin-bg);color:var(--admin-text);font-family:inherit;min-width:200px;">
-            <button class="btn btn-primary btn-sm" onclick="addPartyMember('groomsmen')">Add</button>
-            <button class="btn btn-secondary btn-sm" onclick="cancelAddForm('groomsmen')">Cancel</button>
-          </div>
-          <button class="btn btn-secondary btn-sm" id="show-add-groomsmen" onclick="showAddForm('groomsmen')" style="margin-bottom:2rem;">+ Add Member</button>
         </div>
 
       </main>
@@ -475,20 +334,16 @@
 
     // ── Site Photos ─────────────────────────────────────────────────
     const SITE_SLOTS = [
-      { slot: 'home',      label: 'Homepage Hero',     usedOn: 'Homepage full-height hero',         hasMobile: true },
+      { slot: 'home',      label: 'Home & Gallery',    usedOn: 'Homepage hero & photo strip, and the Gallery page background', hasMobile: true },
       { slot: 'details',   label: 'Details Page',      usedOn: 'Details hero & photo strip',        hasMobile: true },
-      { slot: 'rsvp',      label: 'RSVP / Schedule',   usedOn: 'RSVP & Schedule hero and strips',   hasMobile: true },
-      { slot: 'registry',  label: 'Registry Page',     usedOn: 'Registry hero & photo strip',       hasMobile: true },
-      { slot: 'contact',   label: 'Contact Page',      usedOn: 'Contact hero & photo strip',        hasMobile: true },
+      { slot: 'rsvp',      label: 'RSVP & Schedule',   usedOn: 'RSVP and Schedule hero and photo strips', hasMobile: true },
       { slot: 'dresscode', label: 'Dress Code Photo',  usedOn: 'Dress code card on Details page',   hasMobile: false }
     ];
 
     const SLOT_FILE = {
-      home: 'photo-home.jpg', details: 'photo-details.jpg', rsvp: 'photo-rsvp.jpg',
-      registry: 'photo-registry.jpg', contact: 'photo-contact.jpg', dresscode: 'photo-dresscode.jpg',
+      home: 'photo-home.jpg', details: 'photo-details.jpg', rsvp: 'photo-rsvp.jpg', dresscode: 'photo-dresscode.jpg',
       'home-mobile': 'photo-home-mobile.jpg', 'details-mobile': 'photo-details-mobile.jpg',
-      'rsvp-mobile': 'photo-rsvp-mobile.jpg', 'registry-mobile': 'photo-registry-mobile.jpg',
-      'contact-mobile': 'photo-contact-mobile.jpg'
+      'rsvp-mobile': 'photo-rsvp-mobile.jpg'
     };
 
     function renderSitePhotos() {
@@ -630,153 +485,9 @@
       galleryInput.value = '';
     });
 
-    // ── Wedding Party ───────────────────────────────────────────────
-    async function loadParty() {
-      try {
-        const r    = await fetch('/api/admin/party');
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || 'Failed to load');
-        renderPartyGrid('bridalGrid',    data.bridal);
-        renderPartyGrid('groomsmenGrid', data.groomsmen);
-      } catch (err) {
-        document.getElementById('bridalGrid').innerHTML =
-          `<div style="grid-column:1/-1;color:var(--admin-muted);">Error: ${err.message}</div>`;
-      }
-    }
-
-    function renderPartyGrid(gridId, members) {
-      const grid = document.getElementById(gridId);
-      grid.innerHTML = members.map(m => {
-        const initial = m.name ? m.name.charAt(0).toUpperCase() : (m.role.charAt(0));
-        const photoHtml = m.photo
-          ? `<img src="/Images/${escHtml(m.photo)}?t=${Date.now()}" alt="${escHtml(m.name || m.role)}">`
-          : `<div class="party-admin-placeholder">${escHtml(initial)}</div>`;
-
-        return `
-          <div class="party-admin-card" id="party-card-${escHtml(m.slot)}">
-            <div class="party-admin-photo-wrap" onclick="document.getElementById('party-file-${escHtml(m.slot)}').click()" role="button" tabindex="0" aria-label="Replace photo for ${escHtml(m.role)}">
-              ${photoHtml}
-              <div class="party-admin-photo-overlay">Click to replace</div>
-              <input type="file" accept="image/*" id="party-file-${escHtml(m.slot)}" onchange="uploadPartyPhoto('${escHtml(m.slot)}', this)">
-            </div>
-            <div class="party-admin-fields">
-              <div class="party-admin-role">${escHtml(m.role)}</div>
-              <input type="text" id="party-name-${escHtml(m.slot)}" value="${escHtml(m.name || '')}" placeholder="Name" aria-label="Name">
-              <textarea id="party-desc-${escHtml(m.slot)}" placeholder="Short description for flip card">${escHtml(m.description || '')}</textarea>
-              <div style="display:flex;gap:0.4rem;">
-                <button class="party-save-btn" style="flex:1;" onclick="savePartyMember('${escHtml(m.slot)}')">Save</button>
-                <button class="party-save-btn" style="background:var(--berry);flex-shrink:0;" onclick="removePartyMember('${escHtml(m.slot)}', '${escHtml(m.name || m.role)}')">Remove</button>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    async function uploadPartyPhoto(slot, input) {
-      if (!input.files[0]) return;
-      const name = document.getElementById(`party-name-${slot}`)?.value || '';
-      const desc = document.getElementById(`party-desc-${slot}`)?.value || '';
-      const fd   = new FormData();
-      fd.append('photo', input.files[0]);
-      fd.append('name',  name);
-      fd.append('description', desc);
-
-      try {
-        const r    = await fetch(`/api/admin/party/${slot}`, { method: 'POST', body: fd });
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || 'Upload failed');
-        // Update only the affected thumbnail — preserves unsaved edits in other cards
-        const wrap = document.querySelector(`#party-card-${slot} .party-admin-photo-wrap`);
-        if (wrap && data.member?.photo) {
-          const src = `/Images/${data.member.photo}?t=${Date.now()}`;
-          const existing = wrap.querySelector('img');
-          if (existing) {
-            existing.src = src;
-          } else {
-            const img = document.createElement('img');
-            img.src = src;
-            img.alt = data.member.name || data.member.role;
-            wrap.querySelector('.party-admin-placeholder')?.remove();
-            wrap.insertBefore(img, wrap.firstChild);
-          }
-        }
-        showToast('Photo updated');
-      } catch (err) {
-        showToast(err.message, 'error');
-      }
-      input.value = '';
-    }
-
-    async function savePartyMember(slot) {
-      const name = document.getElementById(`party-name-${slot}`)?.value || '';
-      const desc = document.getElementById(`party-desc-${slot}`)?.value || '';
-      const btn  = document.querySelector(`#party-card-${slot} .party-save-btn`);
-      if (btn) btn.disabled = true;
-
-      const fd = new FormData();
-      fd.append('name',        name);
-      fd.append('description', desc);
-
-      try {
-        const r    = await fetch(`/api/admin/party/${slot}`, { method: 'POST', body: fd });
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || 'Save failed');
-        showToast('Saved');
-      } catch (err) {
-        showToast(err.message, 'error');
-      }
-      if (btn) btn.disabled = false;
-    }
-
-    function showAddForm(side) {
-      document.getElementById(`add-form-${side}`).style.display = 'flex';
-      document.getElementById(`show-add-${side}`).style.display = 'none';
-      document.getElementById(`add-role-${side}`).focus();
-    }
-
-    function cancelAddForm(side) {
-      document.getElementById(`add-form-${side}`).style.display = 'none';
-      document.getElementById(`show-add-${side}`).style.display = '';
-      document.getElementById(`add-role-${side}`).value = '';
-    }
-
-    async function addPartyMember(side) {
-      const role = document.getElementById(`add-role-${side}`).value.trim();
-      if (!role) { showToast('Please enter a role', 'error'); return; }
-      try {
-        const r    = await fetch('/api/admin/party', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ side, role })
-        });
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || 'Failed to add member');
-        cancelAddForm(side);
-        await loadParty();
-        showToast('Member added');
-      } catch (err) {
-        showToast(err.message, 'error');
-      }
-    }
-
-    async function removePartyMember(slot, label) {
-      if (!confirm(`Remove "${label}" from the wedding party? This cannot be undone.`)) return;
-      try {
-        const r    = await fetch(`/api/admin/party/${slot}`, { method: 'DELETE' });
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || 'Failed to remove');
-        await loadParty();
-        showToast('Member removed');
-      } catch (err) {
-        showToast(err.message, 'error');
-      }
-    }
-
     // ── Init ────────────────────────────────────────────────────────
     renderSitePhotos();
     loadGallery();
-    loadParty();
   </script>
 
 </body>
