@@ -447,12 +447,14 @@ app.get('/enter', (req, res) => {
 
 app.get('/home',         requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/details',      requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'details.html')));
-app.get('/registry',     requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'registry.html')));
 app.get('/rsvp',         requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'rsvp.html')));
-app.get('/contact',      requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'contact.html')));
 app.get('/gallery',      requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'gallery.html')));
-app.get('/wedding-party',requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'wedding-party.html')));
 app.get('/schedule',     requireSiteAuth, (req, res) => res.sendFile(path.join(__dirname, 'schedule.html')));
+// Registry, Contact, and Wedding Party pages removed 2026-08-25 — routes and nav
+// links removed but registry.html/contact.html/wedding-party.html stay on disk,
+// same treatment as our-story.html/faq.html. /api/contact, /api/party, and
+// /api/admin/party* are left intact (contact form API + admin's Wedding Party
+// bio editor still work, just nothing guest-facing links to them anymore).
 
 app.get('/admin/login', (req, res) => {
   if (req.session && req.session.adminAuthenticated) return res.redirect('/admin/dashboard');

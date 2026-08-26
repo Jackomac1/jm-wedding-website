@@ -142,11 +142,8 @@
 
   const pageMap = {
     '/home':      'home',
-    '/our-story': 'our-story',
     '/details':   'details',
-    '/registry':  'registry',
-    '/rsvp':      'rsvp',
-    '/contact':   'contact'
+    '/rsvp':      'rsvp'
   };
 
   const activePage = pageMap[path];

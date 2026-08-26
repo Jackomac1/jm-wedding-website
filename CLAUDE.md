@@ -42,12 +42,12 @@ JM_Wedding_Website/
 ├── enter.html             Password gate (public)
 ├── index.html             Homepage (site-auth required)
 ├── details.html           Ceremony, reception, dress code, getting there, hotel
-├── registry.html          Cash gift page (no product registry)
 ├── rsvp.html              RSVP form
-├── contact.html           Contact info + message form
 ├── gallery.html           Photo gallery — hover-zoom + lightbox on click
-├── wedding-party.html     Bridal party + groomsmen (7 per side, names/photos TODO)
 ├── schedule.html          Multi-day timeline: Fri Aug 27 / Sat Aug 28 / Sun Aug 29 (Big Day) / Mon Aug 30 — click-to-flip cards with Google Maps links
+├── registry.html          REMOVED 2026-08-25 (see note below) — was the cash gift page
+├── contact.html           REMOVED 2026-08-25 (see note below) — was contact info + message form
+├── wedding-party.html     REMOVED 2026-08-25 (see note below) — was bridal party + groomsmen
 ├── admin/
 │   ├── login.html
 │   ├── dashboard.html     RSVP toggle, stats, song requests, table, CSV export
@@ -63,7 +63,7 @@ JM_Wedding_Website/
 └── Images/                All photos (see Photo Filenames below)
 ```
 
-**Note:** `our-story.html` and `faq.html` exist on disk but their routes are removed from server.js and all nav links are gone. They are not accessible.
+**Note:** `our-story.html`, `faq.html`, `registry.html`, `contact.html`, and `wedding-party.html` all exist on disk but their routes are removed from server.js and all nav links (menu + footer + homepage nav-cards) are gone. They are not accessible. For the latter 3 (removed 2026-08-25): `/api/contact` (Resend email), `/api/party` + `/api/admin/party*` (wedding party CRUD), and the Admin → Photos → Wedding Party tab were deliberately left working — nothing guest-facing links to them, but the admin can still manage that data or bring the pages back by re-adding the routes + nav links. `rsvp.html`'s "RSVP is closed" message used to link to `/contact`; it now points to a `mailto:majaandjack@gmail.com` link instead so guests still have a way to reach out.
 
 ## API Routes
 
@@ -141,7 +141,7 @@ JM_Wedding_Website/
   - `.section-blush`: grape-fizz bg, white text
 - **Section titles:** Playfair Display bold (NOT Cormorant Garamond — Cormorant is hero script + footer + nav brand only)
 - **Section labels:** 0.72rem, uppercase, grape-fizz on cream sections (chartreuse hardcoded on `.section-alt` — NOT affected by page themes)
-- **Nav cards** (homepage): 3 colored cards — 1=grape-fizz, 2=bluebell (fixed `#A9BEDD`, dark espresso text — light bg needs dark text, unlike cards 1/3), 3=berry — no emojis
+- **Nav cards** (homepage): 2 colored cards (was 3 — Gifts card removed 2026-08-25 along with the whole Registry page) — 1=Details=grape-fizz, 2=RSVP=bluebell (fixed `#A9BEDD`, dark espresso text since white doesn't read on a light bg)
 - **No emojis** anywhere on the site
 - **Buttons:** `.btn-primary` (grape-fizz fill), `.btn-secondary` (outlined berry border), `.btn-blush` (berry fill)
 - **Ornament dividers:** `.ornament` with `.ornament-diamond` (chartreuse)
@@ -158,10 +158,10 @@ All three variables are defined in a single block in `CSS/style.css` — search 
 
 | Page(s) | Body class | `--grape-fizz` (labels/buttons) | `--accent` (diamonds/highlights) | `--dark-bg` (footer/dark sections) |
 |---------|-----------|----------------|-----------|---------|
-| Home, Registry | *(none)* | `#5C1B3B` grape fizz | `#A9BEDD` bluebell | `#3D6B4D` forest green |
+| Home *(Registry removed 2026-08-25, still has this styling but is unreachable)* | *(none)* | `#5C1B3B` grape fizz | `#A9BEDD` bluebell | `#3D6B4D` forest green |
 | Details, RSVP | `theme-chartreuse` | `#3D6B4D` forest green | `#5C1B3B` grape fizz | `#2A5038` dark forest |
-| Schedule, Contact | `theme-berry` | `#5C1B3B` grape fizz | `#A9BEDD` bluebell | `#3D6B4D` forest green |
-| Wedding Party | `theme-bluebell` | `#A9BEDD` bluebell | `#3D6B4D` forest green | `#2A5038` dark forest |
+| Schedule *(Contact removed 2026-08-25, still has this styling but is unreachable)* | `theme-berry` | `#5C1B3B` grape fizz | `#A9BEDD` bluebell | `#3D6B4D` forest green |
+| *(Wedding Party removed 2026-08-25 — `theme-bluebell` class now unused)* | `theme-bluebell` | `#A9BEDD` bluebell | `#3D6B4D` forest green | `#2A5038` dark forest |
 | Gallery | `theme-bluebell-grassland` | `#A9BEDD` bluebell | `#5C1B3B` grape fizz | `#1E3028` dark forest |
 
 ## Photo Filenames (all in `/Images/`)
@@ -232,7 +232,7 @@ Music settings stored in `db.music`:
 Lets the admin browse the real guest-facing pages while logged in and edit hardcoded text directly on the page (click text, edit, it saves) — for the copy that doesn't already have a dedicated structured editor. **Does not** touch `details.html`/`schedule.html` or the gallery/wedding-party grids — those stay on their existing admin editors (`admin/details.html`, `admin/schedule.html`, `admin/photos.html`, `admin/accommodations.html`); this system would create a second source of truth for those fields.
 
 - **Data**: sparse `db.content` map, `{ "key": "text" }`. Empty by default — every tagged HTML element keeps its real current text as the hardcoded fallback, so only fields an admin actually edits get an entry. `GET /api/content` (public) returns `{ content, isAdmin }`; `PUT /api/admin/content` (admin) upserts `{key, value}`, or deletes the override when `value` is `null` (reset to default).
-- **Markup convention**: any element with `data-cb="key"` is overlaid/editable. Covered pages: `index.html`, `contact.html`, `registry.html`, `rsvp.html` (static labels only — not the dynamically-rendered event checkboxes), `gallery.html` and `wedding-party.html` (hero/intro text only — not the photo/bio grids), `enter.html`.
+- **Markup convention**: any element with `data-cb="key"` is overlaid/editable. Covered pages: `index.html`, `rsvp.html` (static labels only — not the dynamically-rendered event checkboxes), `gallery.html` (hero/intro text only — not the photo grid), `enter.html`. `contact.html`, `registry.html`, and `wedding-party.html` still have their `data-cb` tags too, but those pages were removed 2026-08-25 (see File Structure note) so the tags are currently dormant.
 - **`shared.*` keys** (`shared.coupleNames`, `shared.weddingDate`, `shared.rsvpDeadline`, `shared.contactEmail`, `shared.footerCopyright`) are reused verbatim across every page that shows that value (footer, hero sections, the RSVP deadline embedded in prose on `index.html`/`rsvp.html`) — editing one instance updates all of them. Always wrap just the short atomic token in a nested `<span data-cb="shared.x">`, never the surrounding sentence — a shared key must never be a whole paragraph, or admin edits on one page would silently rewrite unrelated prose on another. Everything else gets its own page-scoped key (e.g. `index.hero.title`) so pages can diverge freely.
 - **Never nest two `data-cb` elements** (parent and child both tagged) — nested `contenteditable` regions are unreliable across browsers. If a shared token sits inside a longer sentence, tag only the inner span and leave the surrounding sentence non-editable via this tool.
 - **Front end**: `JS/content.js`, included on the 7 pages above (after the other page scripts). Fetches `/api/content` once, overlays matching elements. If `isAdmin`, shows a floating pencil toggle (`.cb-edit-toggle`, bottom-left — mirrors the music button's bottom-right treatment). In edit mode: `contenteditable` + dashed outline, Enter commits (blurs) instead of inserting a newline, paste is forced to plain text. On blur: unchanged or empty text is **not saved** — it silently reverts to the last value (empty never gets persisted, avoids dangling `aria-labelledby` targets and broken layout). Double-click a field in edit mode to reset it to its original hardcoded default.

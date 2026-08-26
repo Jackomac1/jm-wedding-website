@@ -766,11 +766,11 @@ h1, h2, h3, h4 {
   color: #fff;
 }
 
+/* Only 2 cards remain (Gifts card removed 2026-08-25) — Details stays grape fizz, RSVP is now nth-child(2) and picks up the bluebell treatment below */
 .nav-card:nth-child(1) { background: var(--grape-fizz); }
-.nav-card:nth-child(2) { background: #A9BEDD; } /* bluebell — fixed (was forest green) */
+.nav-card:nth-child(2) { background: #A9BEDD; } /* bluebell — fixed (was forest green, then briefly grape fizz) */
 .nav-card:nth-child(2) .nav-card-title { color: var(--espresso); }
 .nav-card:nth-child(2) .nav-card-desc  { color: rgba(61,107,77,0.82); }
-.nav-card:nth-child(3) { background: var(--berry); }
 
 .nav-card:hover {
   transform: translateY(-5px);
