@@ -1924,6 +1924,29 @@ app.delete('/api/admin/guestlist/party/:partyId', requireAdminAuth, (req, res) =
   res.json({ success: true });
 });
 
+// Admin-only silent update of a party's RSVP fields — unlike POST /api/rsvp/party/:partyId
+// (the guest-facing submission endpoint), this never sends a confirmation email. Exists for
+// corrections and for restoring a party's RSVP data (e.g. after a backup/restore) without
+// re-notifying the guest.
+app.put('/api/admin/guestlist/party/:partyId', requireAdminAuth, (req, res) => {
+  const db    = getDb();
+  const party = (db.parties || []).find(p => p.id === req.params.partyId);
+  if (!party) return res.status(404).json({ error: 'Party not found' });
+
+  const { email, phone, dietary, message, songUri, songName, events, submittedAt, submittedBy } = req.body;
+  if (email       !== undefined) party.email       = String(email).trim();
+  if (phone       !== undefined) party.phone       = String(phone).trim();
+  if (dietary     !== undefined) party.dietary     = String(dietary).trim();
+  if (message     !== undefined) party.message     = String(message).trim();
+  if (songUri     !== undefined) party.songUri     = String(songUri).trim();
+  if (songName    !== undefined) party.songName    = String(songName).trim();
+  if (events      !== undefined) party.events      = Array.isArray(events) ? events : [];
+  if (submittedAt !== undefined) party.submittedAt = submittedAt;
+  if (submittedBy !== undefined) party.submittedBy = submittedBy;
+  writeDb(db);
+  res.json({ success: true, party });
+});
+
 app.put('/api/admin/guestlist/guest/:id/rsvp', requireAdminAuth, (req, res) => {
   const db    = getDb();
   const guest = (db.guestList || []).find(g => g.id === req.params.id);

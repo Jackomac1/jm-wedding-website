@@ -115,6 +115,7 @@ JM_Wedding_Website/
 | DELETE | `/api/admin/music` | admin | Remove current song and reset music settings |
 | GET | `/api/content` | — | Public: `{ content, isAdmin }` — in-place text overrides + whether the session is an admin session |
 | PUT | `/api/admin/content` | admin | Upsert `{key, value}` into `db.content`; `value: null` removes the override (reset to default) |
+| PUT | `/api/admin/guestlist/party/:partyId` | admin | Silently set a party's RSVP fields (email/phone/dietary/message/song/events/submittedAt) — unlike the guest-facing `POST /api/rsvp/party/:partyId`, never sends a confirmation email. For corrections, or restoring RSVP data after a backup/restore without re-notifying the guest. |
 | GET | `/api/admin/email/recipients` | admin | Parties who've RSVPed with an email, for the reminder blast list |
 | POST | `/api/admin/email/blast` | admin | Send the reminder template to every party with at least one attending member |
 | GET/POST | `/api/admin/email/templates` | admin | `db.emailTemplates` — subject/message for attending, declined, reminder |
