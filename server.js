@@ -19,10 +19,15 @@ const PORT = process.env.PORT || 3000;
 // ---------------------------------------------------------------------------
 // JSON "database" — stored in data/db.json
 // ---------------------------------------------------------------------------
-const dataDir  = path.join(__dirname, 'data');
-const dbFile   = path.join(dataDir, 'db.json');
-const imagesDir = path.join(__dirname, 'Images');
-const audioDir  = path.join(__dirname, 'audio');
+// DATA_DIR, when set, points at a persistent Railway Volume mount (e.g. /data)
+// so db.json/Images/audio survive redeploys instead of resetting with the
+// container's ephemeral filesystem. Falls back to the old __dirname-relative
+// paths when unset, so local dev is unaffected.
+const persistRoot = process.env.DATA_DIR || __dirname;
+const dataDir   = path.join(persistRoot, 'data');
+const dbFile    = path.join(dataDir, 'db.json');
+const imagesDir = path.join(persistRoot, 'Images');
+const audioDir  = path.join(persistRoot, 'audio');
 
 if (!fs.existsSync(dataDir))   fs.mkdirSync(dataDir,   { recursive: true });
 if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
@@ -431,7 +436,7 @@ app.use(session({
 
 app.use('/CSS',    express.static(path.join(__dirname, 'CSS')));
 app.use('/JS',     express.static(path.join(__dirname, 'JS')));
-app.use('/Images', express.static(path.join(__dirname, 'Images')));
+app.use('/Images', express.static(imagesDir));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/audio',  express.static(audioDir));
 
