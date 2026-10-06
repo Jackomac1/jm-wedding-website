@@ -532,6 +532,19 @@ app.post('/api/admin/logout', (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Phone push notifications (ntfy.sh) — fire-and-forget, never blocks a response
+// ---------------------------------------------------------------------------
+function sendRsvpNotification(title, message) {
+  if (!process.env.NTFY_TOPIC) return;
+  axios.post('https://ntfy.sh/', {
+    topic:   process.env.NTFY_TOPIC,
+    title,
+    message,
+    tags:    ['tada']
+  }).catch(err => console.error('ntfy notification failed:', err.message));
+}
+
+// ---------------------------------------------------------------------------
 // Mailer (Resend)
 // ---------------------------------------------------------------------------
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -967,6 +980,20 @@ app.post('/api/rsvp', async (req, res) => {
     submitted_at:         new Date().toISOString()
   });
   writeDb(db);
+
+  // Fire-and-forget phone push notification
+  try {
+    const title = att === 'yes'
+      ? `RSVP: ${guest_name} — ${count} attending`
+      : `RSVP: ${guest_name} — declined`;
+    const notes = [];
+    if (dietary_restrictions) notes.push('dietary notes');
+    if (song_name)            notes.push(`song: ${song_name}`);
+    if (message)              notes.push('left a message');
+    sendRsvpNotification(title, notes.length ? notes.join(', ') : 'Submitted via majaandjack.ca');
+  } catch (e) {
+    console.error('Notification build error:', e.message);
+  }
 
   // Add song to Spotify playlist if provided and guest is attending
   const hasSpotifyToken = process.env.SPOTIFY_REFRESH_TOKEN || db.settings.spotifyRefreshToken;
@@ -1760,6 +1787,23 @@ app.post('/api/rsvp/party/:partyId', (req, res) => {
   party.phone       = (phone    || '').trim();
   writeDb(db);
   res.json({ success: true });
+
+  // Fire-and-forget phone push notification
+  try {
+    const guests = (db.guestList || []).filter(g => g.partyId === party.id);
+    const attendingCount = guests.filter(g => g.rsvpStatus === 'attending').length
+      + guests.filter(g => g.plusOneAllowed && g.plusOneStatus === 'attending').length;
+    const title = attendingCount > 0
+      ? `RSVP: ${party.name} — ${attendingCount} attending`
+      : `RSVP: ${party.name} — declined`;
+    const notes = [];
+    if (party.dietary)  notes.push('dietary notes');
+    if (party.songName) notes.push(`song: ${party.songName}`);
+    if (party.message)  notes.push('left a message');
+    sendRsvpNotification(title, notes.length ? notes.join(', ') : 'Submitted via majaandjack.ca');
+  } catch (e) {
+    console.error('Notification build error:', e.message);
+  }
 
   // Fire-and-forget confirmation email
   if (party.email) {

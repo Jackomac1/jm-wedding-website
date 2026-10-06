@@ -231,6 +231,14 @@ Event list is managed via Admin → Schedule — no hardcoded constants remain.
 
 Editing either `db.emailTemplates` or `db.emailDetails` does not require a code change or deploy — it's a live database write via the admin UI, same as schedule events or detail cards.
 
+## RSVP Phone Push Notifications (added 2026-10-05)
+
+`sendRsvpNotification(title, message)` in `server.js` posts to [ntfy.sh](https://ntfy.sh) (a free push-notification service, no account needed) whenever a guest submits an RSVP — both the real party-based flow (`POST /api/rsvp/party/:partyId`) and the legacy token-based one (`POST /api/rsvp`) trigger it, fire-and-forget, right after `writeDb()`. No-ops silently if `NTFY_TOPIC` isn't set.
+
+- **`NTFY_TOPIC`** (Railway env var) — the ntfy topic name. On the free tier this name *is* the access control: anyone who knows it can read (or send fake messages to) the topic, so it's a long random string (`jm-wedding-rsvp-<20 random chars>`), not something guessable. To receive notifications: install the ntfy app (iOS/Android), subscribe to this exact topic name.
+- Title format: `RSVP: {party or guest name} — N attending` or `— declined`. Body: a short comma-joined list of what's notable (dietary notes / song request / message left), or a generic fallback line if none of those apply.
+- This is independent of the Resend confirmation email — notifications fire even for parties with no email on file, and failures are logged but never block the guest's RSVP response.
+
 ## Background Music
 
 Music settings stored in `db.music`:
